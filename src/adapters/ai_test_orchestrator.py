@@ -84,8 +84,11 @@ class AITestOrchestrator:
             scenario_json = self._extract_json(response.text)
             return self._parse_scenario(scenario_json)
         except Exception as e:
-            # If AI fails, log and return default scenario
-            print(f"Warning: AI orchestrator failed to parse message: {e}")
+            # If AI fails, return default scenario
+            # Suppress warning for API key errors (expected when Gemini is not configured)
+            error_str = str(e)
+            if "API_KEY_INVALID" not in error_str and "API key not valid" not in error_str:
+                print(f"Warning: AI orchestrator failed to parse message: {e}")
             return TestScenario()
 
     def _build_prompt(self, message: str, operation: str) -> str:
