@@ -5,6 +5,7 @@ by both MCP and A2A protocols.
 """
 
 import logging
+import os
 from typing import TYPE_CHECKING, Any, Union
 
 from fastmcp.server.context import Context
@@ -177,6 +178,16 @@ def get_principal_from_context(
     don't reliably propagate to async callers (Python ContextVar + async/sync boundary issue).
     The caller MUST call set_current_tenant(tenant_context) in their own context.
     """
+    # TEST MODE: Bypass authentication and use environment variables
+    if os.getenv("ADCP_TESTING") == "true":
+        test_tenant_id = os.getenv("ADCP_TEST_TENANT_ID")
+        test_principal_id = os.getenv("ADCP_TEST_PRINCIPAL_ID")
+        
+        if test_tenant_id and test_principal_id:
+            logger.info(f"🧪 TEST MODE: Using tenant={test_tenant_id}, principal={test_principal_id}")
+            console.print(f"[yellow]🧪 TEST MODE: tenant={test_tenant_id}, principal={test_principal_id}[/yellow]")
+            return (test_principal_id, {"tenant_id": test_tenant_id})
+    
     # Import here to avoid circular dependency
     from src.core.tool_context import ToolContext
 
