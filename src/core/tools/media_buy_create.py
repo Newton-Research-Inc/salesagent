@@ -237,15 +237,39 @@ def _extract_creative_url_and_dimensions(
                         if width and height:
                             break
 
-    # Fallback: Check for dimensions at top level (backwards compatibility)
+    # Fallback 1: If format spec lookup failed, try common asset keys directly
+    if (width is None or height is None) and creative_data.get("assets"):
+        assets = creative_data["assets"]
+        # Try common asset keys: image, video, main
+        for asset_key in ["image", "video", "main"]:
+            if asset_key in assets and isinstance(assets[asset_key], dict):
+                asset_obj = assets[asset_key]
+                if width is None and asset_obj.get("width"):
+                    try:
+                        width = int(asset_obj["width"])
+                        logger.debug(f"Extracted width from assets.{asset_key}: {width}")
+                    except (ValueError, TypeError):
+                        pass
+                if height is None and asset_obj.get("height"):
+                    try:
+                        height = int(asset_obj["height"])
+                        logger.debug(f"Extracted height from assets.{asset_key}: {height}")
+                    except (ValueError, TypeError):
+                        pass
+                if width and height:
+                    break
+
+    # Fallback 2: Check for dimensions at top level (backwards compatibility)
     if width is None and creative_data.get("width"):
         try:
             width = int(creative_data["width"])
+            logger.debug(f"Extracted width from top-level: {width}")
         except (ValueError, TypeError):
             logger.warning(f"Invalid width type in creative: {creative_data.get('width')}")
     if height is None and creative_data.get("height"):
         try:
             height = int(creative_data["height"])
+            logger.debug(f"Extracted height from top-level: {height}")
         except (ValueError, TypeError):
             logger.warning(f"Invalid height type in creative: {creative_data.get('height')}")
 
@@ -1964,6 +1988,11 @@ async def _create_media_buy_impl(
                         "name": getattr(pkg_obj, "name", None),
                         "status": sanitized_status,  # Only store AdCP-compliant status values
                     }
+                    
+                    # Initialize variables that will be used later
+                    pricing_info_for_package: dict[str, Any] | None = None
+                    budget_value: dict[str, Any] | None = None
+                    
                     # Add full package data from raw_request
                     for idx, req_pkg in enumerate(req.packages):
                         if idx == pending_packages.index(pkg_obj):
@@ -1972,7 +2001,6 @@ async def _create_media_buy_impl(
 
                             # Serialize budget: normalize to object format for database storage
                             # ADCP 2.5.0 sends flat numbers, but we normalize to object with currency for DB
-                            budget_value: dict[str, Any] | None = None
                             if req_pkg.budget is not None:
                                 if isinstance(req_pkg.budget, (int, float)):
                                     # ADCP 2.5.0 flat format: normalize to object with currency from pricing
@@ -2029,7 +2057,7 @@ async def _create_media_buy_impl(
                     # Create MediaPackage with dual-write: dedicated columns + JSON
                     db_package = DBMediaPackage(
                         media_buy_id=media_buy_id,
-                        package_id=pkg_data["package_id"],
+                        package_id=pkg_obj.package_id,  # Fixed: use pkg_obj from current loop, not pkg_data from previous loop
                         package_config=package_config,
                         # Dual-write: populate dedicated columns
                         budget=Decimal(str(budget_total)) if budget_total is not None else None,
@@ -2766,7 +2794,17 @@ async def _create_media_buy_impl(
                         DBCreative.creative_id.in_(all_creative_ids),
                     )
                     creatives_list = session.scalars(creative_stmt).all()
-                    creatives_by_id = {str(c.creative_id): c for c in creatives_list}
+                    
+                    # ⚠️ CRITICAL: Eagerly load all attributes NOW to avoid DetachedInstanceError later
+                    # Convert to dict with all data we'll need, while still in session
+                    for creative in creatives_list:
+                        creatives_by_id[str(creative.creative_id)] = {
+                            "creative_id": creative.creative_id,
+                            "creative_obj": creative,  # Keep object reference for DB updates
+                            "data": dict(creative.data) if creative.data else {},
+                            "format": str(creative.format),
+                            "name": creative.name,
+                        }
 
                     # Validate all creative IDs exist (match update_media_buy behavior)
                     found_creative_ids = set(creatives_by_id.keys())
@@ -2785,8 +2823,10 @@ async def _create_media_buy_impl(
                         # NO FALLBACK - if adapter doesn't return package_id, fail loudly
                         response_package_id = None
                         if response.packages and i < len(response.packages):
-                            response_package_id = response.packages[i].get("package_id")
-                            logger.info(f"[DEBUG] Package {i}: response.packages[i] = {response.packages[i]}")
+                            # response.packages can be dicts or Package objects
+                            pkg = response.packages[i]
+                            response_package_id = pkg.get("package_id") if isinstance(pkg, dict) else pkg.package_id
+                            logger.info(f"[DEBUG] Package {i}: response.packages[i] = {pkg}")
                             logger.info(f"[DEBUG] Package {i}: extracted package_id = {response_package_id}")
 
                         if not response_package_id:
@@ -2797,23 +2837,29 @@ async def _create_media_buy_impl(
                         # Get platform_line_item_id from response if available
                         platform_line_item_id = None
                         if response.packages and i < len(response.packages):
-                            platform_line_item_id = response.packages[i].get("platform_line_item_id")
+                            pkg = response.packages[i]
+                            platform_line_item_id = pkg.get("platform_line_item_id") if isinstance(pkg, dict) else getattr(pkg, "platform_line_item_id", None)
 
                         # Collect platform creative IDs for association
                         platform_creative_ids = []
 
                         for creative_id in package.creative_ids:
-                            # Get creative from batch-loaded map
-                            creative = creatives_by_id.get(creative_id)
+                            # Get creative dict from batch-loaded map (eagerly loaded attributes)
+                            creative_dict = creatives_by_id.get(creative_id)
 
                             # This should never happen now due to validation above
-                            if not creative:
+                            if not creative_dict:
                                 logger.error(f"Creative {creative_id} not in map despite validation - this is a bug")
                                 continue
 
-                            # Create database assignment (always create, even if not yet uploaded to GAM)
-                            # Get platform_creative_id from creative.data JSON
-                            platform_creative_id = creative.data.get("platform_creative_id") if creative.data else None
+                            # Extract pre-loaded data from dict (loaded while in session to avoid DetachedInstanceError)
+                            creative = creative_dict["creative_obj"]  # DB object for updates
+                            creative_data = creative_dict["data"]
+                            creative_format = creative_dict["format"]
+                            creative_name = creative_dict["name"]
+                            
+                            # Get platform_creative_id from creative data
+                            platform_creative_id = creative_data.get("platform_creative_id")
                             if platform_creative_id:
                                 # Add to association list for immediate GAM association
                                 platform_creative_ids.append(platform_creative_id)
@@ -2824,7 +2870,6 @@ async def _create_media_buy_impl(
                                     f"Creative {creative_id} has no platform_creative_id - uploading to GAM now"
                                 )
                                 try:
-                                    creative_data = creative.data or {}
 
                                     # Get format spec for proper extraction
                                     # Use cache-based approach (same as validation section) to avoid asyncio event loop conflicts
@@ -2833,11 +2878,11 @@ async def _create_media_buy_impl(
                                     format_spec = None
                                     try:
                                         # Try cache first (works in any context, no asyncio conflicts)
-                                        format_spec = get_cached_format(str(creative.format))
+                                        format_spec = get_cached_format(creative_format)
                                     except (ValueError, Exception) as e:
                                         logger.warning(
                                             f"[AUTO-APPROVAL] Could not load format spec for creative {creative_id} "
-                                            f"(format={creative.format}): {e}"
+                                            f"(format={creative_format}): {e}"
                                         )
 
                                     # Extract URL and dimensions using shared helper
@@ -2846,14 +2891,17 @@ async def _create_media_buy_impl(
                                     )
 
                                     # Build simple asset dict (same as manual approval flow)
+                                    # NOTE: Mock adapter expects 'id' field, not 'creative_id'
+                                    # Use creative_dict values, NOT ORM object attributes (detached!)
                                     asset = {
-                                        "creative_id": creative.creative_id,
+                                        "id": creative_dict["creative_id"],  # Mock adapter uses 'id', not 'creative_id'
+                                        "creative_id": creative_dict["creative_id"],  # Keep for compatibility
                                         "package_assignments": [package_id],  # This specific package
                                         "width": width,
                                         "height": height,
                                         "url": url,
                                         "asset_type": creative_data.get("asset_type", "image"),
-                                        "name": creative.name or f"Creative {creative.creative_id}",
+                                        "name": creative_name or f"Creative {creative_dict['creative_id']}",
                                     }
 
                                     # Validate required fields - FAIL FAST, do not skip
@@ -2891,21 +2939,22 @@ async def _create_media_buy_impl(
                                     if upload_result and len(upload_result) > 0:
                                         uploaded_status = upload_result[0]
                                         # Only set platform_creative_id if not already set
-                                        if uploaded_status.creative_id and not creative.data.get(
-                                            "platform_creative_id"
-                                        ):
-                                            creative.data["platform_creative_id"] = uploaded_status.creative_id
+                                        if uploaded_status.creative_id and not creative_data.get("platform_creative_id"):
+                                            # Update creative_data dict
+                                            creative_data["platform_creative_id"] = uploaded_status.creative_id
+                                            # Write back to database
+                                            creative.data = creative_data
                                             session.add(creative)
                                             platform_creative_ids.append(uploaded_status.creative_id)
                                             logger.info(
                                                 f"Updated creative {creative_id} with platform_creative_id={uploaded_status.creative_id}"
                                             )
-                                        elif creative.data.get("platform_creative_id"):
+                                        elif creative_data.get("platform_creative_id"):
                                             logger.info(
-                                                f"Preserving existing platform_creative_id={creative.data.get('platform_creative_id')} "
+                                                f"Preserving existing platform_creative_id={creative_data.get('platform_creative_id')} "
                                                 f"for creative {creative_id}, not overwriting with upload result"
                                             )
-                                            platform_creative_ids.append(creative.data["platform_creative_id"])
+                                            platform_creative_ids.append(creative_data["platform_creative_id"])
                                 except ToolError:
                                     # Re-raise ToolError - validation failures should fail the entire operation
                                     raise

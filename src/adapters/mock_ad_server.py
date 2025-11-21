@@ -334,7 +334,8 @@ class MockAdServer(AdServerAdapter):
                 pricing_model = package_pricing_info[package.package_id].get("pricing_model")
 
             # Apply higher limit for video-based pricing models (CPCV, CPV)
-            limit = 100000000 if pricing_model in ["cpcv", "cpv"] else 1000000
+            # Increased standard limit from 1M to 10M for more realistic testing
+            limit = 100000000 if pricing_model in ["cpcv", "cpv"] else 10000000
 
             if package.impressions > limit:  # Mock limit
                 errors.append(
@@ -344,7 +345,8 @@ class MockAdServer(AdServerAdapter):
         # Budget validation (AdCP v2.2.0: sum package budgets)
         budget_amount = request.get_total_budget()
         if budget_amount > 0:
-            if budget_amount > 1000000:  # Mock limit
+            # Increased limit from $1M to $10M for more realistic testing
+            if budget_amount > 10000000:  # Mock limit
                 errors.append("InvalidArgumentError.VALUE_TOO_LARGE @ order.totalBudget")
         else:
             errors.append("InvalidArgumentError @ order.totalBudget")
