@@ -1,0 +1,8 @@
+aws_region  = "us-east-1"
+environment = "staging"
+domain_name = "adcp-salesagent.com"
+db_password = "SalesAgent2024Demo!"
+super_admin_emails = "admin@example.com"
+gemini_api_key = "placeholder"
+google_client_id = "placeholder"
+google_client_secret = "placeholder"
