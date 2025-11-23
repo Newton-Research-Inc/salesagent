@@ -2458,9 +2458,15 @@ def main():
     # Update the app's router with new routes
     app.router.routes = new_routes
 
-    # Add debug endpoint for tenant detection
+    # Add health check endpoint (required for ALB health checks)
     from starlette.routing import Route
 
+    async def health_check_endpoint(request):
+        """Health check endpoint for load balancer."""
+        from starlette.responses import JSONResponse
+        return JSONResponse({"status": "healthy", "service": "a2a"})
+
+    # Add debug endpoint for tenant detection
     from src.core.config_loader import get_tenant_by_virtual_host
 
     async def debug_tenant_endpoint(request):
@@ -2513,6 +2519,10 @@ def main():
             response.headers["X-Tenant-Id"] = tenant_id
 
         return response
+
+    # Add health check route (required for ALB health checks)
+    app.router.routes.append(Route("/health", health_check_endpoint, methods=["GET"]))
+    logger.info("Added /health endpoint for load balancer health checks")
 
     # Add debug route
     app.router.routes.append(Route("/debug/tenant", debug_tenant_endpoint, methods=["GET"]))
