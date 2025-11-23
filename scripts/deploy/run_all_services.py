@@ -53,9 +53,10 @@ def run_migrations():
 
 def run_mcp_server():
     """Run the MCP server."""
-    print("Starting MCP server on port 8080...")
+    mcp_port = os.environ.get("ADCP_PORT", "8080")
+    print(f"Starting MCP server on port {mcp_port}...")
     env = os.environ.copy()
-    env["ADCP_SALES_PORT"] = "8080"
+    env["ADCP_SALES_PORT"] = mcp_port
     proc = subprocess.Popen(
         [sys.executable, "scripts/run_server.py"],
         env=env,
@@ -77,6 +78,7 @@ def run_admin_ui():
     print(f"Starting Admin UI on port {admin_port}...")
     env = os.environ.copy()
     env["PYTHONPATH"] = "/app"
+    env["ADMIN_UI_PORT"] = admin_port  # Pass port to subprocess
     proc = subprocess.Popen(
         [sys.executable, "-m", "src.admin.server"],
         env=env,
@@ -95,12 +97,14 @@ def run_admin_ui():
 def run_a2a_server():
     """Run the A2A server for agent-to-agent interactions."""
     try:
-        print("Starting A2A server on port 8091...")
+        a2a_port = os.environ.get("A2A_PORT", "8091")
+        print(f"Starting A2A server on port {a2a_port}...")
         print("[A2A] Waiting 10 seconds for MCP server to be ready...")
         time.sleep(10)  # Wait for MCP server to be ready
 
         env = os.environ.copy()
         env["A2A_MOCK_MODE"] = "true"  # Use mock mode in production for now
+        env["A2A_PORT"] = a2a_port
 
         print("[A2A] Launching official a2a-sdk server...")
         # Use official a2a-sdk implementation with JSON-RPC 2.0 support
