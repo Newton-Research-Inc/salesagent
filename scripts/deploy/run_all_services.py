@@ -52,13 +52,17 @@ def run_migrations():
 
 
 def run_mcp_server():
-    """Run the MCP server."""
+    """Run the MCP server with path prefix support for ALB routing."""
     mcp_port = os.environ.get("ADCP_PORT", "8080")
     print(f"Starting MCP server on port {mcp_port}...")
+    print(f"[MCP] Path-based routing enabled for /espn/mcp, /cnn/mcp, /nyt/mcp")
     env = os.environ.copy()
     env["ADCP_SALES_PORT"] = mcp_port
+    
+    # Use the path prefix-aware server script for production
+    script = "scripts/run_server_with_path_prefix.py"
     proc = subprocess.Popen(
-        [sys.executable, "scripts/run_server.py"],
+        [sys.executable, script],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
