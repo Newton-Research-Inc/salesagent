@@ -145,6 +145,40 @@ mcp = FastMCP(
     lifespan=lifespan_context,
 )
 
+# Add path-based routing middleware for ALB (must be added before server starts)
+# This allows ALB to route /espn/mcp/*, /cnn/mcp/*, /nyt/mcp/* to this server
+try:
+    from starlette.middleware.base import BaseHTTPMiddleware
+    
+    class PathPrefixMiddleware(BaseHTTPMiddleware):
+        """Strip /<tenant>/mcp prefix from paths and set x-tenant-id header."""
+        
+        async def dispatch(self, request, call_next):
+            path = request.url.path
+            
+            # Parse pattern: /<tenant>/mcp/*
+            if path.startswith("/") and len(path) > 1:
+                parts = path[1:].split("/", 2)
+                if len(parts) >= 2 and parts[1] == "mcp":
+                    tenant_id = parts[0]
+                    new_path = "/" + parts[2] if len(parts) > 2 else "/"
+                    request.scope["path"] = new_path
+                    headers = list(request.scope.get("headers", []))
+                    headers.append((b"x-tenant-id", tenant_id.encode()))
+                    request.scope["headers"] = headers
+                    logger.debug(f"[PathPrefix] {path} → {new_path} (tenant: {tenant_id})")
+            
+            return await call_next(request)
+    
+    # Add middleware to MCP app if it has an app attribute
+    if hasattr(mcp, 'app') and mcp.app is not None:
+        mcp.app.add_middleware(PathPrefixMiddleware)
+        logger.info("✅ Path-based routing enabled: /espn/mcp, /cnn/mcp, /nyt/mcp")
+    else:
+        logger.warning("⚠️ Could not add path routing middleware - MCP app not initialized")
+except Exception as e:
+    logger.warning(f"⚠️ Could not add path routing middleware: {e}")
+
 # Initialize creative engine with minimal config (will be tenant-specific later)
 creative_engine_config: dict[str, Any] = {}
 creative_engine = MockCreativeEngine(creative_engine_config)
