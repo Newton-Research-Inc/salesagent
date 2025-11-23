@@ -138,6 +138,32 @@ async def lifespan_context(app):
         logger.error(f"Failed to stop delivery webhook scheduler: {e}", exc_info=True)
 
 
+# Define path-based routing middleware for ALB
+# This allows ALB to route /espn/mcp/*, /cnn/mcp/*, /nyt/mcp/* to this server
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
+class PathPrefixMiddleware(BaseHTTPMiddleware):
+    """Strip /<tenant>/mcp prefix from paths and set x-tenant-id header."""
+
+    async def dispatch(self, request, call_next):
+        path = request.url.path
+
+        # Parse pattern: /<tenant>/mcp/*
+        if path.startswith("/") and len(path) > 1:
+            parts = path[1:].split("/", 2)
+            if len(parts) >= 2 and parts[1] == "mcp":
+                tenant_id = parts[0]
+                new_path = "/" + parts[2] if len(parts) > 2 else "/"
+                request.scope["path"] = new_path
+                headers = list(request.scope.get("headers", []))
+                headers.append((b"x-tenant-id", tenant_id.encode()))
+                request.scope["headers"] = headers
+                logger.debug(f"[PathPrefix] {path} → {new_path} (tenant: {tenant_id})")
+
+        return await call_next(request)
+
+
 mcp = FastMCP(
     name="AdCPSalesAgent",
     # Sessions enabled for HTTP context (tenant detection via headers)
@@ -145,39 +171,14 @@ mcp = FastMCP(
     lifespan=lifespan_context,
 )
 
-# Add path-based routing middleware for ALB (must be added before server starts)
-# This allows ALB to route /espn/mcp/*, /cnn/mcp/*, /nyt/mcp/* to this server
+# Register middleware with FastMCP after initialization
+# FastMCP will apply this when it creates its internal Starlette app
 try:
-    from starlette.middleware.base import BaseHTTPMiddleware
-    
-    class PathPrefixMiddleware(BaseHTTPMiddleware):
-        """Strip /<tenant>/mcp prefix from paths and set x-tenant-id header."""
-        
-        async def dispatch(self, request, call_next):
-            path = request.url.path
-            
-            # Parse pattern: /<tenant>/mcp/*
-            if path.startswith("/") and len(path) > 1:
-                parts = path[1:].split("/", 2)
-                if len(parts) >= 2 and parts[1] == "mcp":
-                    tenant_id = parts[0]
-                    new_path = "/" + parts[2] if len(parts) > 2 else "/"
-                    request.scope["path"] = new_path
-                    headers = list(request.scope.get("headers", []))
-                    headers.append((b"x-tenant-id", tenant_id.encode()))
-                    request.scope["headers"] = headers
-                    logger.debug(f"[PathPrefix] {path} → {new_path} (tenant: {tenant_id})")
-            
-            return await call_next(request)
-    
-    # Add middleware to MCP app if it has an app attribute
-    if hasattr(mcp, 'app') and mcp.app is not None:
-        mcp.app.add_middleware(PathPrefixMiddleware)
-        logger.info("✅ Path-based routing enabled: /espn/mcp, /cnn/mcp, /nyt/mcp")
-    else:
-        logger.warning("⚠️ Could not add path routing middleware - MCP app not initialized")
+    # Use add_middleware method which queues middleware for later application
+    mcp.add_middleware(PathPrefixMiddleware)
+    logger.info("✅ Path-based routing middleware registered: /espn/mcp, /cnn/mcp, /nyt/mcp")
 except Exception as e:
-    logger.warning(f"⚠️ Could not add path routing middleware: {e}")
+    logger.warning(f"⚠️ Could not register path routing middleware: {e}")
 
 # Initialize creative engine with minimal config (will be tenant-specific later)
 creative_engine_config: dict[str, Any] = {}
