@@ -59,8 +59,8 @@ def run_mcp_server():
     env = os.environ.copy()
     env["ADCP_SALES_PORT"] = mcp_port
     
-    # Use the path prefix-aware server script for production
-    script = "scripts/run_server_with_path_prefix.py"
+    # Use the standard server script - middleware is now in main.py
+    script = "scripts/run_server.py"
     proc = subprocess.Popen(
         [sys.executable, script],
         env=env,
