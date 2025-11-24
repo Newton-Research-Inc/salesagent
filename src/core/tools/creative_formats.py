@@ -52,31 +52,69 @@ def _list_creative_formats_impl(
     if not tenant:
         raise ToolError("No tenant context available")
 
-    # Get formats from all registered creative agents via registry
-    import asyncio
+    # 🔓 DEMO MODE: Return standard IAB formats without querying external creative agents
+    import os
+    demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
+    
+    if demo_mode:
+        # Return standard IAB display formats for demo
+        from src.core.schemas import CreativeFormat, FormatId, FormatType
+        
+        formats = [
+            CreativeFormat(
+                format_id=FormatId(id="display_728x90", agent_url="https://creative.adcontextprotocol.org"),
+                name="Leaderboard 728x90",
+                type=FormatType.DISPLAY,
+                is_standard=True,
+                width=728,
+                height=90,
+                description="Standard IAB leaderboard banner"
+            ),
+            CreativeFormat(
+                format_id=FormatId(id="display_300x250", agent_url="https://creative.adcontextprotocol.org"),
+                name="Medium Rectangle 300x250",
+                type=FormatType.DISPLAY,
+                is_standard=True,
+                width=300,
+                height=250,
+                description="Standard IAB medium rectangle"
+            ),
+            CreativeFormat(
+                format_id=FormatId(id="display_320x50", agent_url="https://creative.adcontextprotocol.org"),
+                name="Mobile Banner 320x50",
+                type=FormatType.DISPLAY,
+                is_standard=True,
+                width=320,
+                height=50,
+                description="Standard IAB mobile banner"
+            ),
+        ]
+    else:
+        # Get formats from all registered creative agents via registry
+        import asyncio
 
-    from src.core.creative_agent_registry import get_creative_agent_registry
+        from src.core.creative_agent_registry import get_creative_agent_registry
 
-    registry = get_creative_agent_registry()
+        registry = get_creative_agent_registry()
 
-    # Run async operation - check if we're already in an async context
-    try:
-        # Check if there's already a running event loop
-        loop = asyncio.get_running_loop()
-        # We're in an async context, run in thread pool to avoid nested loop error
-        import concurrent.futures
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(lambda: asyncio.run(registry.list_all_formats(tenant_id=tenant["tenant_id"])))
-            formats = future.result()
-    except RuntimeError:
-        # No running loop, safe to create one
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # Run async operation - check if we're already in an async context
         try:
-            formats = loop.run_until_complete(registry.list_all_formats(tenant_id=tenant["tenant_id"]))
-        finally:
-            loop.close()
+            # Check if there's already a running event loop
+            loop = asyncio.get_running_loop()
+            # We're in an async context, run in thread pool to avoid nested loop error
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(lambda: asyncio.run(registry.list_all_formats(tenant_id=tenant["tenant_id"])))
+                formats = future.result()
+        except RuntimeError:
+            # No running loop, safe to create one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                formats = loop.run_until_complete(registry.list_all_formats(tenant_id=tenant["tenant_id"]))
+            finally:
+                loop.close()
 
     # Apply filters from request
     if req.type:
