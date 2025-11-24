@@ -318,6 +318,28 @@ def get_principal_from_context(
 
     if not requested_tenant_id:
         console.print("[yellow]No tenant detected from headers[/yellow]")
+        # FALLBACK: Check environment variables for test mode
+        test_tenant_id = os.getenv("ADCP_TEST_TENANT_ID")
+        if test_tenant_id:
+            console.print(f"[cyan]Using ADCP_TEST_TENANT_ID from environment: {test_tenant_id}[/cyan]")
+            from src.core.database.database_session import get_db_session
+            from src.core.database.models import Tenant
+            from sqlalchemy import select
+            with get_db_session() as session:
+                stmt = select(Tenant).filter_by(tenant_id=test_tenant_id)
+                tenant_obj = session.scalars(stmt).first()
+                if tenant_obj:
+                    tenant_context = {
+                        "tenant_id": tenant_obj.tenant_id,
+                        "name": tenant_obj.name,
+                        "subdomain": tenant_obj.subdomain,
+                    }
+                    requested_tenant_id = test_tenant_id
+                    detection_method = "ADCP_TEST_TENANT_ID environment variable"
+                    set_current_tenant(tenant_context)
+                    console.print(f"[green]✅ Tenant loaded from test mode: {requested_tenant_id}[/green]")
+                else:
+                    console.print(f"[red]❌ Test tenant ID '{test_tenant_id}' not found in database[/red]")
     else:
         console.print(f"[bold green]Final tenant_id: {requested_tenant_id} (via {detection_method})[/bold green]")
 
