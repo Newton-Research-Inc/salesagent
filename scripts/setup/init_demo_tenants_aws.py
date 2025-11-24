@@ -147,10 +147,13 @@ def create_demo_tenants():
                     tenant_id=tenant_id,
                     name=prod_data["name"],
                     description=prod_data["description"],
-                    format_ids=[{"id": prod_data["format"]}],  # Correct field name: format_ids (list of dicts)
+                    format_ids=[{
+                        "agent_url": "https://creatives.adcontextprotocol.org",
+                        "id": prod_data["format"]
+                    }],
                     property_tags=["all_inventory"],
-                    targeting_template={},  # Correct field name: targeting_template (not targeting)
-                    delivery_type="guaranteed",  # Correct field name: delivery_type (not delivery_guarantee)
+                    targeting_template={},
+                    delivery_type="guaranteed",
                     # created_at and updated_at are auto-managed by SQLAlchemy
                 )
                 session.add(product)
