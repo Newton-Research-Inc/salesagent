@@ -83,7 +83,7 @@ fi
 
 # Populate standard creative formats (IAB display, video, native)
 echo "🎨 Populating creative formats..."
-if python scripts/setup/populate_creative_formats.py; then
+if PYTHONPATH=/app python scripts/setup/populate_creative_formats.py; then
     echo "✅ Creative formats populated"
 else
     echo "⚠️  Creative format population failed (may already exist)"
