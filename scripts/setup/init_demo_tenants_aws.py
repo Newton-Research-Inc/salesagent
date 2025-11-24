@@ -56,8 +56,10 @@ def create_demo_tenants():
             existing = session.scalars(stmt).first()
 
             if existing:
-                print(f"✓ Tenant {tenant_id} already exists")
-                continue
+                print(f"Tenant {tenant_id} exists - deleting to apply new settings...")
+                session.delete(existing)
+                session.flush()
+                print(f"✓ Deleted existing tenant {tenant_id}")
 
             print(f"Creating tenant: {tenant_id}...")
 
@@ -70,8 +72,8 @@ def create_demo_tenants():
                 ad_server="mock",
                 enable_axe_signals=True,
                 is_active=True,
-                authorized_emails=[f"admin@{tenant_id}.com"],
-                authorized_domains=[f"{tenant_id}.com"],
+                authorized_emails=None,  # No access control - allow unauthenticated access
+                authorized_domains=None,  # No access control - allow unauthenticated access
                 auto_approve_format_ids=["display_300x250", "display_728x90", "display_320x50"],
                 human_review_required=False,
                 # created_at and updated_at are auto-managed
