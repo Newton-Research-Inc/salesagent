@@ -1300,8 +1300,11 @@ async def _create_media_buy_impl(
 
     tenant = get_current_tenant()
 
-    # Validate setup completion (only in production, skip for testing)
-    if not testing_ctx.dry_run and not testing_ctx.test_session_id:
+    # Validate setup completion (only in production, skip for testing and demo mode)
+    import os
+    demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
+    
+    if not testing_ctx.dry_run and not testing_ctx.test_session_id and not demo_mode:
         try:
             validate_setup_complete(tenant["tenant_id"])
         except SetupIncompleteError as e:
