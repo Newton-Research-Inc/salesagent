@@ -1042,6 +1042,110 @@ from src.core.tools.products import get_products  # noqa: E402, F401
 from src.core.tools.properties import list_authorized_properties  # noqa: E402, F401
 from src.core.tools.signals import activate_signal, get_signals  # noqa: E402, F401
 
+
+# ============================================================================
+# Demo Management Tool (Demo Mode Only)
+# ============================================================================
+@mcp.tool()
+def clean_demo_data(
+    tenant_id: str,
+    ctx: Context | None = None
+) -> dict[str, Any]:
+    """Clean all demo data for a tenant (demo mode only).
+    
+    This tool removes all media buys, creatives, and workflow data for a demo tenant,
+    allowing you to reset the environment and run demos multiple times.
+    
+    Args:
+        tenant_id: The tenant ID to clean (must be espn, cnn, or nyt)
+        ctx: FastMCP context (automatically provided)
+    
+    Returns:
+        Status message with counts of deleted records
+    
+    Example:
+        # Clean ESPN demo data before running a new campaign
+        result = await client.tools.clean_demo_data(tenant_id="espn")
+        # Returns: {"status": "success", "deleted": {"media_buys": 3, "creatives": 9}}
+    """
+    # 🔓 DEMO MODE ONLY: This tool only works in demo mode
+    demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
+    
+    if not demo_mode:
+        raise ToolError("clean_demo_data is only available in demo mode (ADCP_DEMO_MODE=true)")
+    
+    # Security: Only allow demo tenants
+    if tenant_id not in ['espn', 'cnn', 'nyt']:
+        raise ToolError(f"Not a demo tenant: {tenant_id}. Only espn, cnn, and nyt are supported.")
+    
+    from sqlalchemy import delete, func
+    from src.core.database.models import (
+        MediaBuy,
+        MediaBuyPackage,
+        Creative,
+        WorkflowStep,
+        AuditLog
+    )
+    
+    counts = {}
+    try:
+        with get_db_session() as session:
+            # Count before deletion
+            counts['media_buys'] = session.scalar(
+                select(func.count()).select_from(MediaBuy).where(MediaBuy.tenant_id == tenant_id)
+            ) or 0
+            
+            counts['creatives'] = session.scalar(
+                select(func.count()).select_from(Creative).where(Creative.tenant_id == tenant_id)
+            ) or 0
+            
+            counts['workflows'] = session.scalar(
+                select(func.count()).select_from(WorkflowStep).where(WorkflowStep.tenant_id == tenant_id)
+            ) or 0
+            
+            # Delete in correct order (respect foreign keys)
+            # 1. Delete packages first (foreign key to media_buys)
+            session.execute(
+                delete(MediaBuyPackage).where(
+                    MediaBuyPackage.media_buy_id.in_(
+                        select(MediaBuy.media_buy_id).where(MediaBuy.tenant_id == tenant_id)
+                    )
+                )
+            )
+            
+            # 2. Delete media buys
+            session.execute(delete(MediaBuy).where(MediaBuy.tenant_id == tenant_id))
+            
+            # 3. Delete creatives
+            session.execute(delete(Creative).where(Creative.tenant_id == tenant_id))
+            
+            # 4. Delete workflow steps
+            session.execute(delete(WorkflowStep).where(WorkflowStep.tenant_id == tenant_id))
+            
+            # 5. Optional: Delete audit logs (commented out by default to preserve history)
+            # session.execute(delete(AuditLog).where(AuditLog.tenant_id == tenant_id))
+            
+            session.commit()
+            
+            logger.info(
+                f"[DEMO_CLEAN] Cleaned {tenant_id}: "
+                f"{counts['media_buys']} media buys, "
+                f"{counts['creatives']} creatives, "
+                f"{counts['workflows']} workflow steps"
+            )
+            
+            return {
+                'status': 'success',
+                'tenant_id': tenant_id,
+                'deleted': counts,
+                'message': f"Cleaned {counts['media_buys']} media buys, {counts['creatives']} creatives, and {counts['workflows']} workflow steps for {tenant_id}"
+            }
+            
+    except Exception as e:
+        logger.error(f"[DEMO_CLEAN] Failed to clean {tenant_id}: {e}")
+        raise ToolError(f"Failed to clean demo data: {str(e)}")
+
+
 # Register tools with MCP (must be done after imports to avoid circular dependency)
 # This breaks the circular import: tool modules no longer import mcp from main.py
 mcp.tool()(get_products)
