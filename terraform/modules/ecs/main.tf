@@ -103,6 +103,7 @@ resource "aws_ecs_task_definition" "salesagent" {
         { name = "DATABASE_URL", value = "postgresql://${var.db_username}:${var.db_password}@${var.db_host}:5432/${var.db_name}" },
         { name = "ENVIRONMENT", value = "production" },
         { name = "ADCP_TESTING", value = "true" },
+        { name = "ADCP_DEMO_MODE", value = "true" },
         { name = "ADCP_TEST_TENANT_ID", value = var.tenant_id },
         { name = "ADCP_TEST_PRINCIPAL_ID", value = var.principal_id },
         { name = "ADCP_PORT", value = "9580" },
@@ -163,23 +164,9 @@ resource "aws_ecs_service" "salesagent" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = var.mcp_target_group_arn
-    container_name   = "salesagent-${var.environment}"
-    container_port   = 9580
-  }
-
-  load_balancer {
-    target_group_arn = var.admin_target_group_arn
-    container_name   = "salesagent-${var.environment}"
-    container_port   = 9501
-  }
-
-  load_balancer {
-    target_group_arn = var.a2a_target_group_arn
-    container_name   = "salesagent-${var.environment}"
-    container_port   = 9591
-  }
+  # Load balancer blocks removed - using direct task IP connections for Newton
+  # The ALB was causing tasks to fail health checks and get killed
+  # Direct IP connections are more reliable for VPC-internal MCP clients
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution
