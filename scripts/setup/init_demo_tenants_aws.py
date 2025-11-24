@@ -150,12 +150,10 @@ def create_demo_tenants():
                     tenant_id=tenant_id,
                     name=prod_data["name"],
                     description=prod_data["description"],
-                    creative_format_ids=[prod_data["format"]],
+                    format_ids=[{"id": prod_data["format"]}],  # Correct field name: format_ids (list of dicts)
                     property_tags=["all_inventory"],
-                    targeting={},
-                    delivery_guarantee="best_effort",
-                    approval_required=False,
-                    is_active=True,
+                    targeting_template={},  # Correct field name: targeting_template (not targeting)
+                    delivery_type="guaranteed",  # Correct field name: delivery_type (not delivery_guarantee)
                     created_at=now,
                     updated_at=now,
                 )
