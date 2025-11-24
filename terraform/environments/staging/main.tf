@@ -445,24 +445,35 @@ output "ecs_clusters" {
   }
 }
 
+output "service_discovery_dns" {
+  description = "Service Discovery DNS names for each tenant"
+  value = {
+    espn = module.ecs_espn.service_discovery_dns_name
+    cnn  = module.ecs_cnn.service_discovery_dns_name
+    nyt  = module.ecs_nyt.service_discovery_dns_name
+  }
+}
+
 output "next_steps" {
   description = "What to do next"
   value       = <<-EOT
-    ✅ Multi-tenant sales agents deployed in Newton's VPC!
+    ✅ Multi-tenant sales agents deployed in Newton's VPC with Service Discovery!
     
     Next steps:
-    1. Get task IPs for Newton connection:
-       ./scripts/get_task_ips.sh
+    1. Configure Newton's MCP servers with stable DNS names:
+       - ESPN: http://espn.salesagent.local:9580/mcp
+       - CNN: http://cnn.salesagent.local:9580/mcp
+       - NYT: http://nyt.salesagent.local:9580/mcp
     
-    2. Configure Newton's MCP servers with task IPs:
-       - ESPN: http://<espn-task-ip>:9580/mcp
-       - CNN: http://<cnn-task-ip>:9580/mcp
-       - NYT: http://<nyt-task-ip>:9580/mcp
+    2. Test Newton's connection to each sales agent
     
-    3. Test Newton's connection to each sales agent
+    Benefits:
+    - ✅ DNS names stay the same across deployments
+    - ✅ Automatic IP updates (10s TTL)
+    - ✅ No more IP changes breaking Newton!
     
     Cost: ~$90/month for 3 Fargate tasks (saved $40 by reusing Newton's network!)
     
-    Note: MCP servers use direct VPC connection (no ALB needed)
+    Note: Service Discovery DNS only resolves within the VPC
   EOT
 }

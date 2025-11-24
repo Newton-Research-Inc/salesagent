@@ -1,3 +1,49 @@
+# ============================================================================
+# Service Discovery (AWS Cloud Map)
+# ============================================================================
+# Creates a private DNS namespace for service discovery within the VPC
+# This allows stable DNS names (e.g., espn.salesagent.local) that automatically
+# update when ECS tasks change IP addresses
+resource "aws_service_discovery_private_dns_namespace" "salesagent" {
+  name        = "salesagent.local"
+  vpc         = var.vpc_id
+  description = "Private DNS namespace for AdCP Sales Agent service discovery"
+
+  tags = {
+    Name        = "salesagent-service-discovery"
+    Environment = var.environment
+  }
+}
+
+# Service Discovery service for this tenant (espn, cnn, or nyt)
+# Registers ECS tasks automatically and maintains A records
+resource "aws_service_discovery_service" "tenant" {
+  name = var.environment  # e.g., "espn" creates espn.salesagent.local
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
+
+    dns_records {
+      ttl  = 10  # Low TTL for quick updates when tasks change
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"  # Return all healthy task IPs
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1  # Mark unhealthy after 1 failed check
+  }
+
+  tags = {
+    Name        = "salesagent-${var.environment}-discovery"
+    Environment = var.environment
+  }
+}
+
+# ============================================================================
+# ECS Cluster
+# ============================================================================
 resource "aws_ecs_cluster" "main" {
   name = "salesagent-${var.environment}"
 
@@ -164,9 +210,15 @@ resource "aws_ecs_service" "salesagent" {
     assign_public_ip = false
   }
 
-  # Load balancer blocks removed - using direct task IP connections for Newton
-  # The ALB was causing tasks to fail health checks and get killed
-  # Direct IP connections are more reliable for VPC-internal MCP clients
+  # Service Discovery registration
+  # Automatically registers task IPs to DNS (e.g., espn.salesagent.local)
+  service_registries {
+    registry_arn = aws_service_discovery_service.tenant.arn
+  }
+
+  # Load balancer blocks removed - using Service Discovery DNS names for Newton
+  # Service Discovery provides stable DNS names that automatically update when tasks change IPs
+  # This is more reliable than ALB for VPC-internal MCP clients
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution
