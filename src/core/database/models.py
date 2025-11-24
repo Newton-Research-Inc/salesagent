@@ -43,9 +43,9 @@ class Tenant(Base, JSONValidatorMixin):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     subdomain: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     virtual_host: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     billing_plan: Mapped[str] = mapped_column(String(50), default="standard")
@@ -450,9 +450,9 @@ class CurrencyLimit(Base):
     # Prevents buyers from creating many small line items to bypass limits
     max_daily_package_spend: Mapped[Decimal | None] = mapped_column(DECIMAL(15, 2), nullable=True)
 
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -476,9 +476,9 @@ class Principal(Base, JSONValidatorMixin):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     platform_mappings: Mapped[dict] = mapped_column(JSONType, nullable=False)
     access_token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -508,7 +508,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     role: Mapped[str] = mapped_column(String(20), nullable=False)
     google_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     last_login: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -587,7 +587,7 @@ class CreativeReview(Base):
     )
 
     # Review metadata
-    reviewed_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    reviewed_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     review_type: Mapped[str] = mapped_column(String(20), nullable=False)
     reviewer_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
@@ -630,7 +630,7 @@ class CreativeAssignment(Base):
     media_buy_id: Mapped[str] = mapped_column(String(100), nullable=False)
     package_id: Mapped[str] = mapped_column(String(100), nullable=False)
     weight: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
 
     # Relationships
     tenant = relationship("Tenant")
@@ -665,8 +665,8 @@ class MediaBuy(Base):
     start_time: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
     end_time: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="draft")
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
     approved_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
     approved_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
     raw_request: Mapped[dict] = mapped_column(JSONType, nullable=False)
@@ -770,7 +770,7 @@ class AuditLog(Base):
     tenant_id: Mapped[str] = mapped_column(
         String(50), ForeignKey("tenants.tenant_id", ondelete="CASCADE"), nullable=False
     )
-    timestamp: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    timestamp: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     operation: Mapped[str] = mapped_column(String(100), nullable=False)
     principal_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     principal_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -801,7 +801,7 @@ class TenantManagementConfig(Base):
     config_key: Mapped[str] = mapped_column(String(100), primary_key=True)
     config_value: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
     updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 
@@ -880,8 +880,8 @@ class AdapterConfig(Base):
     triton_station_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     triton_api_key: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     tenant = relationship("Tenant", back_populates="adapter_config")
@@ -936,8 +936,8 @@ class CreativeAgent(Base):
     auth_header: Mapped[str | None] = mapped_column(String(100), nullable=True)
     auth_credentials: Mapped[str | None] = mapped_column(Text, nullable=True)
     timeout: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     tenant = relationship("Tenant", back_populates="creative_agents")
@@ -971,8 +971,8 @@ class SignalsAgent(Base):
     auth_credentials: Mapped[str | None] = mapped_column(Text, nullable=True)
     forward_promoted_offering: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     timeout: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     tenant = relationship("Tenant", back_populates="signals_agents")
@@ -1347,8 +1347,8 @@ class Context(Base):
 
     # Simple conversation tracking
     conversation_history: Mapped[list] = mapped_column(JSONType, nullable=False, default=list)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
-    last_activity_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
+    last_activity_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
 
     # Relationships
     tenant = relationship("Tenant")
@@ -1397,7 +1397,7 @@ class WorkflowStep(Base, JSONValidatorMixin):
     )  # pending, in_progress, completed, failed, requires_approval
     owner: Mapped[str] = mapped_column(String(20))  # principal, publisher, system
     assigned_to: Mapped[str | None] = mapped_column(String(255))  # Specific user/system if assigned
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     completed_at: Mapped[DateTime | None] = mapped_column(DateTime)
     error_message: Mapped[str | None] = mapped_column(Text)
     transaction_details: Mapped[dict | None] = mapped_column(JSONType)  # Actual API calls made to GAM, etc.
@@ -1440,7 +1440,7 @@ class ObjectWorkflowMapping(Base):
         nullable=False,
     )
     action: Mapped[str] = mapped_column(String(50), nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
 
     # Relationships
     workflow_step = relationship("WorkflowStep", back_populates="object_mappings")
@@ -1471,9 +1471,9 @@ class Strategy(Base, JSONValidatorMixin):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     config: Mapped[dict] = mapped_column(JSONType, nullable=False, default=dict)
     is_simulation: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -1514,7 +1514,7 @@ class StrategyState(Base, JSONValidatorMixin):
     state_key: Mapped[str] = mapped_column(String(255), nullable=False, primary_key=True)
     state_value: Mapped[dict] = mapped_column(JSONType, nullable=False)
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -1545,9 +1545,9 @@ class AuthorizedProperty(Base, JSONValidatorMixin):
     verification_status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     verification_checked_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
     verification_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -1580,9 +1580,9 @@ class PropertyTag(Base, JSONValidatorMixin):
     tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -1616,9 +1616,9 @@ class PublisherPartner(Base, JSONValidatorMixin):
         String(20), nullable=False, default="pending", comment="pending, success, error"
     )
     sync_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
 
     # Relationships
@@ -1653,9 +1653,9 @@ class PushNotificationConfig(Base, JSONValidatorMixin):
     authentication_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     validation_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     webhook_secret: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -1725,7 +1725,7 @@ class WebhookDeliveryRecord(Base):
     response_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Timestamps
-    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=func.now())
 
     # Relationships
     tenant = relationship("Tenant")
@@ -1775,7 +1775,7 @@ class WebhookDeliveryLog(Base):
     response_time_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Timestamps
-    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     completed_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     next_retry_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
