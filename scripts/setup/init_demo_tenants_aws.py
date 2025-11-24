@@ -69,7 +69,11 @@ def create_demo_tenants():
                 existing.authorized_domains = None  # Remove access control
                 existing.auto_approve_format_ids = ["display_300x250", "display_728x90", "display_320x50"]
                 existing.human_review_required = False
-                existing.policy_settings = {"brand_manifest_policy": "public"}  # Allow public access without auth
+                
+                # Update policy_settings dict (don't replace - merge)
+                if existing.policy_settings is None:
+                    existing.policy_settings = {}
+                existing.policy_settings["brand_manifest_policy"] = "public"  # Allow public access without auth
                 
                 # CRITICAL: Mark JSONB fields as modified so SQLAlchemy saves them
                 attributes.flag_modified(existing, "policy_settings")
