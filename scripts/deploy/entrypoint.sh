@@ -81,6 +81,14 @@ if ! python -c "from src.core.database.database import init_db; init_db(exit_on_
     exit 1
 fi
 
+# Populate standard creative formats (IAB display, video, native)
+echo "🎨 Populating creative formats..."
+if python scripts/setup/populate_creative_formats.py; then
+    echo "✅ Creative formats populated"
+else
+    echo "⚠️  Creative format population failed (may already exist)"
+fi
+
 # Initialize demo tenants for AWS deployment (ESPN, CNN, NYT)
 if [ "$ADCP_TESTING" = "true" ] && [ -n "$ADCP_TEST_TENANT_ID" ]; then
     echo "📦 Initializing demo tenants (ESPN, CNN, NYT)..."
