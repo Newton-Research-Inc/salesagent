@@ -142,6 +142,15 @@ resource "aws_security_group" "ecs_tasks" {
     description     = "Allow traffic from ALB"
   }
   
+  # Allow inbound from VPC (for Newton direct connections)
+  ingress {
+    from_port   = 9580
+    to_port     = 9591
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.newton.cidr_block]
+    description = "Allow direct MCP/Admin/A2A connections from Newton (VPC)"
+  }
+  
   # Allow all outbound
   egress {
     from_port   = 0

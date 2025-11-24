@@ -178,6 +178,36 @@ def get_principal_from_context(
     don't reliably propagate to async callers (Python ContextVar + async/sync boundary issue).
     The caller MUST call set_current_tenant(tenant_context) in their own context.
     """
+    # 🚨 DEMO MODE: Bypass authentication entirely when ADCP_DEMO_MODE=true
+    # This allows unauthenticated access to ALL tools for demo/testing purposes
+    demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
+    if demo_mode:
+        # Still need to detect tenant from headers or environment
+        test_tenant_id = os.getenv("ADCP_TEST_TENANT_ID")
+        if test_tenant_id:
+            from src.core.database.database_session import get_db_session
+            from src.core.database.models import Tenant
+            from sqlalchemy import select
+            with get_db_session() as session:
+                stmt = select(Tenant).filter_by(tenant_id=test_tenant_id)
+                tenant_obj = session.scalars(stmt).first()
+                if tenant_obj:
+                    from src.core.utils.tenant_utils import serialize_tenant_to_dict
+                    tenant_context = serialize_tenant_to_dict(tenant_obj)
+                    set_current_tenant(tenant_context)
+                    
+                    # Get the demo principal for this tenant (first principal, or None)
+                    from src.core.database.models import Principal as ModelPrincipal
+                    stmt_principal = select(ModelPrincipal).filter_by(tenant_id=test_tenant_id)
+                    demo_principal = session.scalars(stmt_principal).first()
+                    demo_principal_id = demo_principal.principal_id if demo_principal else None
+                    
+                    console.print(f"[cyan]🔓 DEMO MODE: Bypassing auth for tenant {test_tenant_id}, principal: {demo_principal_id}[/cyan]")
+                    return (demo_principal_id, tenant_context)
+        
+        # If no test tenant ID, just return None (will fail later with better error)
+        console.print("[yellow]⚠️ DEMO MODE enabled but no ADCP_TEST_TENANT_ID set[/yellow]")
+    
     # Import here to avoid circular dependency
     from src.core.tool_context import ToolContext
 
