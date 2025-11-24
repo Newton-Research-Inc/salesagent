@@ -56,30 +56,41 @@ def create_demo_tenants():
             existing = session.scalars(stmt).first()
 
             if existing:
-                print(f"Tenant {tenant_id} exists - deleting to apply new settings...")
-                session.delete(existing)
-                session.flush()
-                print(f"✓ Deleted existing tenant {tenant_id}")
+                print(f"Tenant {tenant_id} exists - updating settings...")
+                # Update existing tenant with new settings
+                existing.name = config["name"]
+                existing.subdomain = config["subdomain"]
+                existing.billing_plan = "demo"
+                existing.ad_server = "mock"
+                existing.enable_axe_signals = True
+                existing.is_active = True
+                existing.authorized_emails = None  # Remove access control
+                existing.authorized_domains = None  # Remove access control
+                existing.auto_approve_format_ids = ["display_300x250", "display_728x90", "display_320x50"]
+                existing.human_review_required = False
+                existing.policy_settings = {"brand_manifest_policy": "public"}  # Allow public access without auth
+                tenant = existing
+                print(f"✓ Updated existing tenant {tenant_id}")
+            else:
+                print(f"Creating tenant: {tenant_id}...")
+                # Create tenant
+                tenant = Tenant(
+                    tenant_id=tenant_id,
+                    name=config["name"],
+                    subdomain=config["subdomain"],
+                    billing_plan="demo",
+                    ad_server="mock",
+                    enable_axe_signals=True,
+                    is_active=True,
+                    authorized_emails=None,  # No access control - allow unauthenticated access
+                    authorized_domains=None,  # No access control - allow unauthenticated access
+                    auto_approve_format_ids=["display_300x250", "display_728x90", "display_320x50"],
+                    human_review_required=False,
+                    policy_settings={"brand_manifest_policy": "public"},  # Allow public access without auth
+                    # created_at and updated_at are auto-managed
+                )
+                session.add(tenant)
 
-            print(f"Creating tenant: {tenant_id}...")
-
-            # Create tenant
-            tenant = Tenant(
-                tenant_id=tenant_id,
-                name=config["name"],
-                subdomain=config["subdomain"],
-                billing_plan="demo",
-                ad_server="mock",
-                enable_axe_signals=True,
-                is_active=True,
-                authorized_emails=None,  # No access control - allow unauthenticated access
-                authorized_domains=None,  # No access control - allow unauthenticated access
-                auto_approve_format_ids=["display_300x250", "display_728x90", "display_320x50"],
-                human_review_required=False,
-                policy_settings={"brand_manifest_policy": "public"},  # Allow public access without auth
-                # created_at and updated_at are auto-managed
-            )
-            session.add(tenant)
             session.flush()
 
             # Create currency limit
