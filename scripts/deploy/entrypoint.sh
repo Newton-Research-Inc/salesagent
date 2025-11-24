@@ -81,6 +81,16 @@ if ! python -c "from src.core.database.database import init_db; init_db(exit_on_
     exit 1
 fi
 
+# Initialize demo tenants for AWS deployment (ESPN, CNN, NYT)
+if [ "$ADCP_TESTING" = "true" ] && [ -n "$ADCP_TEST_TENANT_ID" ]; then
+    echo "📦 Initializing demo tenants (ESPN, CNN, NYT)..."
+    if python scripts/setup/init_demo_tenants_aws.py; then
+        echo "✅ Demo tenants initialized"
+    else
+        echo "⚠️  Demo tenant initialization failed (may already exist)"
+    fi
+fi
+
 # NOTE: CI/test data (init_database_ci.py) should be run by pytest fixtures, NOT in entrypoint
 # Running it here causes race conditions when multiple containers start simultaneously
 
