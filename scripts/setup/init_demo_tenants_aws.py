@@ -10,6 +10,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from sqlalchemy import select
+from sqlalchemy.orm import attributes
 from src.core.database.database_session import get_db_session
 from src.core.database.models import (
     AuthorizedProperty,
@@ -69,8 +70,13 @@ def create_demo_tenants():
                 existing.auto_approve_format_ids = ["display_300x250", "display_728x90", "display_320x50"]
                 existing.human_review_required = False
                 existing.policy_settings = {"brand_manifest_policy": "public"}  # Allow public access without auth
+                
+                # CRITICAL: Mark JSONB fields as modified so SQLAlchemy saves them
+                attributes.flag_modified(existing, "policy_settings")
+                attributes.flag_modified(existing, "auto_approve_format_ids")
+                
                 tenant = existing
-                print(f"✓ Updated existing tenant {tenant_id}")
+                print(f"✓ Updated existing tenant {tenant_id} (policy_settings marked as modified)")
             else:
                 print(f"Creating tenant: {tenant_id}...")
                 # Create tenant
