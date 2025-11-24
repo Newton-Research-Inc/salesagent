@@ -154,13 +154,15 @@ STANDARD_NATIVE_FORMATS = [
 
 def populate_creative_formats():
     """Populate the creative_formats table with standard IAB formats."""
-
+    from sqlalchemy import select
+    
     all_formats = STANDARD_DISPLAY_FORMATS + STANDARD_VIDEO_FORMATS + STANDARD_NATIVE_FORMATS
 
     with get_db_session() as db_session:
         for fmt in all_formats:
-            # Check if format already exists
-            existing = db_session.query(CreativeFormat).filter_by(format_id=fmt["format_id"]).first()
+            # Check if format already exists (SQLAlchemy 2.0 pattern)
+            stmt = select(CreativeFormat).filter_by(format_id=fmt["format_id"])
+            existing = db_session.scalars(stmt).first()
 
             if existing:
                 print(f"Format {fmt['format_id']} already exists, skipping...")
