@@ -79,6 +79,9 @@ def create_demo_tenants():
                 attributes.flag_modified(existing, "policy_settings")
                 attributes.flag_modified(existing, "auto_approve_format_ids")
                 
+                # DEBUG: Log the actual policy_settings dict
+                print(f"  DEBUG: policy_settings after update: {existing.policy_settings}")
+                
                 tenant = existing
                 print(f"✓ Updated existing tenant {tenant_id} (policy_settings marked as modified)")
             else:
