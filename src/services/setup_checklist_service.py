@@ -823,12 +823,20 @@ class SetupChecklistService:
         has_domains = bool(tenant.authorized_domains and len(tenant.authorized_domains) > 0)
         has_emails = bool(tenant.authorized_emails and len(tenant.authorized_emails) > 0)
         access_control_configured = bool(has_domains or has_emails)
+        
+        # 🔓 DEMO MODE: Skip access control requirement
+        import os
+        demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
+        if demo_mode:
+            access_control_configured = True  # Always mark as complete in demo mode
 
         details = []
         if has_domains and tenant.authorized_domains:
             details.append(f"{len(tenant.authorized_domains)} domain(s)")
         if has_emails and tenant.authorized_emails:
             details.append(f"{len(tenant.authorized_emails)} email(s)")
+        if demo_mode and not (has_domains or has_emails):
+            details.append("Demo mode - access control not required")
 
         tasks.append(
             SetupTask(
