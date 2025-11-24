@@ -152,7 +152,9 @@ async def _get_products_impl(
                 offering = req.brand_manifest.get("name") or req.brand_manifest.get("url", "")
 
     # Check brand_manifest_policy from tenant settings
-    brand_manifest_policy = tenant.get("brand_manifest_policy", "require_auth")
+    # Policy is stored in policy_settings dict, not as top-level key
+    policy_settings = tenant.get("policy_settings", {}) or {}
+    brand_manifest_policy = policy_settings.get("brand_manifest_policy", "require_auth")
 
     # Enforce policy-based validation
     if brand_manifest_policy == "require_brand" and not offering:
