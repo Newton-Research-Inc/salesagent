@@ -108,3 +108,5 @@ test_*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]/
 .env.test
 test_sync.py
 .env.bak*
+# Terraform provider binaries
+terraform/environments/staging/.terraform/
