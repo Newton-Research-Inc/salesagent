@@ -76,6 +76,7 @@ def create_demo_tenants():
                 authorized_domains=None,  # No access control - allow unauthenticated access
                 auto_approve_format_ids=["display_300x250", "display_728x90", "display_320x50"],
                 human_review_required=False,
+                policy_settings={"brand_manifest_policy": "public"},  # Allow public access without auth
                 # created_at and updated_at are auto-managed
             )
             session.add(tenant)
