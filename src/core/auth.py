@@ -5,6 +5,7 @@ by both MCP and A2A protocols.
 """
 
 import logging
+import os
 from typing import TYPE_CHECKING, Any, Union
 
 from fastmcp.server.context import Context
