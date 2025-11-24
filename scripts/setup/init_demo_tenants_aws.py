@@ -74,8 +74,7 @@ def create_demo_tenants():
                 authorized_domains=[f"{tenant_id}.com"],
                 auto_approve_format_ids=["display_300x250", "display_728x90", "display_320x50"],
                 human_review_required=False,
-                created_at=now,
-                updated_at=now,
+                # created_at and updated_at are auto-managed
             )
             session.add(tenant)
             session.flush()
@@ -95,8 +94,7 @@ def create_demo_tenants():
                 tenant_id=tenant_id,
                 name="All Inventory",
                 description="Default tag for all inventory",
-                created_at=now,
-                updated_at=now,
+                # created_at and updated_at are auto-managed
             )
             session.add(property_tag)
 
@@ -109,8 +107,7 @@ def create_demo_tenants():
                 identifiers={"domain": f"www.{tenant_id}.com"},
                 publisher_domain=f"www.{tenant_id}.com",
                 verification_status="verified",
-                created_at=now,
-                updated_at=now,
+                # created_at and updated_at are auto-managed
             )
             session.add(auth_prop)
 
@@ -154,8 +151,7 @@ def create_demo_tenants():
                     property_tags=["all_inventory"],
                     targeting_template={},  # Correct field name: targeting_template (not targeting)
                     delivery_type="guaranteed",  # Correct field name: delivery_type (not delivery_guarantee)
-                    created_at=now,
-                    updated_at=now,
+                    # created_at and updated_at are auto-managed by SQLAlchemy
                 )
                 session.add(product)
                 session.flush()
