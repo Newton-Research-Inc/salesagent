@@ -93,47 +93,71 @@ def create_demo_tenants():
 
             session.flush()
 
-            # Create currency limit
-            currency_limit = CurrencyLimit(
-                tenant_id=tenant_id,
-                currency_code="USD",
-                min_package_budget=1000.0,
-                max_daily_package_spend=50000.0,
-            )
-            session.add(currency_limit)
+            # Create or get currency limit
+            stmt = select(CurrencyLimit).filter_by(tenant_id=tenant_id, currency_code="USD")
+            currency_limit = session.scalars(stmt).first()
+            if not currency_limit:
+                currency_limit = CurrencyLimit(
+                    tenant_id=tenant_id,
+                    currency_code="USD",
+                    min_package_budget=1000.0,
+                    max_daily_package_spend=50000.0,
+                )
+                session.add(currency_limit)
+                print(f"  ✓ Created CurrencyLimit for {tenant_id}")
+            else:
+                print(f"  ℹ️ CurrencyLimit already exists for {tenant_id}")
 
-            # Create property tag
-            property_tag = PropertyTag(
-                tag_id="all_inventory",
-                tenant_id=tenant_id,
-                name="All Inventory",
-                description="Default tag for all inventory",
-                # created_at and updated_at are auto-managed
-            )
-            session.add(property_tag)
+            # Create or get property tag
+            stmt = select(PropertyTag).filter_by(tag_id="all_inventory", tenant_id=tenant_id)
+            property_tag = session.scalars(stmt).first()
+            if not property_tag:
+                property_tag = PropertyTag(
+                    tag_id="all_inventory",
+                    tenant_id=tenant_id,
+                    name="All Inventory",
+                    description="Default tag for all inventory",
+                    # created_at and updated_at are auto-managed
+                )
+                session.add(property_tag)
+                print(f"  ✓ Created PropertyTag for {tenant_id}")
+            else:
+                print(f"  ℹ️ PropertyTag already exists for {tenant_id}")
 
-            # Create authorized property
-            auth_prop = AuthorizedProperty(
-                property_id=str(uuid.uuid4()),
-                tenant_id=tenant_id,
-                property_type="website",
-                name=f"{config['name']} Website",
-                identifiers={"domain": f"www.{tenant_id}.com"},
-                publisher_domain=f"www.{tenant_id}.com",
-                verification_status="verified",
-                # created_at and updated_at are auto-managed
-            )
-            session.add(auth_prop)
+            # Create or get authorized property
+            stmt = select(AuthorizedProperty).filter_by(tenant_id=tenant_id, publisher_domain=f"www.{tenant_id}.com")
+            auth_prop = session.scalars(stmt).first()
+            if not auth_prop:
+                auth_prop = AuthorizedProperty(
+                    property_id=str(uuid.uuid4()),
+                    tenant_id=tenant_id,
+                    property_type="website",
+                    name=f"{config['name']} Website",
+                    identifiers={"domain": f"www.{tenant_id}.com"},
+                    publisher_domain=f"www.{tenant_id}.com",
+                    verification_status="verified",
+                    # created_at and updated_at are auto-managed
+                )
+                session.add(auth_prop)
+                print(f"  ✓ Created AuthorizedProperty for {tenant_id}")
+            else:
+                print(f"  ℹ️ AuthorizedProperty already exists for {tenant_id}")
 
-            # Create test principal
-            principal = Principal(
-                principal_id=f"{tenant_id}_test_buyer",
-                tenant_id=tenant_id,
-                name=f"{config['name']} Test Buyer",
-                access_token=f"{tenant_id}-test-token",
-                platform_mappings={"mock": {"advertiser_id": f"{tenant_id}-advertiser"}},
-            )
-            session.add(principal)
+            # Create or get test principal
+            stmt = select(Principal).filter_by(principal_id=f"{tenant_id}_test_buyer", tenant_id=tenant_id)
+            principal = session.scalars(stmt).first()
+            if not principal:
+                principal = Principal(
+                    principal_id=f"{tenant_id}_test_buyer",
+                    tenant_id=tenant_id,
+                    name=f"{config['name']} Test Buyer",
+                    access_token=f"{tenant_id}-test-token",
+                    platform_mappings={"mock": {"advertiser_id": f"{tenant_id}-advertiser"}},
+                )
+                session.add(principal)
+                print(f"  ✓ Created Principal for {tenant_id}")
+            else:
+                print(f"  ℹ️ Principal already exists for {tenant_id}")
 
             # Create sample products
             products_data = [
@@ -156,33 +180,49 @@ def create_demo_tenants():
 
             for prod_data in products_data:
                 product_id = f"{tenant_id}_{prod_data['format']}"
-                product = Product(
-                    product_id=product_id,
-                    tenant_id=tenant_id,
-                    name=prod_data["name"],
-                    description=prod_data["description"],
-                    format_ids=[{
-                        "agent_url": "https://creatives.adcontextprotocol.org",
-                        "id": prod_data["format"]
-                    }],
-                    property_tags=["all_inventory"],
-                    targeting_template={},
-                    delivery_type="guaranteed",
-                    # created_at and updated_at are auto-managed by SQLAlchemy
-                )
-                session.add(product)
-                session.flush()
+                
+                # Check if product already exists
+                stmt = select(Product).filter_by(product_id=product_id, tenant_id=tenant_id)
+                product = session.scalars(stmt).first()
+                
+                if not product:
+                    product = Product(
+                        product_id=product_id,
+                        tenant_id=tenant_id,
+                        name=prod_data["name"],
+                        description=prod_data["description"],
+                        format_ids=[{
+                            "agent_url": "https://creatives.adcontextprotocol.org",
+                            "id": prod_data["format"]
+                        }],
+                        property_tags=["all_inventory"],
+                        targeting_template={},
+                        delivery_type="guaranteed",
+                        # created_at and updated_at are auto-managed by SQLAlchemy
+                    )
+                    session.add(product)
+                    session.flush()
+                    print(f"  ✓ Created Product: {product_id}")
+                else:
+                    print(f"  ℹ️ Product already exists: {product_id}")
 
-                # Add pricing option
-                pricing = PricingOption(
-                    product_id=product_id,
-                    tenant_id=tenant_id,
-                    pricing_model="CPM",
-                    rate=5.0,
-                    currency="USD",
-                    is_fixed=True,
-                )
-                session.add(pricing)
+                # Check if pricing option already exists
+                stmt = select(PricingOption).filter_by(product_id=product_id, tenant_id=tenant_id, pricing_model="CPM")
+                pricing = session.scalars(stmt).first()
+                
+                if not pricing:
+                    pricing = PricingOption(
+                        product_id=product_id,
+                        tenant_id=tenant_id,
+                        pricing_model="CPM",
+                        rate=5.0,
+                        currency="USD",
+                        is_fixed=True,
+                    )
+                    session.add(pricing)
+                    print(f"  ✓ Created PricingOption for {product_id}")
+                else:
+                    print(f"  ℹ️ PricingOption already exists for {product_id}")
 
             session.commit()
             print(f"✅ Created tenant {tenant_id} with products and principal")
