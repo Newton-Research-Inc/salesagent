@@ -58,31 +58,31 @@ def _list_creative_formats_impl(
     
     if demo_mode:
         # Return standard IAB display formats for demo
-        from src.core.schemas import CreativeFormat, FormatId, FormatType
+        from adcp.types import Format, FormatCategory, FormatId
         
         formats = [
-            CreativeFormat(
+            Format(
                 format_id=FormatId(id="display_728x90", agent_url="https://creative.adcontextprotocol.org"),
                 name="Leaderboard 728x90",
-                type=FormatType.DISPLAY,
+                type=FormatCategory.DISPLAY,
                 is_standard=True,
                 width=728,
                 height=90,
                 description="Standard IAB leaderboard banner"
             ),
-            CreativeFormat(
+            Format(
                 format_id=FormatId(id="display_300x250", agent_url="https://creative.adcontextprotocol.org"),
                 name="Medium Rectangle 300x250",
-                type=FormatType.DISPLAY,
+                type=FormatCategory.DISPLAY,
                 is_standard=True,
                 width=300,
                 height=250,
                 description="Standard IAB medium rectangle"
             ),
-            CreativeFormat(
+            Format(
                 format_id=FormatId(id="display_320x50", agent_url="https://creative.adcontextprotocol.org"),
                 name="Mobile Banner 320x50",
-                type=FormatType.DISPLAY,
+                type=FormatCategory.DISPLAY,
                 is_standard=True,
                 width=320,
                 height=50,
