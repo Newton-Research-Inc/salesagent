@@ -330,11 +330,9 @@ def get_principal_from_context(
                 stmt = select(Tenant).filter_by(tenant_id=test_tenant_id)
                 tenant_obj = session.scalars(stmt).first()
                 if tenant_obj:
-                    tenant_context = {
-                        "tenant_id": tenant_obj.tenant_id,
-                        "name": tenant_obj.name,
-                        "subdomain": tenant_obj.subdomain,
-                    }
+                    # Use serialize_tenant_to_dict to get FULL tenant data including policy_settings
+                    from src.core.utils.tenant_utils import serialize_tenant_to_dict
+                    tenant_context = serialize_tenant_to_dict(tenant_obj)
                     requested_tenant_id = test_tenant_id
                     detection_method = "ADCP_TEST_TENANT_ID environment variable"
                     set_current_tenant(tenant_context)
