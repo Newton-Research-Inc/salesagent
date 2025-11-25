@@ -8,6 +8,11 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "service_discovery_namespace_id" {
+  description = "Service Discovery namespace ID (shared across all tenants)"
+  type        = string
+}
+
 variable "private_subnet_ids" {
   description = "Private subnet IDs"
   type        = list(string)
