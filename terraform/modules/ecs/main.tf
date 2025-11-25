@@ -1,27 +1,13 @@
 # ============================================================================
 # Service Discovery (AWS Cloud Map)
 # ============================================================================
-# Creates a private DNS namespace for service discovery within the VPC
-# This allows stable DNS names (e.g., espn.salesagent.local) that automatically
-# update when ECS tasks change IP addresses
-resource "aws_service_discovery_private_dns_namespace" "salesagent" {
-  name        = "salesagent.local"
-  vpc         = var.vpc_id
-  description = "Private DNS namespace for AdCP Sales Agent service discovery"
-
-  tags = {
-    Name        = "salesagent-service-discovery"
-    Environment = var.environment
-  }
-}
-
 # Service Discovery service for this tenant (espn, cnn, or nyt)
-# Registers ECS tasks automatically and maintains A records
+# Registers ECS tasks automatically and maintains A records in the shared namespace
 resource "aws_service_discovery_service" "tenant" {
   name = var.environment  # e.g., "espn" creates espn.salesagent.local
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
+    namespace_id = var.service_discovery_namespace_id
 
     dns_records {
       ttl  = 10  # Low TTL for quick updates when tasks change

@@ -127,6 +127,23 @@ data "aws_internet_gateway" "newton" {
   }
 }
 
+# ============================================================================
+# Service Discovery (shared across all tenants)
+# ============================================================================
+resource "aws_service_discovery_private_dns_namespace" "salesagent" {
+  name        = "salesagent.local"
+  vpc         = data.aws_vpc.newton.id
+  description = "Private DNS namespace for AdCP Sales Agent service discovery"
+
+  tags = {
+    Name        = "salesagent-service-discovery"
+    Environment = var.environment
+  }
+}
+
+# ============================================================================
+# Security Groups
+# ============================================================================
 # Security Group for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
   name_prefix = "${var.environment}-salesagent-ecs-"
@@ -290,6 +307,9 @@ module "ecs_espn" {
   private_subnet_ids = data.aws_subnets.private.ids
   ecs_security_group_id = aws_security_group.ecs_tasks.id
   
+  # Service Discovery (shared namespace)
+  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
+  
   # ALB target groups (ESPN uses existing staging target groups)
   mcp_target_group_arn   = module.alb.mcp_target_group_arn
   admin_target_group_arn = module.alb.admin_target_group_arn
@@ -324,6 +344,9 @@ module "ecs_cnn" {
   private_subnet_ids = data.aws_subnets.private.ids
   ecs_security_group_id = aws_security_group.ecs_tasks.id
   
+  # Service Discovery (shared namespace)
+  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
+  
   # ALB target groups (not actually used for MCP, only for admin/a2a if needed)
   mcp_target_group_arn   = module.alb.mcp_target_group_arn
   admin_target_group_arn = module.alb.admin_target_group_arn
@@ -357,6 +380,9 @@ module "ecs_nyt" {
   vpc_id             = data.aws_vpc.newton.id
   private_subnet_ids = data.aws_subnets.private.ids
   ecs_security_group_id = aws_security_group.ecs_tasks.id
+  
+  # Service Discovery (shared namespace)
+  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
   
   # ALB target groups (not actually used for MCP, only for admin/a2a if needed)
   mcp_target_group_arn   = module.alb.mcp_target_group_arn
