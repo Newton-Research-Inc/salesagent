@@ -1,0 +1,109 @@
+{
+  "mcpServers": {
+    "espn_sales_agent": {
+      "url": "http://espn.salesagent.local:9580/mcp",
+      "transport": "http",
+      "name": "ESPN Sales Agent",
+      "description": "Direct publisher buy - ESPN Sports Network",
+      "type": "publisher",
+      "characteristics": {
+        "buying_model": "direct",
+        "delivery": "guaranteed",
+        "pricing": "fixed_cpm",
+        "targeting_focus": "placement"
+      }
+    },
+    "cnn_sales_agent": {
+      "url": "http://cnn.salesagent.local:9580/mcp",
+      "transport": "http",
+      "name": "CNN Sales Agent",
+      "description": "Direct publisher buy - CNN News Network",
+      "type": "publisher",
+      "characteristics": {
+        "buying_model": "direct",
+        "delivery": "guaranteed",
+        "pricing": "fixed_cpm",
+        "targeting_focus": "placement"
+      }
+    },
+    "nyt_sales_agent": {
+      "url": "http://nyt.salesagent.local:9580/mcp",
+      "transport": "http",
+      "name": "NYT Sales Agent",
+      "description": "Direct publisher buy - New York Times",
+      "type": "publisher",
+      "characteristics": {
+        "buying_model": "direct",
+        "delivery": "guaranteed",
+        "pricing": "fixed_cpm",
+        "targeting_focus": "placement"
+      }
+    },
+    "yahoo_dsp": {
+      "url": "http://yahoo.salesagent.local:9580/mcp",
+      "transport": "http",
+      "name": "Yahoo DSP",
+      "description": "Programmatic platform - Audience-targeted display",
+      "type": "dsp",
+      "characteristics": {
+        "buying_model": "programmatic",
+        "delivery": "non_guaranteed",
+        "pricing": "auction_based",
+        "targeting_focus": "audience",
+        "features": [
+          "audience_segments",
+          "bid_optimization",
+          "conversion_tracking",
+          "viewability_metrics",
+          "retargeting"
+        ]
+      }
+    }
+  },
+  "usage_examples": {
+    "get_all_products": "Newton can call get_products on all 4 agents to compare inventory options",
+    "direct_buy": "Use ESPN/CNN/NYT for guaranteed placements with fixed pricing",
+    "programmatic_buy": "Use Yahoo DSP for audience targeting with dynamic bidding",
+    "split_budget": "Allocate budget across direct and programmatic for diversification",
+    "performance_comparison": "Compare CTR, conversions between direct and programmatic"
+  },
+  "decision_tree": {
+    "need_guaranteed_delivery": "Choose ESPN/CNN/NYT (direct publishers)",
+    "need_audience_targeting": "Choose Yahoo DSP (programmatic)",
+    "need_broad_reach_across_sites": "Choose Yahoo DSP (exchange access)",
+    "need_specific_placement": "Choose ESPN/CNN/NYT (placement-based)",
+    "need_conversion_tracking": "Choose Yahoo DSP (includes attribution)",
+    "need_immediate_launch": "Choose ESPN/CNN/NYT (no approval delay)",
+    "budget_optimization_goal": "Choose Yahoo DSP (auto-bidding)"
+  },
+  "cost_comparison": {
+    "espn_homepage_banner": {
+      "cpm": 5.00,
+      "is_fixed": true,
+      "notes": "Guaranteed delivery, fixed rate, immediate launch"
+    },
+    "yahoo_dsp_audience_display": {
+      "cpm": 6.50,
+      "is_fixed": false,
+      "notes": "Auction-based, audience targeting, requires approval, worth extra $1.50 for targeting"
+    }
+  },
+  "typical_campaigns": {
+    "brand_awareness": {
+      "strategy": "Direct + Programmatic mix",
+      "agents": ["espn_sales_agent", "yahoo_dsp"],
+      "reasoning": "ESPN for guaranteed reach, Yahoo DSP for audience expansion"
+    },
+    "performance_marketing": {
+      "strategy": "Programmatic-focused",
+      "agents": ["yahoo_dsp"],
+      "reasoning": "Conversion tracking, audience targeting, auto-optimization"
+    },
+    "sponsorship": {
+      "strategy": "Direct publisher",
+      "agents": ["espn_sales_agent", "cnn_sales_agent", "nyt_sales_agent"],
+      "reasoning": "Premium placements, guaranteed delivery, brand safety"
+    }
+  }
+}
+
