@@ -1,4 +1,4 @@
-"""Initialize demo tenants (ESPN, CNN, NYT) for AWS deployment."""
+"""Initialize demo tenants (ESPN, CNN, NYT, Yahoo DSP) for AWS deployment."""
 import os
 import sys
 import uuid
@@ -24,25 +24,39 @@ from src.core.database.models import (
 
 
 def create_demo_tenants():
-    """Create ESPN, CNN, NYT tenants if they don't exist."""
+    """Create ESPN, CNN, NYT (publisher ad servers) and Yahoo DSP (programmatic) tenants."""
     tenants_config = [
         {
             "tenant_id": "espn",
             "name": "ESPN",
             "subdomain": "espn",
             "description": "ESPN Sports Network - Premium sports advertising inventory",
+            "ad_server": "mock",
+            "tenant_type": "publisher",
         },
         {
             "tenant_id": "cnn",
             "name": "CNN",
             "subdomain": "cnn",
             "description": "CNN News Network - Premium news advertising inventory",
+            "ad_server": "mock",
+            "tenant_type": "publisher",
         },
         {
             "tenant_id": "nyt",
             "name": "New York Times",
             "subdomain": "nyt",
             "description": "New York Times - Premium journalism advertising inventory",
+            "ad_server": "mock",
+            "tenant_type": "publisher",
+        },
+        {
+            "tenant_id": "yahoo",
+            "name": "Yahoo DSP",
+            "subdomain": "yahoo",
+            "description": "Yahoo DSP - Programmatic advertising platform with audience targeting",
+            "ad_server": "yahoo_dsp",
+            "tenant_type": "dsp",
         },
     ]
 
@@ -62,7 +76,7 @@ def create_demo_tenants():
                 existing.name = config["name"]
                 existing.subdomain = config["subdomain"]
                 existing.billing_plan = "demo"
-                existing.ad_server = "mock"
+                existing.ad_server = config.get("ad_server", "mock")
                 existing.enable_axe_signals = True
                 existing.is_active = True
                 existing.authorized_emails = None  # Remove access control
@@ -83,7 +97,7 @@ def create_demo_tenants():
                 print(f"  DEBUG: policy_settings after update: {existing.policy_settings}")
                 
                 tenant = existing
-                print(f"✓ Updated existing tenant {tenant_id} (policy_settings marked as modified)")
+                print(f"✓ Updated existing tenant {tenant_id} (ad_server: {existing.ad_server})")
             else:
                 print(f"Creating tenant: {tenant_id}...")
                 # Create tenant
@@ -92,7 +106,7 @@ def create_demo_tenants():
                     name=config["name"],
                     subdomain=config["subdomain"],
                     billing_plan="demo",
-                    ad_server="mock",
+                    ad_server=config.get("ad_server", "mock"),
                     enable_axe_signals=True,
                     is_active=True,
                     authorized_emails=None,  # No access control - allow unauthenticated access
@@ -172,24 +186,63 @@ def create_demo_tenants():
             else:
                 print(f"  ℹ️ Principal already exists for {tenant_id}")
 
-            # Create sample products
-            products_data = [
-                {
-                    "name": f"{config['name']} Homepage Banner",
-                    "format": "display_728x90",
-                    "description": f"Premium leaderboard placement on {config['name']} homepage",
-                },
-                {
-                    "name": f"{config['name']} Sidebar Ad",
-                    "format": "display_300x250",
-                    "description": f"Medium rectangle on {config['name']} article pages",
-                },
-                {
-                    "name": f"{config['name']} Mobile Banner",
-                    "format": "display_320x50",
-                    "description": f"Mobile banner on {config['name']} mobile site",
-                },
-            ]
+            # Create sample products (different for DSP vs publisher)
+            if config.get("tenant_type") == "dsp":
+                # DSP products: Audience-focused, programmatic
+                products_data = [
+                    {
+                        "name": "Audience-Targeted Display",
+                        "format": "display_728x90",
+                        "description": "Reach high-value audiences across Yahoo Exchange + open web with audience targeting",
+                        "pricing_model": "CPM",
+                        "rate": 6.50,
+                        "is_fixed": False,  # Bid-based, not fixed
+                    },
+                    {
+                        "name": "Premium Display + Retargeting",
+                        "format": "display_300x250",
+                        "description": "Medium rectangle with site retargeting pools for abandoned cart recovery",
+                        "pricing_model": "CPM",
+                        "rate": 8.00,
+                        "is_fixed": False,  # Bid-based
+                    },
+                    {
+                        "name": "Mobile Audience Network",
+                        "format": "display_320x50",
+                        "description": "Mobile inventory with behavioral targeting across Yahoo mobile properties",
+                        "pricing_model": "CPM",
+                        "rate": 5.50,
+                        "is_fixed": False,  # Bid-based
+                    },
+                ]
+            else:
+                # Publisher products: Placement-focused, guaranteed
+                products_data = [
+                    {
+                        "name": f"{config['name']} Homepage Banner",
+                        "format": "display_728x90",
+                        "description": f"Premium leaderboard placement on {config['name']} homepage",
+                        "pricing_model": "CPM",
+                        "rate": 5.0,
+                        "is_fixed": True,  # Fixed rate for publisher direct
+                    },
+                    {
+                        "name": f"{config['name']} Sidebar Ad",
+                        "format": "display_300x250",
+                        "description": f"Medium rectangle on {config['name']} article pages",
+                        "pricing_model": "CPM",
+                        "rate": 5.0,
+                        "is_fixed": True,
+                    },
+                    {
+                        "name": f"{config['name']} Mobile Banner",
+                        "format": "display_320x50",
+                        "description": f"Mobile banner on {config['name']} mobile site",
+                        "pricing_model": "CPM",
+                        "rate": 5.0,
+                        "is_fixed": True,
+                    },
+                ]
 
             for prod_data in products_data:
                 product_id = f"{tenant_id}_{prod_data['format']}"
@@ -220,17 +273,17 @@ def create_demo_tenants():
                     print(f"  ℹ️ Product already exists: {product_id}")
 
                 # Check if pricing option already exists
-                stmt = select(PricingOption).filter_by(product_id=product_id, tenant_id=tenant_id, pricing_model="CPM")
+                stmt = select(PricingOption).filter_by(product_id=product_id, tenant_id=tenant_id, pricing_model=prod_data.get("pricing_model", "CPM"))
                 pricing = session.scalars(stmt).first()
                 
                 if not pricing:
                     pricing = PricingOption(
                         product_id=product_id,
                         tenant_id=tenant_id,
-                        pricing_model="CPM",
-                        rate=5.0,
+                        pricing_model=prod_data.get("pricing_model", "CPM"),
+                        rate=prod_data.get("rate", 5.0),
                         currency="USD",
-                        is_fixed=True,
+                        is_fixed=prod_data.get("is_fixed", True),
                     )
                     session.add(pricing)
                     print(f"  ✓ Created PricingOption for {product_id}")
