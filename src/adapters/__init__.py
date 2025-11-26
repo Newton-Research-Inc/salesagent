@@ -3,14 +3,18 @@ from .base import AdServerAdapter as AdServerAdapter
 from .creative_engine import CreativeEngineAdapter
 from .google_ad_manager import GoogleAdManager as GAMAdapter
 from .kevel import Kevel as KevelAdapter
+from .mock_ad_server import MockAdServer as MockAdapter
 from .triton_digital import TritonDigital as TritonAdapter
+from .yahoo_dsp import YahooDSP as YahooDSPAdapter
 
 # Map of adapter type strings to adapter classes
 ADAPTER_REGISTRY = {
     "gam": GAMAdapter,
     "google_ad_manager": GAMAdapter,
     "kevel": KevelAdapter,
+    "mock": MockAdapter,
     "triton": TritonAdapter,
+    "yahoo_dsp": YahooDSPAdapter,
     "creative_engine": CreativeEngineAdapter,
     # 'xandr': XandrAdapter,
     # 'microsoft_monetize': XandrAdapter

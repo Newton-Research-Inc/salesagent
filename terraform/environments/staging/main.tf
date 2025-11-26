@@ -409,6 +409,43 @@ module "ecs_nyt" {
   ecr_repository_url = "381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging"
 }
 
+# ECS Module - Yahoo DSP (Programmatic Platform)
+module "ecs_yahoo" {
+  source = "../../modules/ecs"
+  
+  environment        = "yahoo"
+  vpc_id             = data.aws_vpc.newton.id
+  private_subnet_ids = data.aws_subnets.private.ids
+  ecs_security_group_id = aws_security_group.ecs_tasks.id
+  
+  # Service Discovery (shared namespace)
+  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
+  
+  # ALB target groups (not actually used for MCP, only for admin/a2a if needed)
+  mcp_target_group_arn   = module.alb.mcp_target_group_arn
+  admin_target_group_arn = module.alb.admin_target_group_arn
+  a2a_target_group_arn   = module.alb.a2a_target_group_arn
+  
+  # Database connection (shared by all tenants)
+  db_host     = split(":", module.database.endpoint)[0]
+  db_name     = module.database.database_name
+  db_username = module.database.username
+  db_password = var.db_password
+  
+  # Secrets
+  gemini_api_key       = aws_secretsmanager_secret.gemini_api_key.arn
+  google_client_id     = aws_secretsmanager_secret.google_client_id.arn
+  google_client_secret = aws_secretsmanager_secret.google_client_secret.arn
+  super_admin_emails   = var.super_admin_emails
+  
+  # Tenant-specific configuration
+  tenant_id     = "yahoo"
+  principal_id  = "nike"  # Shared principal (simulates Nike buying programmatically)
+  
+  # ECR repository URL
+  ecr_repository_url = "381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging"
+}
+
 # Outputs
 output "vpc_info" {
   description = "Newton VPC information (reused)"
@@ -444,6 +481,11 @@ output "nyt_url" {
   value       = "https://nyt.${var.domain_name}"
 }
 
+output "yahoo_url" {
+  description = "Yahoo DSP agent URL"
+  value       = "https://yahoo.${var.domain_name}"
+}
+
 output "database_endpoint" {
   description = "Database endpoint"
   value       = module.database.endpoint
@@ -468,15 +510,21 @@ output "ecs_clusters" {
       cluster_name = module.ecs_nyt.cluster_name
       service_name = module.ecs_nyt.service_name
     }
+    yahoo = {
+      cluster_id   = module.ecs_yahoo.cluster_id
+      cluster_name = module.ecs_yahoo.cluster_name
+      service_name = module.ecs_yahoo.service_name
+    }
   }
 }
 
 output "service_discovery_dns" {
   description = "Service Discovery DNS names for each tenant"
   value = {
-    espn = module.ecs_espn.service_discovery_dns_name
-    cnn  = module.ecs_cnn.service_discovery_dns_name
-    nyt  = module.ecs_nyt.service_discovery_dns_name
+    espn  = module.ecs_espn.service_discovery_dns_name
+    cnn   = module.ecs_cnn.service_discovery_dns_name
+    nyt   = module.ecs_nyt.service_discovery_dns_name
+    yahoo = module.ecs_yahoo.service_discovery_dns_name
   }
 }
 
@@ -487,18 +535,24 @@ output "next_steps" {
     
     Next steps:
     1. Configure Newton's MCP servers with stable DNS names:
-       - ESPN: http://espn.salesagent.local:9580/mcp
-       - CNN: http://cnn.salesagent.local:9580/mcp
-       - NYT: http://nyt.salesagent.local:9580/mcp
+       - ESPN (Publisher): http://espn.salesagent.local:9580/mcp
+       - CNN (Publisher): http://cnn.salesagent.local:9580/mcp
+       - NYT (Publisher): http://nyt.salesagent.local:9580/mcp
+       - Yahoo DSP (Programmatic): http://yahoo.salesagent.local:9580/mcp
     
     2. Test Newton's connection to each sales agent
+    
+    3. Compare buying experiences:
+       - ESPN/CNN/NYT: Direct publisher buys (placement-focused, guaranteed)
+       - Yahoo DSP: Programmatic buying (audience-focused, auction-based)
     
     Benefits:
     - ✅ DNS names stay the same across deployments
     - ✅ Automatic IP updates (10s TTL)
     - ✅ No more IP changes breaking Newton!
+    - ✅ Both direct and programmatic buying in one demo!
     
-    Cost: ~$90/month for 3 Fargate tasks (saved $40 by reusing Newton's network!)
+    Cost: ~$120/month for 4 Fargate tasks (saved $40 by reusing Newton's network!)
     
     Note: Service Discovery DNS only resolves within the VPC
   EOT
