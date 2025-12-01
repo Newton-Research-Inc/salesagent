@@ -17,6 +17,8 @@ All code is complete and pushed to GitHub (`staging` branch, commit `b43a280c`):
 
 ### Step 1: Build and Push Docker Image
 
+**⚠️ IMPORTANT:** Build for AMD64 architecture (ECS runs on x86_64, not ARM).
+
 ```bash
 # From your local machine
 cd /Users/danfinkel/github/opensource/salesagent
@@ -24,8 +26,9 @@ cd /Users/danfinkel/github/opensource/salesagent
 # Pull latest changes (already on staging branch)
 git pull origin staging
 
-# Build Docker image
-docker build -t salesagent:yahoo-dsp .
+# Build Docker image for AMD64 (ECS architecture)
+# This is critical if building on Apple Silicon (M1/M2/M3)
+docker build --platform linux/amd64 -t salesagent:yahoo-dsp .
 
 # Login to ECR
 aws ecr get-login-password --region us-east-1 | \
@@ -40,6 +43,8 @@ docker push 381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging:late
 ```
 
 **Expected Time:** 5-10 minutes
+
+**Note:** The `--platform linux/amd64` flag ensures the image runs on ECS (x86_64). Without it, you'll see `exec format error` on Apple Silicon Macs.
 
 ---
 
@@ -330,6 +335,47 @@ Yahoo DSP Metrics (+ all ESPN metrics):
 ---
 
 ## 🐛 Troubleshooting
+
+### Issue: `exec /bin/bash: exec format error` in ECS logs
+
+**Symptom:**
+```bash
+aws logs tail /ecs/salesagent-yahoo --follow --region us-east-1
+# Shows: exec /bin/bash: exec format error
+```
+
+**Cause:** Docker image built for wrong CPU architecture (ARM64 instead of AMD64).
+
+**Fix:** Rebuild with correct architecture:
+```bash
+cd /Users/danfinkel/github/opensource/salesagent
+
+# Rebuild for AMD64 (ECS architecture)
+docker build --platform linux/amd64 -t salesagent:yahoo-dsp .
+
+# Tag and push
+docker tag salesagent:yahoo-dsp \
+  381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging:latest
+
+docker push 381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging:latest
+
+# Force ECS to pull new image and restart
+aws ecs update-service \
+  --cluster salesagent-yahoo \
+  --service salesagent-yahoo \
+  --force-new-deployment \
+  --region us-east-1
+
+# Wait 2-3 minutes, then check logs again
+aws logs tail /ecs/salesagent-yahoo --follow --region us-east-1
+# Should now see: 🚀 Starting AdCP Sales Agent...
+```
+
+### Issue: ECS service shows "Running: 0" despite "DesiredCount: 1"
+
+**Cause:** Task is crashing on startup (usually architecture mismatch).
+
+**Fix:** Check logs with `aws logs tail /ecs/salesagent-yahoo --follow` and apply fix above.
 
 ### Issue: Docker push fails with certificate error
 
