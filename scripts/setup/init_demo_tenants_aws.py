@@ -197,6 +197,7 @@ def create_demo_tenants():
                         "pricing_model": "CPM",
                         "rate": 6.50,
                         "is_fixed": False,  # Bid-based, not fixed
+                        "price_guidance": {"floor": 5.00, "p50": 6.50, "p75": 8.00},  # Required for auction pricing
                     },
                     {
                         "name": "Premium Display + Retargeting",
@@ -205,6 +206,7 @@ def create_demo_tenants():
                         "pricing_model": "CPM",
                         "rate": 8.00,
                         "is_fixed": False,  # Bid-based
+                        "price_guidance": {"floor": 6.00, "p50": 8.00, "p75": 10.00},  # Required for auction pricing
                     },
                     {
                         "name": "Mobile Audience Network",
@@ -213,6 +215,7 @@ def create_demo_tenants():
                         "pricing_model": "CPM",
                         "rate": 5.50,
                         "is_fixed": False,  # Bid-based
+                        "price_guidance": {"floor": 4.00, "p50": 5.50, "p75": 7.00},  # Required for auction pricing
                     },
                 ]
             else:
@@ -284,6 +287,7 @@ def create_demo_tenants():
                         rate=prod_data.get("rate", 5.0),
                         currency="USD",
                         is_fixed=prod_data.get("is_fixed", True),
+                        price_guidance=prod_data.get("price_guidance"),  # Include price guidance for auction pricing
                     )
                     session.add(pricing)
                     print(f"  ✓ Created PricingOption for {product_id}")
