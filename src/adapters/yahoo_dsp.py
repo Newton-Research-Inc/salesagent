@@ -459,9 +459,9 @@ class YahooDSP(AdServerAdapter):
 
         # Calculate totals
         total_impressions = sum(p.impressions for p in packages)
-        total_clicks = sum(p.metadata.get("clicks", 0) for p in packages if p.metadata else 0)
+        total_clicks = sum(p.metadata.get("clicks", 0) for p in packages if p.metadata)
         total_spend = sum(p.spend for p in packages)
-        total_conversions = sum(p.metadata.get("conversions", 0) for p in packages if p.metadata else 0)
+        total_conversions = sum(p.metadata.get("conversions", 0) for p in packages if p.metadata)
 
         self.log(f"   📈 Impressions: {total_impressions:,}")
         self.log(f"   🖱️  Clicks: {total_clicks:,}")
