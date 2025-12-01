@@ -54,11 +54,22 @@ See [deployment.md](deployment.md) for platform-specific guides. We support your
 ### Deployment
 - **[deployment/](deployment/)** - Deployment guides
   - Docker Hub authentication
+  - PGBouncer configuration
+- **[../terraform/](../terraform/)** - AWS Infrastructure
+  - AWS Setup Guide (VPC, RDS, ECS, ALB)
+  - Deployment Guide (Docker, database, ECS)
+  - DNS and Service Discovery
 
 ### Partners
 - **[partners/](partners/)** - Partner-specific documentation
   - Bug analyses and postmortems
   - Integration notes
+
+### Demo Guides
+- **[demo/YAHOO_DSP_GUIDE.md](demo/YAHOO_DSP_GUIDE.md)** - Yahoo DSP sales agent guide
+- **[demo/NEWTON_INTEGRATION_GUIDE.md](demo/NEWTON_INTEGRATION_GUIDE.md)** - Newton + AdCP integration
+- **[demo/NEWTON_CAMPAIGN_BRIEFS.md](demo/NEWTON_CAMPAIGN_BRIEFS.md)** - Pre-configured campaign scenarios
+- **[demo/NEWTON_YAHOO_DSP_DEMO_SCRIPT.md](demo/NEWTON_YAHOO_DSP_DEMO_SCRIPT.md)** - Yahoo DSP demo walkthrough
 
 ### Reference
 - **[adcp-field-mapping.md](adcp-field-mapping.md)** - AdCP protocol field mappings

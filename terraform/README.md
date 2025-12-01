@@ -196,13 +196,23 @@ Add:
 
 ## 📚 Documentation
 
-**Detailed Guide**: `terraform/AWS_SETUP_GUIDE.md`
-- Complete step-by-step instructions
+**Setup Guide**: `AWS_SETUP_GUIDE.md`
+- Complete step-by-step setup instructions
+- Infrastructure creation (VPC, RDS, ECS, ALB)
 - All 6 phases explained
-- Troubleshooting section
-- Testing procedures
 
-**Quick Reference**: This file
+**Deployment Guide**: `DEPLOYMENT_GUIDE.md`
+- Docker image build and push
+- Database initialization
+- ECS service deployment
+- Verification procedures
+
+**DNS Guide**: `DNS_AND_SERVICE_DISCOVERY.md`
+- VPC Service Discovery (internal DNS)
+- Public DNS configuration
+- SSL certificate setup
+
+**Quick Reference**: This file (README.md)
 - Fast overview
 - Quick commands
 - Cost estimates
