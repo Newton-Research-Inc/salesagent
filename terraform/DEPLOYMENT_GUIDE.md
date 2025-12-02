@@ -8,6 +8,21 @@ This guide covers the complete deployment process:
 3. **ECS Deployment** - Deploy sales agent services
 4. **Verification** - Test all endpoints
 
+### Demo Agents
+
+| Agent | Type | Adapter | Description |
+|-------|------|---------|-------------|
+| ESPN | Publisher | `mock` | Sports network - placement-based buying |
+| CNN | Publisher | `mock` | News network - contextual targeting |
+| NYT | Publisher | `mock` | Premium journalism - direct deals |
+| Yahoo DSP | DSP | `yahoo_dsp` | Programmatic platform - audience targeting, auction-based |
+
+**Yahoo DSP Features:**
+- Audience segments (outdoor_enthusiasts, eco_conscious_consumers, etc.)
+- Multiple exchanges (Yahoo Exchange, Index Exchange, Open RTB)
+- Deal/PMP support (Private Auction, Preferred Deal, Programmatic Guaranteed)
+- Yahoo DSP API terminology (Lines, AUTOBID, goalType, etc.)
+
 ---
 
 ## Part 1: Docker Image Deployment
@@ -38,9 +53,13 @@ docker build -t salesagent:staging .
 ### Push to ECR
 
 ```bash
-# Get ECR repository URL from Terraform
 cd terraform/environments/staging
+
+# Get ECR repository URL from Terraform (requires terraform apply first)
 ECR_URL=$(terraform output -raw ecr_repository_url)
+
+# Alternative: Use hardcoded URL if terraform output not available
+# ECR_URL="381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging"
 
 # Login to ECR
 aws ecr get-login-password --region us-east-1 | \
@@ -52,6 +71,10 @@ docker tag salesagent:staging $ECR_URL:latest
 # Push to ECR
 docker push $ECR_URL:latest
 ```
+
+> **Note:** If you get `Output "ecr_repository_url" not found`, either:
+> 1. Run `terraform apply` first to create the output, or
+> 2. Use the hardcoded URL: `381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging`
 
 ### Verify Image Upload
 
@@ -130,7 +153,13 @@ uv run python scripts/setup/init_demo_tenants_aws.py
 # Verify
 psql $DATABASE_URL -c "SELECT tenant_id, name, ad_server FROM tenants;"
 
-# Expected: espn, cnn, nyt, yahoo rows
+# Expected output:
+#  tenant_id |    name    |  ad_server
+# -----------+------------+------------
+#  espn      | ESPN       | mock
+#  cnn       | CNN        | mock
+#  nyt       | New York Times | mock
+#  yahoo     | Yahoo DSP  | yahoo_dsp   <-- Uses enhanced DSP adapter
 ```
 
 ### Step 4: Remove Your IP Access
@@ -324,28 +353,41 @@ Add to Newton's MCP configuration:
   "mcpServers": {
     "espn_sales_agent": {
       "url": "http://espn.salesagent.local:9580/mcp",
+      "description": "ESPN Sports Network - Direct publisher buying (mock adapter)",
       "headers": {
         "x-adcp-auth": "adcp_espn_ZgDyLYOkOwlrVkGA6xIKn0QMEUGrcWo9B1UE73MOLdA"
       }
     },
     "cnn_sales_agent": {
       "url": "http://cnn.salesagent.local:9580/mcp",
+      "description": "CNN News Network - Contextual targeting (mock adapter)",
       "headers": {
         "x-adcp-auth": "adcp_cnn_bCLg89IQMy10K5exnTuO7bKZNx6LhYz8E9DexZ6DhlM"
       }
     },
     "nyt_sales_agent": {
       "url": "http://nyt.salesagent.local:9580/mcp",
+      "description": "New York Times - Premium journalism (mock adapter)",
       "headers": {
         "x-adcp-auth": "adcp_nyt_yCJn_Ji_br1ydkg3KLu_gqqOiZSiuh-hgyjMMcu1oAo"
       }
     },
     "yahoo_dsp": {
-      "url": "http://yahoo.salesagent.local:9580/mcp"
+      "url": "http://yahoo.salesagent.local:9580/mcp",
+      "description": "Yahoo DSP - Programmatic platform with audience targeting, auction-based pricing, Deal/PMP support (yahoo_dsp adapter)"
     }
   }
 }
 ```
+
+**Yahoo DSP Products (5 total):**
+| Product | Format | CPM | Description |
+|---------|--------|-----|-------------|
+| Audience-Targeted Display | 728x90 | $6.50 | Open exchange with audience segments |
+| Premium Display + Retargeting | 300x250 | $8.00 | Retargeting pools |
+| Mobile Audience Network | 320x50 | $5.50 | Yahoo mobile properties |
+| Premium PMP Deal | 300x250 | $12.00 | Sports/outdoor publishers PMP |
+| Video Pre-Roll | 30sec | $15.00 | Video with completion tracking |
 
 Restart Newton to load new configuration.
 
@@ -391,8 +433,9 @@ Restart Newton to load new configuration.
 ```bash
 # Build & push Docker image
 docker build --platform linux/amd64 -t salesagent:staging .
-docker tag salesagent:staging $(terraform output -raw ecr_repository_url):latest
-docker push $(terraform output -raw ecr_repository_url):latest
+ECR_URL=$(terraform output -raw ecr_repository_url 2>/dev/null || echo "381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging")
+docker tag salesagent:staging $ECR_URL:latest
+docker push $ECR_URL:latest
 
 # Deploy ECS services
 cd terraform/environments/staging
@@ -422,5 +465,21 @@ Once all checks pass, you have:
 - ✅ Newton connected via MCP
 - ✅ Ready for demos! 🚀
 
+### Demo Scenarios
+
+**Publisher Direct (ESPN/CNN/NYT):**
+- Placement-based buying
+- Fixed CPM pricing
+- Guaranteed delivery
+- Limited targeting (geo, device)
+
+**Programmatic DSP (Yahoo):**
+- Audience-first targeting (outdoor_enthusiasts, eco_conscious_consumers, etc.)
+- Auction-based pricing (AUTOBID optimization)
+- Yahoo DSP API terminology (Lines, goalType, exchanges)
+- Deal/PMP support for premium inventory
+- Rich reporting (win rate, viewability, conversions)
+
 See `DNS_AND_SERVICE_DISCOVERY.md` for DNS configuration details.
+See `../docs/demo/NEWTON_YAHOO_DSP_DEMO_SCRIPT.md` for the full Yahoo DSP demo script.
 
