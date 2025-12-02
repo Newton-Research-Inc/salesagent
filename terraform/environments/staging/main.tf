@@ -528,6 +528,11 @@ output "service_discovery_dns" {
   }
 }
 
+output "ecr_repository_url" {
+  description = "ECR repository URL for Docker images"
+  value       = "381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging"
+}
+
 output "next_steps" {
   description = "What to do next"
   value       = <<-EOT
