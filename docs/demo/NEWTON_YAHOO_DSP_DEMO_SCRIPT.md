@@ -391,68 +391,130 @@ mcp_yahoo.create_media_buy(
 ```
 
 **Yahoo DSP Response:**
+
+> **Note:** Yahoo DSP uses specific terminology aligned with their API:
+> - **Campaign** = Order (contains multiple Lines)
+> - **Line** = Ad Group (targeting + budget + bidding)
+> - **Ad** = Creative assignment
+> - Status values: `ACTIVE`, `PENDING_REVIEW`, `PAUSED`, `STOP_DAILY_BUDGET`, etc.
+
 ```json
 {
-  "status": "pending_review",
+  "status": "pending",
   "media_buy_id": "yahoo_dsp_pob_20251201",
+  "external_ids": {
+    "yahoo_campaign_id": "yahoo_dsp_pob_20251201",
+    "yahoo_order_id": 567890,
+    "line_ids": [1234567]
+  },
   "packages": [{
     "package_id": "pob_audience_campaign",
     "status": "pending",
-    "external_id": "yahoo_adgroup_hiking_abc123",
+    "external_id": "1234567"  // Yahoo DSP Line ID
+  }],
+  
+  // Full Line details (Yahoo DSP API structure):
+  "lines": [{
+    "id": 1234567,
+    "name": "Performance Outerwear Brand - pob_audience_campaign",
+    "orderId": 567890,
+    "mediaType": "DISPLAY",
+    "status": "PENDING_REVIEW",
     
-    // DSP provides upfront audience insights:
-    "targeting_config": {
-      "audience_segments": [
-        {
-          "name": "outdoor_enthusiasts",
-          "reach": 3500000,
-          "quality_score": 0.89,
-          "cpm_lift": 0.25  // 25% CPM increase for targeting
-        },
-        {
-          "name": "eco_conscious_consumers",
-          "reach": 2800000,
-          "quality_score": 0.85,
-          "cpm_lift": 0.20
-        },
-        {
-          "name": "adventure_travelers",
-          "reach": 1900000,
-          "quality_score": 0.82,
-          "cpm_lift": 0.15
-        },
-        {
-          "name": "sustainable_shoppers",
-          "reach": 1600000,
-          "quality_score": 0.80,
-          "cpm_lift": 0.18
-        }
-      ],
-      "total_addressable_audience": 5200000,
-      "estimated_unique_reach": 4160000,
-      "estimated_frequency": 1.5
+    // Dates
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    
+    // Budget (Yahoo DSP style)
+    "scheduleBudget": 50000,
+    "dailyBudget": 1612.90,
+    
+    // Bidding (Yahoo DSP API fields)
+    "bidStrategy": "AUTOBID",
+    "bidType": "DYNAMIC",
+    "goalType": "CLICK",
+    "maxBid": 8.00,
+    "pacingType": "EVEN",
+    
+    // Frequency Cap (Yahoo DSP style)
+    "frequencyCap": {
+      "type": "IMPRESSION",
+      "limit": 3,
+      "duration": 1,
+      "durationUnit": "DAY",
+      "scope": "LINE"
     },
     
-    // Bid landscape data:
-    "bid_landscape": {
-      "median_winning_bid": 8.15,
-      "percentile_25": 6.85,
-      "percentile_75": 9.50,
-      "competition_level": "medium-high",
-      "estimated_win_rate_at_bid": {
-        "8.00": 0.48  // 48% win rate at our $8 bid
+    // Exchanges targeted
+    "exchanges": ["YAHOO_EXCHANGE", "INDEX_EXCHANGE", "OPEN_EXCHANGE"],
+    
+    // Audience segments with Yahoo DSP metadata
+    "audienceSegments": [
+      {
+        "id": "seg_12345",
+        "name": "Outdoor Enthusiasts",
+        "type": "YAHOO_OWNED",
+        "provider": "Yahoo",
+        "reach": 3500000,
+        "cpmLift": 0.25,
+        "recency": "30_DAYS",
+        "qualityScore": 0.89
+      },
+      {
+        "id": "seg_23456",
+        "name": "Eco Conscious Consumers",
+        "type": "THIRD_PARTY",
+        "provider": "Oracle Data Cloud",
+        "reach": 2800000,
+        "cpmLift": 0.30,
+        "recency": "60_DAYS",
+        "qualityScore": 0.85
+      },
+      {
+        "id": "seg_34567",
+        "name": "Adventure Travelers",
+        "type": "YAHOO_OWNED",
+        "provider": "Yahoo",
+        "reach": 1900000,
+        "cpmLift": 0.28,
+        "recency": "45_DAYS",
+        "qualityScore": 0.82
+      },
+      {
+        "id": "seg_45678",
+        "name": "Sustainable Shoppers",
+        "type": "THIRD_PARTY",
+        "provider": "Experian",
+        "reach": 1500000,
+        "cpmLift": 0.35,
+        "recency": "30_DAYS",
+        "qualityScore": 0.80
       }
-    },
-    
-    // Bid strategy configuration:
-    "bid_strategy": {
-      "type": "auto_optimize_ctr",
-      "initial_bid": 8.00,
-      "floor_bid": 6.00,
-      "ceiling_bid": 10.00,
-      "optimization_goal": "maximize_clicks"
+    ]
+  }],
+  
+  // Reach estimate
+  "reachEstimate": {
+    "estimatedUniqueUsers": 5200000,
+    "estimatedImpressions": 18200000,
+    "estimatedDailyImpressions": 586000,
+    "confidence": 0.87
+  },
+  
+  // Bid landscape data:
+  "bidLandscape": {
+    "medianWinningBid": 8.40,
+    "percentile25": 6.72,
+    "percentile75": 10.00,
+    "percentile90": 12.00,
+    "competitionLevel": "MEDIUM",
+    "estimatedWinRateAtBid": {
+      "$6.40": 0.25,
+      "$8.00": 0.45,
+      "$9.60": 0.65,
+      "$12.00": 0.85
     }
-  }]
+  }
 }
 ```
 
@@ -497,87 +559,129 @@ mcp_yahoo.get_media_buy_delivery(
 ```
 
 **Yahoo DSP Performance Report:**
+
+> **Yahoo DSP Reporting API** provides detailed metrics at Line level with
+> DSP-specific dimensions (exchange breakdown, win rate, viewability).
+
 ```json
 {
   "packages": [{
     "package_id": "pob_audience_campaign",
+    "external_id": "1234567",
     "status": "delivering",
     
-    // Standard metrics:
-    "impressions": 3100000,  // 3.1M of 6.25M (50% through)
+    // Standard AdCP metrics:
+    "impressions": 3100000,
     "clicks": 34100,
-    "spend": 24800,
-    "avg_cpm": 8.00,
+    "spend": 24800.00,
     
-    // DSP-specific metrics:
+    // Yahoo DSP Line-level metrics (in metadata):
     "metadata": {
-      // Auction performance:
-      "bid_requests": 10800000,  // Total auction opportunities
-      "win_rate": 0.287,  // Won 28.7% of auctions
-      "avg_bid": 8.00,
-      "avg_win_price": 8.03,  // Actually paid $8.03 CPM
+      // Line info (Yahoo DSP terminology)
+      "lineId": 1234567,
+      "lineName": "Performance Outerwear Brand - pob_audience_campaign",
+      "lineStatus": "ACTIVE",  // Yahoo DSP status
+      "mediaType": "DISPLAY",
       
-      // Quality metrics:
-      "viewability_rate": 0.75,  // 75% viewable impressions
-      "ctr": 0.011,  // 1.1% click-through rate (EXCELLENT for display)
+      // Bidding performance (DSP-specific)
+      "bidRequests": 10800000,
+      "bidsWon": 3100000,
+      "winRate": 0.287,
+      "avgBid": 8.00,
+      "avgWinPrice": 8.00,
       
-      // Conversion tracking:
-      "conversions": 682,  // Post-click gear purchases!
-      "conversion_rate": 0.020,  // 2.0% of clicks converted
-      "cost_per_conversion": 36.36,
+      // Performance metrics
+      "ctr": 0.011,
+      "conversions": 682,
+      "conversionRate": 0.020,
+      "cpm": 8.00,
+      "cpc": 0.73,
+      "cpa": 36.36,
       
-      // Audience performance breakdown:
-      "audience_insights": {
-        "top_performing_segment": "outdoor_enthusiasts",
-        "segment_performance": {
-          "outdoor_enthusiasts": {
-            "impressions": 1400000,
-            "clicks": 19600,
-            "ctr": 0.014,  // 1.4% CTR - BEST
-            "conversions": 372,
-            "conversion_rate": 0.019
-          },
-          "eco_conscious_consumers": {
-            "impressions": 900000,
-            "clicks": 9900,
-            "ctr": 0.011,
-            "conversions": 198,
-            "conversion_rate": 0.020
-          },
-          "adventure_travelers": {
-            "impressions": 500000,
-            "clicks": 3000,
-            "ctr": 0.006,
-            "conversions": 72,
-            "conversion_rate": 0.024  // Lower volume but HIGHER conversion rate
-          },
-          "sustainable_shoppers": {
-            "impressions": 300000,
-            "clicks": 1600,
-            "ctr": 0.005,
-            "conversions": 40,
-            "conversion_rate": 0.025  // HIGHEST conversion rate
-          }
-        }
-      },
+      // Viewability (key DSP metric)
+      "viewableImpressions": 2325000,
+      "viewabilityRate": 0.75,
       
-      // Optimization insights:
-      "bid_optimization": {
-        "optimal_bid": 7.85,  // Algorithm found sweet spot
-        "bid_adjustments": {
-          "outdoor_enthusiasts": "+15%",  // Bidding higher for best segment
-          "sustainable_shoppers": "+20%", // Highest conversion rate
-          "adventure_travelers": "+10%",
-          "eco_conscious_consumers": "0%"
-        }
+      // Budget tracking
+      "scheduleBudget": 50000,
+      "dailyBudget": 1612.90,
+      "budgetUtilization": 0.496,
+      
+      // Audience segments active
+      "audienceSegments": 4,
+      
+      // Exchange breakdown (Yahoo DSP dimension)
+      "exchangeBreakdown": {
+        "YAHOO_EXCHANGE": 1395000,
+        "INDEX_EXCHANGE": 930000,
+        "OPEN_EXCHANGE": 775000
       }
     }
   }],
+  
+  // Totals
   "totals": {
     "impressions": 3100000,
     "clicks": 34100,
-    "conversions": 682,
-    "spend": 24800
+    "spend": 24800.00
+  }
+}
+```
+
+**Segment-Level Performance (Yahoo DSP Audience Insights):**
+```json
+{
+  "audienceInsights": {
+    "topPerformingSegment": "outdoor_enthusiasts",
+    "segmentPerformance": {
+      "outdoor_enthusiasts": {
+        "type": "YAHOO_OWNED",
+        "provider": "Yahoo",
+        "impressions": 1400000,
+        "clicks": 19600,
+        "ctr": 0.014,
+        "conversions": 372,
+        "conversionRate": 0.019
+      },
+      "eco_conscious_consumers": {
+        "type": "THIRD_PARTY",
+        "provider": "Oracle Data Cloud",
+        "impressions": 900000,
+        "clicks": 9900,
+        "ctr": 0.011,
+        "conversions": 198,
+        "conversionRate": 0.020
+      },
+      "adventure_travelers": {
+        "type": "YAHOO_OWNED",
+        "provider": "Yahoo",
+        "impressions": 500000,
+        "clicks": 3000,
+        "ctr": 0.006,
+        "conversions": 72,
+        "conversionRate": 0.024
+      },
+      "sustainable_shoppers": {
+        "type": "THIRD_PARTY",
+        "provider": "Experian",
+        "impressions": 300000,
+        "clicks": 1600,
+        "ctr": 0.005,
+        "conversions": 40,
+        "conversionRate": 0.025
+      }
+    },
+    
+    // Optimization insights (AUTOBID adjustments):
+    "bidOptimization": {
+      "optimalBid": 7.85,
+      "bidAdjustments": {
+        "outdoor_enthusiasts": "+15%",
+        "sustainable_shoppers": "+20%",
+        "adventure_travelers": "+10%",
+        "eco_conscious_consumers": "0%"
+      }
+    }
   }
 }
 ```

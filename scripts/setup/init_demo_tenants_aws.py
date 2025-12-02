@@ -189,33 +189,65 @@ def create_demo_tenants():
             # Create sample products (different for DSP vs publisher)
             if config.get("tenant_type") == "dsp":
                 # DSP products: Audience-focused, programmatic
+                # Aligned with Yahoo DSP API terminology (Lines, Exchanges, Deals)
                 products_data = [
                     {
-                        "name": "Audience-Targeted Display",
+                        "name": "Audience-Targeted Display (Open Exchange)",
                         "format": "display_728x90",
-                        "description": "Reach high-value audiences across Yahoo Exchange + open web with audience targeting",
+                        "description": "Reach high-value audiences across Yahoo Exchange + open web. "
+                                       "Supports outdoor_enthusiasts, eco_conscious_consumers, sustainable_shoppers, "
+                                       "adventure_travelers audience segments. AUTOBID optimization available.",
                         "pricing_model": "CPM",
                         "rate": 6.50,
-                        "is_fixed": False,  # Bid-based, not fixed
-                        "price_guidance": {"floor": 5.00, "p50": 6.50, "p75": 8.00},  # Required for auction pricing
+                        "is_fixed": False,  # Bid-based (auction)
+                        "price_guidance": {"floor": 5.00, "p50": 6.50, "p75": 8.00},
+                        "product_suffix": "",  # Use default product_id format
                     },
                     {
                         "name": "Premium Display + Retargeting",
                         "format": "display_300x250",
-                        "description": "Medium rectangle with site retargeting pools for abandoned cart recovery",
+                        "description": "Medium rectangle with site retargeting pools for abandoned cart recovery. "
+                                       "Supports FIRST_PARTY retargeting audiences. Higher CPM for precision targeting.",
                         "pricing_model": "CPM",
                         "rate": 8.00,
-                        "is_fixed": False,  # Bid-based
-                        "price_guidance": {"floor": 6.00, "p50": 8.00, "p75": 10.00},  # Required for auction pricing
+                        "is_fixed": False,  # Bid-based (auction)
+                        "price_guidance": {"floor": 6.00, "p50": 8.00, "p75": 10.00},
+                        "product_suffix": "",
                     },
                     {
                         "name": "Mobile Audience Network",
                         "format": "display_320x50",
-                        "description": "Mobile inventory with behavioral targeting across Yahoo mobile properties",
+                        "description": "Mobile inventory with behavioral targeting across Yahoo mobile properties. "
+                                       "Supports fitness_enthusiasts, travel_enthusiasts audience segments.",
                         "pricing_model": "CPM",
                         "rate": 5.50,
-                        "is_fixed": False,  # Bid-based
-                        "price_guidance": {"floor": 4.00, "p50": 5.50, "p75": 7.00},  # Required for auction pricing
+                        "is_fixed": False,  # Bid-based (auction)
+                        "price_guidance": {"floor": 4.00, "p50": 5.50, "p75": 7.00},
+                        "product_suffix": "",
+                    },
+                    {
+                        "name": "Premium PMP Deal - Sports & Outdoor Publishers",
+                        "format": "display_300x250",
+                        "description": "Private Marketplace (PMP) deal with premium sports and outdoor publishers. "
+                                       "PREFERRED_DEAL type with fixed floor price. Higher viewability (75%+) and "
+                                       "brand-safe inventory. Ideal for outdoor_enthusiasts, adventure_travelers targeting.",
+                        "pricing_model": "CPM",
+                        "rate": 12.00,  # Higher CPM for premium PMP inventory
+                        "is_fixed": False,  # Still auction-based but with floor
+                        "price_guidance": {"floor": 10.00, "p50": 12.00, "p75": 15.00},
+                        "product_suffix": "_pmp_sports",  # Special suffix for PMP deal
+                    },
+                    {
+                        "name": "Video Pre-Roll (Programmatic)",
+                        "format": "video_30sec",
+                        "description": "30-second video pre-roll across Yahoo video network and exchange partners. "
+                                       "Supports VIDEO mediaType with video completion tracking. "
+                                       "Optimized for VIEWABLE_IMPRESSION goal type.",
+                        "pricing_model": "CPM",
+                        "rate": 15.00,  # Video typically higher CPM
+                        "is_fixed": False,
+                        "price_guidance": {"floor": 12.00, "p50": 15.00, "p75": 20.00},
+                        "product_suffix": "_video",
                     },
                 ]
             else:
@@ -248,7 +280,12 @@ def create_demo_tenants():
                 ]
 
             for prod_data in products_data:
-                product_id = f"{tenant_id}_{prod_data['format']}"
+                # Generate product_id - use custom suffix if provided, otherwise use format
+                suffix = prod_data.get("product_suffix", "")
+                if suffix:
+                    product_id = f"{tenant_id}_{prod_data['format']}{suffix}"
+                else:
+                    product_id = f"{tenant_id}_{prod_data['format']}"
                 
                 # Check if product already exists
                 stmt = select(Product).filter_by(product_id=product_id, tenant_id=tenant_id)
