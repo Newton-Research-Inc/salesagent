@@ -99,70 +99,210 @@ class YahooDSP(AdServerAdapter):
     }
 
     # =========================================================================
-    # Yahoo DSP Bidding Configuration
+    # Yahoo DSP Bidding Configuration (from Yahoo DSP API)
+    # https://help.yahooinc.com/dsp-api/docs/lines
     # =========================================================================
     BID_STRATEGIES = {
-        "AUTOBID": "Automatic bidding - DSP optimizes bids",
-        "MAXBID": "Maximum bid - Set ceiling price",
+        "AUTOBID": {
+            "description": "Automatic bidding - DSP optimizes bids dynamically",
+            "bidType": "DYNAMIC",
+            "supportsLearningPhase": True,
+            "supportsTargetMetrics": True,
+        },
+        "MAXBID": {
+            "description": "Maximum bid - Fixed ceiling price for all auctions",
+            "bidType": "FIXED",
+            "supportsLearningPhase": False,
+            "supportsTargetMetrics": False,
+        },
     }
 
     BID_TYPES = {
-        "DYNAMIC": "Dynamic bidding based on optimization",
-        "FIXED": "Fixed bid amount",
+        "DYNAMIC": "Dynamic bidding based on real-time optimization signals",
+        "FIXED": "Fixed bid amount for all auctions",
     }
 
+    # Goal types with associated metrics and learning requirements
     GOAL_TYPES = {
-        "IMPRESSION": "Optimize for impressions",
-        "CLICK": "Optimize for clicks (CTR)",
-        "CONVERSION": "Optimize for conversions (CPA)",
-        "VIEWABLE_IMPRESSION": "Optimize for viewable impressions",
-        "VIDEO_COMPLETION": "Optimize for video completions",
+        "IMPRESSION": {
+            "description": "Optimize for impressions (CPM)",
+            "metric": "impressions",
+            "learningPhaseDays": 0,
+            "minDataPoints": 0,
+        },
+        "CLICK": {
+            "description": "Optimize for clicks (CTR)",
+            "metric": "clicks",
+            "targetField": "targetCtr",
+            "defaultTarget": 0.001,  # 0.1% CTR
+            "learningPhaseDays": 3,
+            "minDataPoints": 100,
+        },
+        "CONVERSION": {
+            "description": "Optimize for conversions (CPA)",
+            "metric": "conversions",
+            "targetField": "targetCpa",
+            "learningPhaseDays": 7,
+            "minDataPoints": 50,
+            "requiresPixel": True,
+        },
+        "VIEWABLE_IMPRESSION": {
+            "description": "Optimize for viewable impressions (vCPM)",
+            "metric": "viewableImpressions",
+            "targetField": "viewabilityTarget",
+            "defaultTarget": 0.70,  # 70% viewability
+            "learningPhaseDays": 3,
+            "minDataPoints": 1000,
+        },
+        "VIDEO_COMPLETION": {
+            "description": "Optimize for video completions (CPCV)",
+            "metric": "videoCompletions",
+            "targetField": "targetCompletionRate",
+            "defaultTarget": 0.70,  # 70% completion rate
+            "learningPhaseDays": 5,
+            "minDataPoints": 200,
+            "mediaTypes": ["VIDEO"],
+        },
     }
 
     PACING_TYPES = {
-        "EVEN": "Spread budget evenly across flight",
-        "ACCELERATED": "Spend budget as fast as possible",
+        "EVEN": {
+            "description": "Spread budget evenly across flight",
+            "algorithm": "time_weighted",
+            "overspendAllowed": False,
+        },
+        "ACCELERATED": {
+            "description": "Spend budget as fast as possible",
+            "algorithm": "asap",
+            "overspendAllowed": True,
+        },
     }
 
     # =========================================================================
-    # Yahoo DSP Exchanges (Supply Sources)
+    # Yahoo DSP Exchanges (Supply Sources) - Enhanced with realistic metadata
+    # https://help.yahooinc.com/dsp-api/docs/traffic-api
     # =========================================================================
     EXCHANGES = {
         "YAHOO_EXCHANGE": {
             "id": 1,
             "name": "Yahoo Exchange",
             "type": "owned",
-            "description": "Yahoo-owned properties (Yahoo Mail, Yahoo Finance, etc.)",
+            "description": "Yahoo-owned properties (Yahoo Mail, Yahoo Finance, Yahoo Sports, etc.)",
+            "avgCpm": 6.50,
+            "viewabilityRate": 0.72,
+            "dailyImpressions": 500000000,
+            "mediaTypes": ["DISPLAY", "VIDEO", "NATIVE"],
+            "geoAvailability": ["US", "CA", "UK", "AU", "DE", "FR", "JP"],
+            "brandSafetyScore": 0.95,
+            "fraudRate": 0.02,
         },
         "VERIZON_MEDIA": {
             "id": 2,
             "name": "Verizon Media",
             "type": "owned",
-            "description": "Verizon Media properties",
+            "description": "Verizon Media properties (AOL, HuffPost, TechCrunch, Engadget)",
+            "avgCpm": 7.00,
+            "viewabilityRate": 0.70,
+            "dailyImpressions": 200000000,
+            "mediaTypes": ["DISPLAY", "VIDEO", "NATIVE"],
+            "geoAvailability": ["US", "CA", "UK"],
+            "brandSafetyScore": 0.92,
+            "fraudRate": 0.03,
         },
         "MAGNITE": {
             "id": 3,
             "name": "Magnite (Rubicon)",
             "type": "ssp",
-            "description": "Premium publisher inventory via Magnite",
+            "description": "Premium publisher inventory via Magnite SSP",
+            "avgCpm": 8.50,
+            "viewabilityRate": 0.68,
+            "dailyImpressions": 800000000,
+            "mediaTypes": ["DISPLAY", "VIDEO", "AUDIO", "CTV"],
+            "geoAvailability": ["GLOBAL"],
+            "brandSafetyScore": 0.88,
+            "fraudRate": 0.05,
+            "premiumPublishers": ["ESPN", "CNN", "NYT", "WSJ", "NBC"],
         },
         "PUBMATIC": {
             "id": 4,
             "name": "PubMatic",
             "type": "ssp",
-            "description": "PubMatic exchange inventory",
+            "description": "PubMatic exchange - global programmatic marketplace",
+            "avgCpm": 5.50,
+            "viewabilityRate": 0.65,
+            "dailyImpressions": 1200000000,
+            "mediaTypes": ["DISPLAY", "VIDEO", "NATIVE", "CTV"],
+            "geoAvailability": ["GLOBAL"],
+            "brandSafetyScore": 0.85,
+            "fraudRate": 0.06,
         },
         "INDEX_EXCHANGE": {
             "id": 5,
             "name": "Index Exchange",
             "type": "ssp",
-            "description": "Index Exchange inventory",
+            "description": "Index Exchange - header bidding focused SSP",
+            "avgCpm": 7.50,
+            "viewabilityRate": 0.71,
+            "dailyImpressions": 600000000,
+            "mediaTypes": ["DISPLAY", "VIDEO"],
+            "geoAvailability": ["US", "CA", "UK", "EU"],
+            "brandSafetyScore": 0.90,
+            "fraudRate": 0.04,
+            "headerBiddingEnabled": True,
+        },
+        "OPENX": {
+            "id": 6,
+            "name": "OpenX",
+            "type": "ssp",
+            "description": "OpenX - premium programmatic marketplace",
+            "avgCpm": 6.00,
+            "viewabilityRate": 0.67,
+            "dailyImpressions": 400000000,
+            "mediaTypes": ["DISPLAY", "VIDEO", "CTV"],
+            "geoAvailability": ["GLOBAL"],
+            "brandSafetyScore": 0.87,
+            "fraudRate": 0.05,
+        },
+        "TRIPLELIFT": {
+            "id": 7,
+            "name": "TripleLift",
+            "type": "ssp",
+            "description": "TripleLift - native advertising exchange",
+            "avgCpm": 9.00,
+            "viewabilityRate": 0.75,
+            "dailyImpressions": 150000000,
+            "mediaTypes": ["NATIVE", "DISPLAY", "VIDEO"],
+            "geoAvailability": ["US", "CA", "UK", "EU"],
+            "brandSafetyScore": 0.91,
+            "fraudRate": 0.03,
+            "nativeFormats": ["in-feed", "in-article", "recommendation"],
+        },
+        "SHARETHROUGH": {
+            "id": 8,
+            "name": "Sharethrough",
+            "type": "ssp",
+            "description": "Sharethrough - native and video exchange",
+            "avgCpm": 8.00,
+            "viewabilityRate": 0.73,
+            "dailyImpressions": 100000000,
+            "mediaTypes": ["NATIVE", "VIDEO"],
+            "geoAvailability": ["US", "CA"],
+            "brandSafetyScore": 0.89,
+            "fraudRate": 0.04,
         },
         "OPEN_EXCHANGE": {
             "id": 99,
             "name": "Open RTB Marketplace",
             "type": "open",
-            "description": "Open marketplace inventory",
+            "description": "Open marketplace - aggregated inventory from multiple sources",
+            "avgCpm": 4.00,
+            "viewabilityRate": 0.55,
+            "dailyImpressions": 5000000000,
+            "mediaTypes": ["DISPLAY", "VIDEO", "NATIVE", "AUDIO"],
+            "geoAvailability": ["GLOBAL"],
+            "brandSafetyScore": 0.70,
+            "fraudRate": 0.12,
+            "note": "Requires brand safety and fraud filtering",
         },
     }
 
@@ -306,9 +446,88 @@ class YahooDSP(AdServerAdapter):
 
     # =========================================================================
     # Frequency Cap Configuration (Yahoo DSP style)
+    # https://help.yahooinc.com/dsp-api/docs/lines
     # =========================================================================
-    FREQUENCY_CAP_DURATION_UNITS = ["HOUR", "DAY", "WEEK", "MONTH", "LIFETIME"]
-    FREQUENCY_CAP_SCOPES = ["LINE", "CAMPAIGN", "ADVERTISER"]
+    FREQUENCY_CAP_TYPES = {
+        "IMPRESSION": "Limit number of impressions per user",
+        "CLICK": "Limit number of clicks per user",
+    }
+    
+    FREQUENCY_CAP_DURATION_UNITS = {
+        "HOUR": {"seconds": 3600, "description": "Per hour"},
+        "DAY": {"seconds": 86400, "description": "Per day (24 hours)"},
+        "WEEK": {"seconds": 604800, "description": "Per week (7 days)"},
+        "MONTH": {"seconds": 2592000, "description": "Per month (30 days)"},
+        "LIFETIME": {"seconds": None, "description": "Campaign lifetime"},
+    }
+    
+    FREQUENCY_CAP_SCOPES = {
+        "LINE": "Frequency cap applies to this Line only",
+        "CAMPAIGN": "Frequency cap applies across all Lines in Campaign",
+        "ADVERTISER": "Frequency cap applies across all Campaigns for Advertiser",
+    }
+    
+    # Recommended frequency cap presets by goal type
+    FREQUENCY_CAP_PRESETS = {
+        "awareness": {"limit": 5, "duration": 1, "durationUnit": "DAY", "scope": "CAMPAIGN"},
+        "consideration": {"limit": 3, "duration": 1, "durationUnit": "DAY", "scope": "LINE"},
+        "conversion": {"limit": 7, "duration": 1, "durationUnit": "WEEK", "scope": "LINE"},
+        "retargeting": {"limit": 10, "duration": 1, "durationUnit": "DAY", "scope": "ADVERTISER"},
+    }
+
+    # =========================================================================
+    # Yahoo DSP Reporting Dimensions and Metrics
+    # https://help.yahooinc.com/dsp-api/docs/reporting-api
+    # =========================================================================
+    REPORTING_DIMENSIONS = {
+        "time": ["date", "hour", "week", "month"],
+        "entity": ["advertiser", "campaign", "line", "ad", "creative"],
+        "targeting": ["exchange", "deal", "device", "geo", "audience"],
+        "delivery": ["domain", "app", "placement"],
+    }
+    
+    REPORTING_METRICS = {
+        # Volume metrics
+        "impressions": {"type": "count", "description": "Total impressions served"},
+        "clicks": {"type": "count", "description": "Total clicks"},
+        "conversions": {"type": "count", "description": "Total conversions"},
+        "videoCompletions": {"type": "count", "description": "Video completions (100%)"},
+        "videoStarts": {"type": "count", "description": "Video starts"},
+        "video25": {"type": "count", "description": "Video 25% completion"},
+        "video50": {"type": "count", "description": "Video 50% completion"},
+        "video75": {"type": "count", "description": "Video 75% completion"},
+        
+        # Cost metrics
+        "spend": {"type": "currency", "description": "Total spend"},
+        "mediaCost": {"type": "currency", "description": "Media cost (excluding fees)"},
+        "dataFees": {"type": "currency", "description": "Third-party data fees"},
+        
+        # Rate metrics
+        "cpm": {"type": "rate", "description": "Cost per 1000 impressions"},
+        "cpc": {"type": "rate", "description": "Cost per click"},
+        "cpa": {"type": "rate", "description": "Cost per acquisition"},
+        "ctr": {"type": "percentage", "description": "Click-through rate"},
+        "conversionRate": {"type": "percentage", "description": "Conversion rate"},
+        "videoCompletionRate": {"type": "percentage", "description": "Video completion rate"},
+        
+        # Quality metrics
+        "viewableImpressions": {"type": "count", "description": "Viewable impressions (MRC standard)"},
+        "viewabilityRate": {"type": "percentage", "description": "Viewability rate"},
+        "measurableImpressions": {"type": "count", "description": "Measurable impressions"},
+        "measurabilityRate": {"type": "percentage", "description": "Measurability rate"},
+        
+        # Auction metrics
+        "bidRequests": {"type": "count", "description": "Total bid requests received"},
+        "bidsSubmitted": {"type": "count", "description": "Bids submitted to auction"},
+        "bidsWon": {"type": "count", "description": "Auctions won"},
+        "winRate": {"type": "percentage", "description": "Auction win rate"},
+        "avgBid": {"type": "currency", "description": "Average bid amount"},
+        "avgWinPrice": {"type": "currency", "description": "Average winning price"},
+        
+        # Reach metrics
+        "uniqueUsers": {"type": "count", "description": "Unique users reached"},
+        "frequency": {"type": "rate", "description": "Average frequency per user"},
+    }
 
     def __init__(self, config, principal, dry_run=False, creative_engine=None, tenant_id=None):
         """Initialize Yahoo DSP adapter."""
@@ -408,7 +627,9 @@ class YahooDSP(AdServerAdapter):
         goal_type: str,
         max_bid: float,
         total_budget: float, 
-        pacing: str = "EVEN"
+        pacing: str = "EVEN",
+        campaign_days: int = 30,
+        custom_targets: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Configure DSP bidding strategy (Yahoo DSP API style).
@@ -419,24 +640,83 @@ class YahooDSP(AdServerAdapter):
         - goalType: IMPRESSION, CLICK, CONVERSION, etc.
         - maxBid: Maximum CPM bid
         - pacingType: EVEN or ACCELERATED
+        - Learning phase and target metrics based on goal type
+        
+        Args:
+            strategy: AUTOBID or MAXBID
+            goal_type: IMPRESSION, CLICK, CONVERSION, VIEWABLE_IMPRESSION, VIDEO_COMPLETION
+            max_bid: Maximum CPM bid amount
+            total_budget: Total campaign budget
+            pacing: EVEN or ACCELERATED
+            campaign_days: Campaign duration in days (for target calculations)
+            custom_targets: Override default target metrics
         """
+        # Get strategy and goal configuration
+        strategy_config = self.BID_STRATEGIES.get(strategy, self.BID_STRATEGIES["AUTOBID"])
+        goal_config = self.GOAL_TYPES.get(goal_type, self.GOAL_TYPES["IMPRESSION"])
+        pacing_config = self.PACING_TYPES.get(pacing, self.PACING_TYPES["EVEN"])
+        
         config = {
             "bidStrategy": strategy,
-            "bidType": "DYNAMIC" if strategy == "AUTOBID" else "FIXED",
+            "bidType": strategy_config.get("bidType", "DYNAMIC") if isinstance(strategy_config, dict) else "DYNAMIC",
             "goalType": goal_type,
             "maxBid": max_bid,
             "pacingType": pacing,
             "budgetAllocation": "DAILY_CAP",
+            
+            # Learning phase configuration
+            "learningPhase": {
+                "enabled": strategy == "AUTOBID" and goal_config.get("learningPhaseDays", 0) > 0,
+                "durationDays": goal_config.get("learningPhaseDays", 0),
+                "minDataPoints": goal_config.get("minDataPoints", 0),
+                "status": "NOT_STARTED",  # NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED
+            },
+            
+            # Pacing details
+            "pacingDetails": {
+                "algorithm": pacing_config.get("algorithm", "time_weighted") if isinstance(pacing_config, dict) else "time_weighted",
+                "dailyBudget": round(total_budget / max(1, campaign_days), 2),
+                "overspendAllowed": pacing_config.get("overspendAllowed", False) if isinstance(pacing_config, dict) else False,
+            },
         }
 
-        # Add goal-specific configuration
+        # Add goal-specific target configuration
+        target_field = goal_config.get("targetField") if isinstance(goal_config, dict) else None
+        if target_field:
+            # Use custom target if provided, otherwise use default
+            default_target = goal_config.get("defaultTarget")
+            if custom_targets and target_field in custom_targets:
+                config[target_field] = custom_targets[target_field]
+            elif default_target is not None:
+                config[target_field] = default_target
+            elif goal_type == "CONVERSION":
+                # Calculate target CPA based on budget and expected conversions
+                expected_conversions = max(1, int(total_budget / 50))  # Assume $50 CPA
+                config["targetCpa"] = round(total_budget / expected_conversions, 2)
+        
+        # Add bid adjustments for AUTOBID strategy
+        if strategy == "AUTOBID":
+            config["bidAdjustments"] = {
+                "enabled": True,
+                "maxAdjustment": 0.50,  # +/- 50% from base bid
+                "factors": {
+                    "deviceType": {"mobile": 1.1, "desktop": 1.0, "tablet": 0.9, "ctv": 1.2},
+                    "dayOfWeek": {"weekday": 1.0, "weekend": 0.95},
+                    "timeOfDay": {"morning": 0.9, "afternoon": 1.0, "evening": 1.15, "night": 0.8},
+                    "exchange": {},  # Populated based on exchange performance
+                },
+            }
+        
+        # Add conversion tracking config if goal is CONVERSION
         if goal_type == "CONVERSION":
-            config["targetCpa"] = total_budget * 0.02  # 2% of budget per conversion
-            config["learningPhaseDays"] = 7
-        elif goal_type == "CLICK":
-            config["targetCtr"] = 0.001  # 0.1% CTR target
-        elif goal_type == "VIEWABLE_IMPRESSION":
-            config["viewabilityTarget"] = 0.70  # 70% viewability target
+            config["conversionTracking"] = {
+                "pixelRequired": goal_config.get("requiresPixel", True) if isinstance(goal_config, dict) else True,
+                "attributionWindow": {
+                    "clickThrough": 30,  # days
+                    "viewThrough": 1,    # days
+                },
+                "deduplication": "FIRST_CLICK",  # FIRST_CLICK, LAST_CLICK, LINEAR
+            }
 
         return config
 
@@ -446,23 +726,63 @@ class YahooDSP(AdServerAdapter):
         duration: int = 1,
         duration_unit: str = "DAY",
         scope: str = "LINE",
+        cap_type: str = "IMPRESSION",
+        preset: str | None = None,
     ) -> dict[str, Any]:
         """
         Build frequency cap configuration (Yahoo DSP style).
         
         Yahoo DSP frequency cap structure:
         - type: IMPRESSION or CLICK
-        - limit: Max impressions/clicks
-        - duration: Time period
-        - durationUnit: DAY, WEEK, MONTH, LIFETIME
+        - limit: Max impressions/clicks per user
+        - duration: Time period value
+        - durationUnit: HOUR, DAY, WEEK, MONTH, LIFETIME
         - scope: LINE, CAMPAIGN, ADVERTISER
+        
+        Args:
+            limit: Maximum number of impressions/clicks per user
+            duration: Time period (e.g., 1 for "1 DAY")
+            duration_unit: HOUR, DAY, WEEK, MONTH, LIFETIME
+            scope: LINE, CAMPAIGN, or ADVERTISER
+            cap_type: IMPRESSION or CLICK
+            preset: Optional preset name (awareness, consideration, conversion, retargeting)
+        
+        Returns:
+            Frequency cap configuration dict
         """
+        # Use preset if provided
+        if preset and preset in self.FREQUENCY_CAP_PRESETS:
+            preset_config = self.FREQUENCY_CAP_PRESETS[preset]
+            limit = preset_config["limit"]
+            duration = preset_config["duration"]
+            duration_unit = preset_config["durationUnit"]
+            scope = preset_config["scope"]
+        
+        # Validate duration unit
+        if duration_unit not in self.FREQUENCY_CAP_DURATION_UNITS:
+            duration_unit = "DAY"
+        
+        # Validate scope
+        if scope not in self.FREQUENCY_CAP_SCOPES:
+            scope = "LINE"
+        
+        # Validate cap type
+        if cap_type not in self.FREQUENCY_CAP_TYPES:
+            cap_type = "IMPRESSION"
+        
+        # Calculate effective cap period in seconds (for reporting)
+        duration_info = self.FREQUENCY_CAP_DURATION_UNITS.get(duration_unit, {})
+        seconds_per_unit = duration_info.get("seconds") if isinstance(duration_info, dict) else None
+        effective_seconds = seconds_per_unit * duration if seconds_per_unit else None
+        
         return {
-            "type": "IMPRESSION",
+            "type": cap_type,
             "limit": limit,
             "duration": duration,
             "durationUnit": duration_unit,
             "scope": scope,
+            "effectivePeriodSeconds": effective_seconds,
+            "description": f"Max {limit} {cap_type.lower()}s per user per {duration} {duration_unit.lower()}(s) at {scope.lower()} level",
         }
 
     def _get_deal_info(self, product_id: str) -> dict[str, Any] | None:
@@ -802,6 +1122,114 @@ class YahooDSP(AdServerAdapter):
             packages=response_packages,
         )
 
+    def _generate_exchange_breakdown(
+        self,
+        total_impressions: int,
+        exchanges: list[str],
+    ) -> dict[str, dict[str, Any]]:
+        """
+        Generate detailed exchange-level performance breakdown.
+        
+        Uses exchange metadata to simulate realistic performance differences
+        between exchanges (viewability, CPM, fraud rate, etc.).
+        """
+        breakdown = {}
+        remaining_impressions = total_impressions
+        
+        for i, exchange_key in enumerate(exchanges):
+            exchange_info = self.EXCHANGES.get(exchange_key, {})
+            
+            # Distribute impressions (weighted by exchange size)
+            if i == len(exchanges) - 1:
+                exchange_impressions = remaining_impressions
+            else:
+                # Larger exchanges get more share
+                daily_supply = exchange_info.get("dailyImpressions", 100000000)
+                weight = min(0.5, daily_supply / 1000000000)  # Cap at 50%
+                exchange_impressions = int(total_impressions * weight * random.uniform(0.8, 1.2))
+                exchange_impressions = min(exchange_impressions, remaining_impressions)
+                remaining_impressions -= exchange_impressions
+            
+            if exchange_impressions <= 0:
+                continue
+            
+            # Use exchange metadata for realistic metrics
+            base_viewability = exchange_info.get("viewabilityRate", 0.65)
+            base_cpm = exchange_info.get("avgCpm", 5.00)
+            fraud_rate = exchange_info.get("fraudRate", 0.05)
+            brand_safety = exchange_info.get("brandSafetyScore", 0.85)
+            
+            # Add some variance
+            viewability = base_viewability * random.uniform(0.95, 1.05)
+            cpm = base_cpm * random.uniform(0.90, 1.10)
+            
+            # Calculate derived metrics
+            clicks = int(exchange_impressions * random.uniform(0.0008, 0.0015))
+            viewable_impressions = int(exchange_impressions * viewability)
+            valid_impressions = int(exchange_impressions * (1 - fraud_rate))
+            
+            breakdown[exchange_key] = {
+                "exchangeId": exchange_info.get("id", 0),
+                "exchangeName": exchange_info.get("name", exchange_key),
+                "exchangeType": exchange_info.get("type", "unknown"),
+                "impressions": exchange_impressions,
+                "viewableImpressions": viewable_impressions,
+                "viewabilityRate": round(viewability, 3),
+                "clicks": clicks,
+                "ctr": round(clicks / exchange_impressions if exchange_impressions > 0 else 0, 5),
+                "avgCpm": round(cpm, 2),
+                "spend": round((exchange_impressions / 1000) * cpm, 2),
+                "fraudRate": round(fraud_rate, 3),
+                "validImpressions": valid_impressions,
+                "brandSafetyScore": round(brand_safety, 2),
+            }
+        
+        return breakdown
+
+    def _generate_device_breakdown(self, total_impressions: int) -> dict[str, dict[str, Any]]:
+        """Generate device-level performance breakdown."""
+        # Typical device distribution
+        device_shares = {
+            "mobile": 0.55,
+            "desktop": 0.30,
+            "tablet": 0.08,
+            "ctv": 0.05,
+            "other": 0.02,
+        }
+        
+        breakdown = {}
+        for device, share in device_shares.items():
+            impressions = int(total_impressions * share * random.uniform(0.9, 1.1))
+            clicks = int(impressions * random.uniform(0.0008, 0.0018))
+            
+            breakdown[device] = {
+                "impressions": impressions,
+                "clicks": clicks,
+                "ctr": round(clicks / impressions if impressions > 0 else 0, 5),
+                "share": round(impressions / total_impressions if total_impressions > 0 else 0, 3),
+            }
+        
+        return breakdown
+
+    def _generate_video_metrics(self, impressions: int) -> dict[str, Any]:
+        """Generate video-specific metrics for VIDEO media type."""
+        video_starts = int(impressions * random.uniform(0.85, 0.95))
+        video_25 = int(video_starts * random.uniform(0.80, 0.90))
+        video_50 = int(video_25 * random.uniform(0.75, 0.85))
+        video_75 = int(video_50 * random.uniform(0.70, 0.80))
+        video_completions = int(video_75 * random.uniform(0.65, 0.80))
+        
+        return {
+            "videoStarts": video_starts,
+            "video25": video_25,
+            "video50": video_50,
+            "video75": video_75,
+            "videoCompletions": video_completions,
+            "videoCompletionRate": round(video_completions / video_starts if video_starts > 0 else 0, 3),
+            "avgViewTime": round(random.uniform(15, 25), 1),  # seconds
+            "avgPercentViewed": round(random.uniform(0.55, 0.75), 3),
+        }
+
     def get_media_buy_delivery(
         self,
         media_buy_id: str,
@@ -812,12 +1240,13 @@ class YahooDSP(AdServerAdapter):
         """
         Get DSP campaign performance with programmatic-specific metrics.
         
-        Yahoo DSP Reporting API metrics:
+        Yahoo DSP Reporting API metrics (aligned with actual API):
         - impressions, clicks, conversions, spend
         - ctr, cpm, cpc, cpa
-        - viewableImpressions, viewabilityRate
-        - winRate, bidRequests, bidsWon
-        - videoCompletions, videoCompletionRate
+        - viewableImpressions, viewabilityRate, measurableImpressions
+        - winRate, bidRequests, bidsWon, avgBid, avgWinPrice
+        - videoStarts, video25, video50, video75, videoCompletions
+        - uniqueUsers, frequency
         
         Dimensions available:
         - date, advertiser, campaign, line, ad
@@ -888,6 +1317,89 @@ class YahooDSP(AdServerAdapter):
             else:
                 pkg_status = PackageStatus.PENDING
 
+            # Generate detailed breakdowns
+            exchange_breakdown = self._generate_exchange_breakdown(
+                impressions, 
+                line.get("exchanges", self.default_exchanges)
+            )
+            device_breakdown = self._generate_device_breakdown(impressions)
+            
+            # Generate video metrics if VIDEO media type
+            video_metrics = {}
+            if line["mediaType"] == "VIDEO":
+                video_metrics = self._generate_video_metrics(impressions)
+            
+            # Calculate reach metrics
+            unique_users = int(impressions / random.uniform(2.5, 4.0))  # Avg frequency 2.5-4
+            frequency = round(impressions / unique_users if unique_users > 0 else 0, 2)
+            
+            # Measurability (not all impressions can be measured for viewability)
+            measurable_impressions = int(impressions * random.uniform(0.85, 0.95))
+            measurability_rate = round(measurable_impressions / impressions if impressions > 0 else 0, 3)
+            
+            # Build comprehensive metadata
+            metadata = {
+                # Yahoo DSP Line info
+                "lineId": line["id"],
+                "lineName": line["name"],
+                "lineStatus": status,
+                "mediaType": line["mediaType"],
+                "goalType": line.get("goalType", "IMPRESSION"),
+                
+                # Bidding metrics (Yahoo DSP Reporting API)
+                "bidRequests": bid_requests,
+                "bidsSubmitted": int(bid_requests * random.uniform(0.7, 0.9)),
+                "bidsWon": impressions,
+                "winRate": round(win_rate, 3),
+                "avgBid": max_bid,
+                "avgWinPrice": round(avg_win_price, 2),
+                
+                # Performance metrics
+                "ctr": round(ctr, 5),
+                "conversions": conversions,
+                "conversionRate": round(conversion_rate, 4),
+                "cpm": round(avg_win_price, 2),
+                "cpc": round(spend / clicks if clicks > 0 else 0, 2),
+                "cpa": round(spend / conversions if conversions > 0 else 0, 2),
+                
+                # Viewability metrics (MRC standard)
+                "viewableImpressions": viewable_impressions,
+                "viewabilityRate": round(viewability_rate, 3),
+                "measurableImpressions": measurable_impressions,
+                "measurabilityRate": measurability_rate,
+                
+                # Reach metrics
+                "uniqueUsers": unique_users,
+                "frequency": frequency,
+                
+                # Budget tracking
+                "scheduleBudget": line["scheduleBudget"],
+                "dailyBudget": line["dailyBudget"],
+                "spend": round(spend, 2),
+                "budgetUtilization": round(spend / budget if budget > 0 else 0, 3),
+                "budgetRemaining": round(budget - spend, 2),
+                
+                # Cost breakdown
+                "mediaCost": round(spend * 0.85, 2),  # 85% media cost
+                "dataFees": round(spend * 0.10, 2),   # 10% data fees
+                "platformFees": round(spend * 0.05, 2),  # 5% platform fees
+                
+                # Audience info
+                "audienceSegments": len(line.get("audienceSegments", [])),
+                
+                # Detailed breakdowns (Yahoo DSP dimensions)
+                "exchangeBreakdown": exchange_breakdown,
+                "deviceBreakdown": device_breakdown,
+            }
+            
+            # Add video metrics if applicable
+            if video_metrics:
+                metadata["videoMetrics"] = video_metrics
+            
+            # Add deal info if PMP
+            if line.get("deal"):
+                metadata["dealInfo"] = line["deal"]
+
             packages.append(
                 PackagePerformance(
                     package_id=line["packageId"],
@@ -896,49 +1408,7 @@ class YahooDSP(AdServerAdapter):
                     impressions=impressions,
                     clicks=clicks,
                     spend=round(spend, 2),
-                    
-                    # DSP-specific metrics in metadata
-                    metadata={
-                        # Yahoo DSP Line info
-                        "lineId": line["id"],
-                        "lineName": line["name"],
-                        "lineStatus": status,
-                        "mediaType": line["mediaType"],
-                        
-                        # Bidding metrics
-                        "bidRequests": bid_requests,
-                        "bidsWon": impressions,
-                        "winRate": round(win_rate, 3),
-                        "avgBid": max_bid,
-                        "avgWinPrice": round(avg_win_price, 2),
-                        
-                        # Performance metrics
-                        "ctr": round(ctr, 5),
-                        "conversions": conversions,
-                        "conversionRate": round(conversion_rate, 4),
-                        "cpm": round(avg_win_price, 2),
-                        "cpc": round(spend / clicks if clicks > 0 else 0, 2),
-                        "cpa": round(spend / conversions if conversions > 0 else 0, 2),
-                        
-                        # Viewability
-                        "viewableImpressions": viewable_impressions,
-                        "viewabilityRate": round(viewability_rate, 3),
-                        
-                        # Budget tracking
-                        "scheduleBudget": line["scheduleBudget"],
-                        "dailyBudget": line["dailyBudget"],
-                        "budgetUtilization": round(spend / budget if budget > 0 else 0, 3),
-                        
-                        # Audience info
-                        "audienceSegments": len(line.get("audienceSegments", [])),
-                        
-                        # Exchange breakdown (simulated)
-                        "exchangeBreakdown": {
-                            "YAHOO_EXCHANGE": round(impressions * 0.45),
-                            "INDEX_EXCHANGE": round(impressions * 0.30),
-                            "OPEN_EXCHANGE": round(impressions * 0.25),
-                        },
-                    },
+                    metadata=metadata,
                 )
             )
 
@@ -1123,3 +1593,97 @@ class YahooDSP(AdServerAdapter):
             self.log(f"   ✓ Creative {creative_id} → Ad {ad_id}: {status}")
 
         return results
+
+    def associate_creatives(
+        self,
+        line_item_ids: list[str],
+        platform_creative_ids: list[str],
+    ) -> list[dict[str, Any]]:
+        """
+        Associate already-uploaded creatives with Lines.
+        
+        In Yahoo DSP, this creates Ad objects that link creatives to Lines.
+        
+        Args:
+            line_item_ids: Yahoo DSP Line IDs
+            platform_creative_ids: Yahoo DSP Creative IDs (already uploaded)
+        
+        Returns:
+            List of association results with status for each combination
+        """
+        self.log(f"🔗 Yahoo DSP: Associating {len(platform_creative_ids)} creatives with {len(line_item_ids)} lines")
+        
+        results = []
+        for line_id in line_item_ids:
+            for creative_id in platform_creative_ids:
+                # Create Ad object (association between Line and Creative)
+                ad_id = random.randint(10000000, 99999999)
+                
+                results.append({
+                    "line_item_id": line_id,
+                    "creative_id": creative_id,
+                    "ad_id": str(ad_id),
+                    "status": "success",
+                    "message": f"Created Ad {ad_id} linking Creative {creative_id} to Line {line_id}",
+                })
+                self.log(f"   ✓ Line {line_id} + Creative {creative_id} → Ad {ad_id}")
+        
+        return results
+
+    def update_media_buy_performance_index(
+        self,
+        media_buy_id: str,
+        package_performance: list[PackagePerformance],
+    ) -> bool:
+        """
+        Update the performance index for packages in a media buy.
+        
+        Yahoo DSP uses this to adjust bid strategies based on performance.
+        The performance index influences AUTOBID optimization.
+        
+        Args:
+            media_buy_id: Yahoo DSP Campaign ID
+            package_performance: List of package performance data
+        
+        Returns:
+            True if update successful
+        """
+        campaign = self._campaigns.get(media_buy_id)
+        if not campaign:
+            self.log(f"⚠️ Campaign {media_buy_id} not found for performance index update")
+            return False
+        
+        self.log(f"📈 Yahoo DSP: Updating performance index for {media_buy_id}")
+        
+        # Update bid adjustments based on performance
+        for perf in package_performance:
+            for line in campaign["lines"]:
+                if line["packageId"] == perf.package_id:
+                    # Calculate performance score
+                    if perf.metadata:
+                        ctr = perf.metadata.get("ctr", 0)
+                        conversion_rate = perf.metadata.get("conversionRate", 0)
+                        viewability = perf.metadata.get("viewabilityRate", 0)
+                        
+                        # Simple performance score (0-100)
+                        perf_score = (
+                            (ctr * 10000) * 0.3 +  # CTR weight
+                            (conversion_rate * 100) * 0.4 +  # Conversion weight
+                            (viewability * 100) * 0.3  # Viewability weight
+                        )
+                        
+                        line["performanceScore"] = round(perf_score, 2)
+                        line["lastPerformanceUpdate"] = datetime.now(UTC).isoformat()
+                        
+                        # Adjust bid based on performance
+                        if perf_score > 70:
+                            line["bidAdjustment"] = 1.15  # Increase bid 15%
+                        elif perf_score > 50:
+                            line["bidAdjustment"] = 1.0  # No change
+                        else:
+                            line["bidAdjustment"] = 0.90  # Decrease bid 10%
+                        
+                        self.log(f"   ✓ Line {line['id']}: Score={perf_score:.1f}, Bid Adj={line['bidAdjustment']:.2f}")
+                    break
+        
+        return True
