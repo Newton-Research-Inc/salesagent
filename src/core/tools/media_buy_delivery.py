@@ -459,6 +459,7 @@ def get_media_buy_delivery(
     webhook_url: str | None = None,
     push_notification_config: PushNotificationConfig | None = None,
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Get delivery data for media buys.
 

@@ -266,6 +266,7 @@ def list_authorized_properties(
     webhook_url: str | None = None,
     ctx: Context | ToolContext | None = None,
     context: dict | None = None,  # payload-level context
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """List all properties this agent is authorized to represent (AdCP spec endpoint).
 

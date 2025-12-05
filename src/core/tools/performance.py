@@ -105,6 +105,7 @@ def update_performance_index(
     webhook_url: str | None = None,
     context: dict | None = None,
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Update performance index data for a media buy.
 

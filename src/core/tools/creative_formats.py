@@ -175,6 +175,7 @@ def list_creative_formats(
     webhook_url: str | None = None,
     context: dict | None = None,  # Application level context per adcp spec
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """List all available creative formats (AdCP spec endpoint).
 

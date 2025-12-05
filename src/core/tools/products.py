@@ -592,6 +592,7 @@ async def get_products(
     push_notification_config: PushNotificationConfig | None = None,
     context: dict | None = None,  # payload-level context
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Get available products matching the brief.
 
