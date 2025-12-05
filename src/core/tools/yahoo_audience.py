@@ -18,7 +18,6 @@ from fastmcp.tools.tool import ToolResult
 
 from src.adapters import get_adapter
 from src.core.auth import get_principal_from_context
-from src.core.config_loader import load_config
 from src.core.database.database_session import get_db_session
 from src.core.database.models import Tenant
 
@@ -112,9 +111,8 @@ async def _get_audience_segments_impl(
                     platform_mappings=principal_row.platform_mappings or {},
                 )
     
-    # Load config and create adapter
-    config = load_config()
-    adapter = get_adapter(config, principal)
+    # Create adapter - get_adapter reads tenant config from database
+    adapter = get_adapter(principal)
     
     # Verify adapter name
     if adapter.adapter_name != "yahoo_dsp":
@@ -221,9 +219,8 @@ async def _get_segment_analytics_impl(
                     platform_mappings=principal_row.platform_mappings or {},
                 )
     
-    # Load config and create adapter
-    config = load_config()
-    adapter = get_adapter(config, principal)
+    # Create adapter - get_adapter reads tenant config from database
+    adapter = get_adapter(principal)
     
     # Verify adapter name
     if adapter.adapter_name != "yahoo_dsp":
