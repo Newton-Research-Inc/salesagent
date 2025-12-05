@@ -199,7 +199,7 @@ context_mgr = ContextManager()
 SELECTED_ADAPTER = (
     (config.get("ad_server", {}).get("adapter") or "mock") if config else "mock"
 ).lower()  # noqa: F841 - used below for adapter selection
-AVAILABLE_ADAPTERS = ["mock", "gam", "kevel", "triton", "triton_digital"]
+AVAILABLE_ADAPTERS = ["mock", "gam", "kevel", "triton", "triton_digital", "yahoo_dsp"]
 
 # --- In-Memory State (already initialized above, just adding context_map) ---
 context_map: dict[str, str] = {}  # Maps context_id to media_buy_id
