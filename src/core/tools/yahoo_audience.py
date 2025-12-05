@@ -16,10 +16,10 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.context import Context
 from fastmcp.tools.tool import ToolResult
 
-from src.adapters import get_adapter
 from src.core.auth import get_principal_from_context
 from src.core.database.database_session import get_db_session
 from src.core.database.models import Tenant
+from src.core.helpers.adapter_helpers import get_adapter
 
 logger = logging.getLogger(__name__)
 
