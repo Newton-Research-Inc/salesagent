@@ -2,1212 +2,1221 @@
 
 ## 🎯 Demo Objective
 
-Show Newton buying media through **Yahoo DSP (programmatic)** vs **ESPN (direct publisher)**, highlighting:
-1. **Audience targeting** (DSP) vs placement targeting (publisher)
-2. **Auction-based pricing** (DSP) vs fixed pricing (publisher)
-3. **Rich performance metrics** (DSP) vs basic metrics (publisher)
-4. **Strategic decision-making** by Newton based on audience analysis
+Show Newton executing a media buy on **Yahoo DSP** using **native Yahoo audience tools**, demonstrating:
+1. **Strategic execution** - Newton receives allocation from MMM/audience modeling
+2. **Native tool integration** - Newton uses Yahoo's `getAudienceSegments` and `Get_analytics_for_audiences_segment`
+3. **Intelligent segment selection** - Newton evaluates and selects optimal audiences
+4. **AdCP interoperability** - Standard AdCP tools work alongside native DSP tools
 
 ---
 
 ## 📋 Demo Scenario
 
-**Brand:** "Performance Outerwear Brand" (POB) - Premium outdoor apparel company (think Patagonia/Columbia)
+**Advertiser:** Honda  
+**Campaign:** CR-V Spring Launch Q1 2026  
+**Budget:** $500K allocated to Yahoo DSP (determined by Media Mix Model)
 
-**Campaign Goal:** Launch new sustainable hiking collection to eco-conscious outdoor enthusiasts with a $50K budget.
+**Strategic Context:**
+- Honda's MMM determined that $500K should go to Yahoo DSP for programmatic reach
+- Audience modeling identified target: Auto intenders considering SUVs, age 25-54
+- Newton's job: Operationalize this allocation by finding the RIGHT audiences within Yahoo DSP
 
-**Target Audience:** (Pre-identified through separate analysis)
-- Outdoor enthusiasts (hiking, camping, trail running)
-- Eco-conscious consumers who value sustainability
-- Age 25-45, household income $75K+
-- Active lifestyle, weekend adventurers
-
-**Newton's Task:** 
-- Evaluate where to find this specific audience
-- Compare direct publisher (ESPN) vs programmatic DSP (Yahoo) capabilities
-- Choose the strategy that best reaches the target audience
-- Execute the buy and demonstrate ROI
+**Newton's Task:**
+- Use Yahoo DSP's native audience tools to discover available segments
+- Evaluate segment quality (reach, CPM, conversion rates)
+- Select optimal segment mix aligned with campaign objectives
+- Execute the buy using standard AdCP tools
 
 ---
 
 ## 🎬 Demo Script
 
-### **Act 1: Discovery Phase - "Finding the Right Audience"**
+### **Act 1: Strategic Brief**
 
-Newton has been given a specific audience profile and needs to determine which platform can best reach them.
+Newton receives instructions from Honda's agency with pre-determined allocation.
 
 ```python
-# Newton's internal reasoning:
-"I have a very specific target audience for Performance Outerwear Brand:
-outdoor enthusiasts who value sustainability. This isn't a broad 
-sports audience - it's a niche group. Let me query the available 
-sales agents to see who can help me reach THIS specific audience."
-
-# Tool calls:
-mcp_espn.get_products(brief="outdoor enthusiasts, eco-conscious, sustainable products")
-mcp_cnn.get_products(brief="outdoor enthusiasts, eco-conscious, sustainability")
-mcp_yahoo.get_products(brief="outdoor enthusiasts, hiking, camping, eco-conscious consumers, sustainable products")
-```
-
----
-
-#### **ESPN Response (Placement-Based)**
-
-```json
-{
-  "products": [
-    {
-      "product_id": "espn_display_728x90",
-      "name": "ESPN Homepage Leaderboard",
-      "description": "Premium placement on ESPN.com homepage",
-      "pricing_options": [{
-        "pricing_model": "CPM",
-        "rate": 5.00,
-        "currency": "USD",
-        "is_fixed": true
-      }],
-      "properties": ["espn.com"],
-      "inventory_profile": {
-        "daily_available_impressions": 500000
-      },
-      "targeting_constraints": {
-        "geo_targeting": ["US"],
-        "device_types": ["desktop", "mobile"]
-      }
+# Newton receives strategic brief:
+brief = {
+    "advertiser": "Honda",
+    "campaign": "CR-V Spring Launch 2026",
+    "budget": 500000,
+    "currency": "USD",
+    "platform": "yahoo_dsp",
+    "allocation_source": "Media Mix Model Q4 2025",
+    
+    "target_audience": {
+        "description": "Auto intenders considering SUVs, age 25-54",
+        "source": "Audience modeling from dealer data + 3P signals",
+        "key_attributes": [
+            "In-market for SUV/Crossover",
+            "Household income $75K+",
+            "Age 25-54",
+            "Competitive brand considerers (Toyota RAV4, Subaru Outback)"
+        ]
+    },
+    
+    "objectives": {
+        "primary": "awareness",
+        "secondary": "dealer_visits",
+        "kpis": ["reach", "frequency", "viewability", "dealer_visit_rate"]
+    },
+    
+    "flight": {
+        "start": "2026-01-01",
+        "end": "2026-03-31"
     }
-  ]
 }
 ```
 
-**Newton's Analysis:**
+**Newton's Internal Reasoning:**
 ```
-ESPN Analysis:
-✅ Pros: Broad reach (500K daily), affordable CPM ($5.00)
-❌ Cons: NO audience targeting - reaches ALL ESPN visitors
-❌ Cons: Sports focus doesn't align with outdoor/sustainability
-❌ Cons: Can only target by placement (homepage), not by audience
+"I have a $500K allocation for Yahoo DSP from Honda's MMM. The audience 
+modeling team identified auto intenders 25-54 as the target. My job is to:
 
-Audience Match: POOR
-- ESPN = Sports fans (basketball, football, etc.)
-- POB Target = Outdoor enthusiasts (hiking, camping)
-- Overlap: ~5% (some sports fans do outdoor activities)
+1. DISCOVER what audience segments Yahoo DSP has available
+2. EVALUATE which segments best match Honda's target audience
+3. SELECT the optimal segment mix across the funnel
+4. EXECUTE the buy using AdCP tools
 
-Reach Efficiency: LOW
-- 500K daily impressions, but only ~25K are relevant
-- Effective CPM: $100 (95% wasted impressions)
+Let me start by querying Yahoo DSP's audience inventory..."
 ```
 
 ---
 
-#### **CNN Response (Contextual Targeting)**
+### **Act 2: Audience Discovery**
 
-```json
-{
-  "products": [
-    {
-      "product_id": "cnn_display_300x250",
-      "name": "CNN Climate Section - Medium Rectangle",
-      "description": "Placement in CNN's Climate & Environment coverage",
-      "pricing_options": [{
-        "pricing_model": "CPM",
-        "rate": 7.00,
-        "currency": "USD",
-        "is_fixed": true
-      }],
-      "properties": ["cnn.com/climate"],
-      "inventory_profile": {
-        "daily_available_impressions": 150000
-      },
-      "targeting_constraints": {
-        "contextual": "Climate & environment news readers",
-        "geo_targeting": ["US"]
-      }
-    }
-  ]
-}
-```
+Newton uses Yahoo DSP's native `getAudienceSegments` tool to discover available audiences.
 
-**Newton's Analysis:**
-```
-CNN Analysis:
-✅ Pros: Contextual alignment - Climate section attracts eco-conscious readers
-✅ Pros: Better than ESPN - environmental content = relevant mindset
-❌ Cons: Still placement-based, not audience-based
-❌ Cons: Lower reach (150K daily) due to section-specific placement
-❌ Cons: Higher CPM ($7.00) for lower volume
+```python
+# Step 1: Query INTEREST segments (Yahoo behavioral data)
+mcp_yahoo.getAudienceSegments(
+    accountId=12345,  # Honda's advertiser ID
+    segmentType="INTEREST",
+    keywords="auto, SUV, crossover, vehicle, car shopping",
+    status="ACTIVE",
+    countryCodes="USA",
+    limit=25
+)
 
-Audience Match: MEDIUM
-- CNN Climate = Environmental news readers
-- POB Target = Eco-conscious + outdoor active
-- Overlap: ~20% (news readers ≠ outdoor gear buyers)
+# Step 2: Query FACT segments (third-party data providers)
+mcp_yahoo.getAudienceSegments(
+    accountId=12345,
+    segmentType="FACT",
+    keywords="auto intender, vehicle purchase, dealership, SUV buyer",
+    status="ACTIVE",
+    countryCodes="USA",
+    limit=25
+)
 
-Reach Efficiency: MEDIUM
-- 150K daily impressions, but only ~30K are relevant
-- Effective CPM: $35 (80% waste - reading about climate ≠ buying hiking gear)
+# Step 3: Query LOOKALIKE segments (based on Honda converters)
+mcp_yahoo.getAudienceSegments(
+    accountId=12345,
+    segmentType="LOOKALIKE",
+    query="Honda",
+    status="ACTIVE",
+    limit=10
+)
+
+# Step 4: Query CONVERSIONRULE segments (Honda pixel-based)
+mcp_yahoo.getAudienceSegments(
+    accountId=12345,
+    segmentType="CONVERSIONRULE",
+    status="ACTIVE",
+    limit=10
+)
 ```
 
 ---
 
-#### **Yahoo DSP Response (Audience-Based)**
-
-> **Note:** Yahoo DSP products include rich metadata about exchanges, audience segments, 
-> and bidding capabilities aligned with the Yahoo DSP API.
+#### **Yahoo DSP Response: INTEREST Segments**
 
 ```json
 {
-  "products": [
+  "segments": [
     {
-      "product_id": "yahoo_display_300x250",
-      "name": "Audience-Targeted Display + Retargeting",
-      "description": "Programmatic display with advanced audience targeting across Yahoo Exchange and open web. Supports outdoor_enthusiasts, eco_conscious_consumers, sustainable_shoppers audience segments. AUTOBID optimization available.",
-      "pricing_options": [{
-        "pricing_model": "CPM",
-        "rate": 8.00,
-        "currency": "USD",
-        "is_fixed": false,
-        "price_guidance": {
-          "floor": 6.00,
-          "p50": 8.00,
-          "p75": 10.00
-        }
-      }],
-      
-      // Exchanges available (Yahoo DSP supply sources)
-      "exchanges": [
-        {
-          "id": "YAHOO_EXCHANGE",
-          "name": "Yahoo Exchange",
-          "type": "owned",
-          "avgCpm": 6.50,
-          "viewabilityRate": 0.72,
-          "brandSafetyScore": 0.95
-        },
-        {
-          "id": "INDEX_EXCHANGE",
-          "name": "Index Exchange",
-          "type": "ssp",
-          "avgCpm": 7.50,
-          "viewabilityRate": 0.71,
-          "brandSafetyScore": 0.90
-        },
-        {
-          "id": "MAGNITE",
-          "name": "Magnite (Rubicon)",
-          "type": "ssp",
-          "avgCpm": 8.50,
-          "viewabilityRate": 0.68,
-          "premiumPublishers": ["ESPN", "CNN", "NYT", "WSJ"]
-        },
-        {
-          "id": "TRIPLELIFT",
-          "name": "TripleLift",
-          "type": "ssp",
-          "avgCpm": 9.00,
-          "viewabilityRate": 0.75,
-          "nativeFormats": ["in-feed", "in-article"]
-        },
-        {
-          "id": "OPEN_EXCHANGE",
-          "name": "Open RTB Marketplace",
-          "type": "open",
-          "avgCpm": 4.00,
-          "viewabilityRate": 0.55,
-          "dailyImpressions": 5000000000
-        }
-      ],
-      
-      // Audience segments with provider metadata
-      "targeting_capabilities": {
-        "audience_segments": [
-          {
-            "id": "outdoor_enthusiasts",
-            "type": "YAHOO_OWNED",
-            "provider": "Yahoo",
-            "reach": 3500000,
-            "cpmLift": 0.25,
-            "recency": "30_DAYS"
-          },
-          {
-            "id": "eco_conscious_consumers",
-            "type": "THIRD_PARTY",
-            "provider": "Oracle Data Cloud",
-            "reach": 2800000,
-            "cpmLift": 0.30,
-            "recency": "60_DAYS"
-          },
-          {
-            "id": "adventure_travelers",
-            "type": "YAHOO_OWNED",
-            "provider": "Yahoo",
-            "reach": 1900000,
-            "cpmLift": 0.28,
-            "recency": "45_DAYS"
-          },
-          {
-            "id": "sustainable_shoppers",
-            "type": "THIRD_PARTY",
-            "provider": "Experian",
-            "reach": 1500000,
-            "cpmLift": 0.35,
-            "recency": "30_DAYS"
-          }
-        ],
-        "behavioral_targeting": true,
-        "lookalike_audiences": true,
-        "retargeting": true,
-        "contextual_keywords": ["hiking", "camping", "outdoor gear", "sustainability", "eco-friendly"]
-      },
-      
-      // Bidding capabilities (Yahoo DSP API)
-      "bidding_capabilities": {
-        "strategies": ["AUTOBID", "MAXBID"],
-        "goalTypes": ["IMPRESSION", "CLICK", "CONVERSION", "VIEWABLE_IMPRESSION"],
-        "pacingTypes": ["EVEN", "ACCELERATED"],
-        "learningPhaseSupported": true
-      },
-      
-      // Frequency cap presets
-      "frequency_cap_presets": {
-        "awareness": {"limit": 5, "duration": 1, "durationUnit": "DAY"},
-        "consideration": {"limit": 3, "duration": 1, "durationUnit": "DAY"},
-        "conversion": {"limit": 7, "duration": 1, "durationUnit": "WEEK"}
-      },
-      
-      "performance_tracking": {
-        "conversions": true,
-        "viewability": true,
-        "brand_lift": true,
-        "audience_insights": true,
-        "exchangeBreakdown": true,
-        "deviceBreakdown": true
-      }
+      "id": 98765,
+      "name": "Auto Intenders - SUV/Crossover",
+      "segmentType": "INTEREST",
+      "status": "ACTIVE",
+      "reach": 8500000,
+      "description": "Users actively researching SUVs and crossovers based on Yahoo search and content consumption",
+      "recency": "30_DAYS",
+      "cpmLift": 0.15
     },
     {
-      "product_id": "yahoo_display_300x250_pmp_sports",
-      "name": "Premium PMP Deal - Sports & Outdoor Publishers",
-      "description": "Private Marketplace (PMP) deal with premium sports and outdoor publishers. PREFERRED_DEAL type with fixed floor price. Higher viewability (75%+) and brand-safe inventory.",
-      "pricing_options": [{
-        "pricing_model": "CPM",
-        "rate": 12.00,
-        "currency": "USD",
-        "is_fixed": false,
-        "price_guidance": {
-          "floor": 10.00,
-          "p50": 12.00,
-          "p75": 15.00
-        }
-      }],
-      "deal_info": {
-        "dealType": "PREFERRED_DEAL",
-        "guaranteed": false,
-        "publishers": ["Outside Magazine", "REI Co-op", "Backpacker", "Trail Runner"]
-      }
+      "id": 98770,
+      "name": "Auto Enthusiasts - New Vehicle Research",
+      "segmentType": "INTEREST",
+      "status": "ACTIVE",
+      "reach": 12000000,
+      "description": "Users consuming automotive content and comparing vehicles",
+      "recency": "45_DAYS",
+      "cpmLift": 0.10
+    },
+    {
+      "id": 98771,
+      "name": "Family Vehicle Shoppers",
+      "segmentType": "INTEREST",
+      "status": "ACTIVE",
+      "reach": 6200000,
+      "description": "Users researching family-friendly vehicles, safety ratings, cargo space",
+      "recency": "30_DAYS",
+      "cpmLift": 0.18
+    }
+  ],
+  "totalCount": 47,
+  "page": 1
+}
+```
+
+---
+
+#### **Yahoo DSP Response: FACT Segments (Third-Party Data)**
+
+```json
+{
+  "segments": [
+    {
+      "id": 98766,
+      "name": "Competitive Auto - Toyota/Subaru Considerers",
+      "segmentType": "FACT",
+      "status": "ACTIVE",
+      "reach": 3200000,
+      "provider": "Oracle Data Cloud",
+      "description": "Users who have shown purchase intent for Toyota RAV4, Subaru Outback, Forester",
+      "recency": "60_DAYS",
+      "cpmLift": 0.35,
+      "dataFee": 1.50
+    },
+    {
+      "id": 98768,
+      "name": "In-Market Auto - Near Purchase (90 days)",
+      "segmentType": "FACT",
+      "status": "ACTIVE",
+      "reach": 2100000,
+      "provider": "Polk/IHS Markit",
+      "description": "Users predicted to purchase a vehicle within 90 days based on registration and financial data",
+      "recency": "30_DAYS",
+      "cpmLift": 0.65,
+      "dataFee": 2.50
+    },
+    {
+      "id": 98772,
+      "name": "SUV/Crossover Intenders - Premium",
+      "segmentType": "FACT",
+      "status": "ACTIVE",
+      "reach": 4800000,
+      "provider": "Experian",
+      "description": "High-confidence SUV purchase intenders based on credit and lifestyle data",
+      "recency": "45_DAYS",
+      "cpmLift": 0.45,
+      "dataFee": 2.00
+    }
+  ],
+  "totalCount": 23,
+  "page": 1
+}
+```
+
+---
+
+#### **Yahoo DSP Response: LOOKALIKE Segments**
+
+```json
+{
+  "segments": [
+    {
+      "id": 98767,
+      "name": "Honda Website Converters - Lookalike",
+      "segmentType": "LOOKALIKE",
+      "status": "ACTIVE",
+      "reach": 5100000,
+      "seedAudience": "Honda.com build & price completers",
+      "seedSize": 125000,
+      "similarityScore": 0.85,
+      "description": "Users similar to those who completed build & price on Honda.com",
+      "recency": "FRESH",
+      "cpmLift": 0.25
+    },
+    {
+      "id": 98773,
+      "name": "Honda Dealer Visitors - Lookalike",
+      "segmentType": "LOOKALIKE",
+      "status": "ACTIVE",
+      "reach": 3800000,
+      "seedAudience": "Honda dealer website visitors",
+      "seedSize": 85000,
+      "similarityScore": 0.82,
+      "description": "Users similar to those who visited Honda dealer websites",
+      "recency": "FRESH",
+      "cpmLift": 0.28
+    }
+  ],
+  "totalCount": 5,
+  "page": 1
+}
+```
+
+---
+
+#### **Yahoo DSP Response: CONVERSIONRULE Segments (Retargeting)**
+
+```json
+{
+  "segments": [
+    {
+      "id": 98774,
+      "name": "Honda.com - CR-V Page Visitors",
+      "segmentType": "CONVERSIONRULE",
+      "status": "ACTIVE",
+      "reach": 450000,
+      "description": "Users who visited CR-V pages on Honda.com in last 30 days",
+      "recency": "30_DAYS",
+      "cpmLift": 0.0
+    },
+    {
+      "id": 98775,
+      "name": "Honda.com - Build & Price Abandoners",
+      "segmentType": "CONVERSIONRULE",
+      "status": "ACTIVE",
+      "reach": 180000,
+      "description": "Users who started but didn't complete build & price",
+      "recency": "14_DAYS",
+      "cpmLift": 0.0
+    }
+  ],
+  "totalCount": 8,
+  "page": 1
+}
+```
+
+---
+
+**Newton's Discovery Summary:**
+```
+DISCOVERED SEGMENTS (9 candidates across 4 types):
+
+INTEREST (Yahoo Behavioral):
+├── Auto Intenders SUV/Crossover (8.5M reach)
+├── Auto Enthusiasts New Vehicle (12M reach)
+└── Family Vehicle Shoppers (6.2M reach)
+
+FACT (Third-Party Data):
+├── Competitive Auto Toyota/Subaru (3.2M reach) - Oracle
+├── In-Market Auto Near Purchase (2.1M reach) - Polk/IHS
+└── SUV/Crossover Intenders Premium (4.8M reach) - Experian
+
+LOOKALIKE:
+├── Honda Website Converters LAL (5.1M reach)
+└── Honda Dealer Visitors LAL (3.8M reach)
+
+CONVERSIONRULE (Retargeting):
+├── CR-V Page Visitors (450K reach)
+└── Build & Price Abandoners (180K reach)
+
+Now I need to evaluate these segments to determine optimal allocation...
+```
+
+---
+
+### **Act 3: Segment Evaluation**
+
+Newton uses Yahoo DSP's `Get_analytics_for_audiences_segment` to evaluate segment quality.
+
+```python
+# Evaluate top candidate segments
+mcp_yahoo.Get_analytics_for_audiences_segment(
+    segmentIds="98765,98766,98767,98768,98772,98774,98775"
+)
+```
+
+---
+
+#### **Yahoo DSP Response: Segment Analytics**
+
+```json
+{
+  "segmentAnalytics": [
+    {
+      "segmentId": 98765,
+      "name": "Auto Intenders - SUV/Crossover",
+      "segmentType": "INTEREST",
+      "reach": 8500000,
+      "avgCPM": 6.50,
+      "historicalCTR": 0.0012,
+      "viewabilityRate": 0.71,
+      "frequencyCapRecommendation": 4,
+      "overlapAnalysis": {
+        "98766": 0.35,
+        "98767": 0.22,
+        "98768": 0.45,
+        "98772": 0.38
+      },
+      "performanceIndex": 72,
+      "recommendation": "SCALE - High reach, efficient CPM"
+    },
+    {
+      "segmentId": 98766,
+      "name": "Competitive Auto - Toyota/Subaru",
+      "segmentType": "FACT",
+      "provider": "Oracle Data Cloud",
+      "reach": 3200000,
+      "avgCPM": 8.20,
+      "dataFee": 1.50,
+      "effectiveCPM": 9.70,
+      "historicalCTR": 0.0018,
+      "viewabilityRate": 0.68,
+      "conversionRate": 0.023,
+      "dealerVisitRate": 0.0045,
+      "performanceIndex": 85,
+      "recommendation": "CONQUEST - High intent, competitive shoppers"
+    },
+    {
+      "segmentId": 98767,
+      "name": "Honda Website Converters - Lookalike",
+      "segmentType": "LOOKALIKE",
+      "reach": 5100000,
+      "avgCPM": 7.00,
+      "historicalCTR": 0.0021,
+      "viewabilityRate": 0.73,
+      "conversionRate": 0.031,
+      "dealerVisitRate": 0.0062,
+      "performanceIndex": 88,
+      "recommendation": "CORE - High-quality lookalike, strong conversion"
+    },
+    {
+      "segmentId": 98768,
+      "name": "In-Market Auto - Near Purchase",
+      "segmentType": "FACT",
+      "provider": "Polk/IHS Markit",
+      "reach": 2100000,
+      "avgCPM": 12.50,
+      "dataFee": 2.50,
+      "effectiveCPM": 15.00,
+      "historicalCTR": 0.0028,
+      "viewabilityRate": 0.75,
+      "conversionRate": 0.048,
+      "dealerVisitRate": 0.0095,
+      "performanceIndex": 94,
+      "recommendation": "CONVERSION - Highest intent, justify premium CPM"
+    },
+    {
+      "segmentId": 98772,
+      "name": "SUV/Crossover Intenders - Premium",
+      "segmentType": "FACT",
+      "provider": "Experian",
+      "reach": 4800000,
+      "avgCPM": 8.00,
+      "dataFee": 2.00,
+      "effectiveCPM": 10.00,
+      "historicalCTR": 0.0015,
+      "viewabilityRate": 0.70,
+      "conversionRate": 0.028,
+      "dealerVisitRate": 0.0052,
+      "performanceIndex": 81,
+      "recommendation": "CONSIDERATION - Good balance of reach and quality"
+    },
+    {
+      "segmentId": 98774,
+      "name": "Honda.com - CR-V Page Visitors",
+      "segmentType": "CONVERSIONRULE",
+      "reach": 450000,
+      "avgCPM": 5.00,
+      "historicalCTR": 0.0045,
+      "viewabilityRate": 0.78,
+      "conversionRate": 0.082,
+      "dealerVisitRate": 0.018,
+      "performanceIndex": 96,
+      "recommendation": "RETARGETING - Highest conversion, limited scale"
+    },
+    {
+      "segmentId": 98775,
+      "name": "Honda.com - Build & Price Abandoners",
+      "segmentType": "CONVERSIONRULE",
+      "reach": 180000,
+      "avgCPM": 5.00,
+      "historicalCTR": 0.0062,
+      "viewabilityRate": 0.80,
+      "conversionRate": 0.125,
+      "dealerVisitRate": 0.028,
+      "performanceIndex": 98,
+      "recommendation": "RETARGETING - Highest intent, must include"
     }
   ]
 }
 ```
 
-**Newton's Analysis:**
-```
-Yahoo DSP Analysis:
-✅ Pros: AUDIENCE-FIRST targeting - can specifically target outdoor enthusiasts
-✅ Pros: Multiple relevant segments available with provider metadata:
-    - outdoor_enthusiasts (YAHOO_OWNED, 3.5M reach, 30-day recency) - EXACT match
-    - eco_conscious_consumers (Oracle Data Cloud, 2.8M reach) - EXACT match
-    - adventure_travelers (YAHOO_OWNED, 1.9M reach) - HIGH relevance
-    - sustainable_shoppers (Experian, 1.5M reach) - HIGH relevance
-✅ Pros: 9 exchanges available (Yahoo, Index, Magnite, TripleLift, etc.)
-✅ Pros: Premium PMP deal option for sports/outdoor publishers ($12 CPM)
-✅ Pros: AUTOBID optimization with learning phase support
-✅ Pros: Retargeting capability - re-engage POB website visitors
-✅ Pros: Conversion tracking with attribution windows (30-day click, 1-day view)
-✅ Pros: Lookalike modeling - find similar audiences
-✅ Pros: Frequency cap presets (awareness, consideration, conversion)
-
-❌ Cons: Higher CPM ($8.00 vs $5-7) due to audience precision
-✅ BUT: CPM is bid-based (auction) - AUTOBID optimizes over time
-✅ BUT: Exchange breakdown shows where value is (Yahoo Exchange: 72% viewability)
-
-Audience Match: EXCELLENT
-- Yahoo DSP segments = Outdoor enthusiasts + Eco-conscious
-- POB Target = EXACT SAME
-- Overlap: ~80% (precision audience targeting)
-- Segment quality scores: 0.80-0.95 (high quality data)
-
-Reach Efficiency: HIGH
-- 2M daily impressions available across 9 exchanges
-- With targeting: ~1.6M relevant impressions daily
-- Effective CPM: $10 (20% waste vs 80-95% for publishers)
-- Brand safety scores: 0.70-0.95 depending on exchange
-```
-
 ---
 
-### **Newton's Comparative Analysis & Decision**
+### **Newton's Segment Analysis & Selection**
 
 ```markdown
-COMPARISON TABLE:
+# SEGMENT EVALUATION MATRIX
 
-Metric                    | ESPN      | CNN       | Yahoo DSP
---------------------------|-----------|-----------|------------
-Daily Reach               | 500K      | 150K      | 2M
-Base CPM                  | $5.00     | $7.00     | $8.00 (auction)
-Targeting Type            | Placement | Contextual| Audience
-Target Audience Match     | Poor (~5%)| Medium (~20%)| Excellent (~80%)
-Relevant Impressions/Day  | 25K       | 30K       | 1.6M
-Effective CPM             | $100      | $35       | $10
-Wasted Impressions        | 95%       | 80%       | 20%
-Conversion Tracking       | No        | No        | Yes
-Audience Insights         | No        | No        | Yes
-Retargeting               | No        | No        | Yes
-Optimization              | Manual    | Manual    | Automated
+| Segment | Type | Reach | Eff. CPM | CTR | Conv% | Dealer Visit | Score | Role |
+|---------|------|-------|----------|-----|-------|--------------|-------|------|
+| Auto Intenders SUV | INTEREST | 8.5M | $6.50 | 0.12% | - | - | 72 | SCALE |
+| Competitive Toyota/Subaru | FACT | 3.2M | $9.70 | 0.18% | 2.3% | 0.45% | 85 | CONQUEST |
+| Honda LAL Converters | LOOKALIKE | 5.1M | $7.00 | 0.21% | 3.1% | 0.62% | 88 | CORE |
+| In-Market Near Purchase | FACT | 2.1M | $15.00 | 0.28% | 4.8% | 0.95% | 94 | CONVERSION |
+| SUV Intenders Premium | FACT | 4.8M | $10.00 | 0.15% | 2.8% | 0.52% | 81 | CONSIDERATION |
+| CR-V Page Visitors | RETARGET | 450K | $5.00 | 0.45% | 8.2% | 1.8% | 96 | RETARGET |
+| Build & Price Abandoners | RETARGET | 180K | $5.00 | 0.62% | 12.5% | 2.8% | 98 | RETARGET |
 
-DECISION: Yahoo DSP (100% of budget)
+# OVERLAP ANALYSIS
 
-REASONING:
+Key insight: 35% overlap between Auto Intenders SUV and Competitive Auto segments.
+Recommendation: Use exclusions to avoid paying twice for same users.
 
-1. AUDIENCE PRECISION IS CRITICAL:
-   Performance Outerwear Brand needs to reach a SPECIFIC audience:
-   outdoor enthusiasts who value sustainability. This is not a broad
-   demographic - it's a defined lifestyle segment.
-   
-   ESPN reaches sports fans (5% overlap with outdoor enthusiasts)
-   CNN reaches climate news readers (20% overlap with gear buyers)
-   Yahoo DSP reaches outdoor enthusiasts directly (80% precision)
+# FUNNEL-BASED ALLOCATION
 
-2. COST EFFICIENCY MATH:
-   ESPN: $50K ÷ $5 CPM = 10M impressions
-         10M × 5% relevant = 500K target impressions
-         Cost per target impression: $100
-   
-   CNN: $50K ÷ $7 CPM = 7.14M impressions
-        7.14M × 20% relevant = 1.43M target impressions
-        Cost per target impression: $35
-   
-   Yahoo DSP: $50K ÷ $8 CPM = 6.25M impressions
-              6.25M × 80% relevant = 5M target impressions
-              Cost per target impression: $10
+Given Honda's objectives (awareness + dealer visits), I'll allocate across the funnel:
 
-   Yahoo DSP delivers 10X more relevant reach than ESPN at 1/10th
-   the cost per target customer.
+## AWARENESS TIER (35% = $175K)
+Purpose: Maximize unique reach among SUV intenders
+Segments: Auto Intenders SUV/Crossover (8.5M reach)
+Expected: 26.9M impressions, 32K clicks
+Strategy: Broad reach, frequency cap at 4/week
 
-3. MEASURABLE OUTCOMES:
-   Yahoo DSP tracks conversions (gear purchases), enabling:
-   - ROI measurement
-   - Campaign optimization
-   - Audience insights
-   
-   ESPN/CNN cannot measure whether ads drove hiking gear sales.
+## CONSIDERATION TIER (25% = $125K)  
+Purpose: Engage high-quality intenders with proven intent signals
+Segments: 
+  - SUV/Crossover Intenders Premium (4.8M reach)
+  - Honda LAL Converters (5.1M reach)
+Expected: 13.9M impressions, 24K clicks
+Strategy: Balanced reach/quality, frequency cap at 3/week
 
-4. AUDIENCE EXPANSION:
-   Yahoo DSP's lookalike modeling can find more customers similar
-   to POB's existing buyers. Publishers can't do this.
+## CONQUEST TIER (20% = $100K)
+Purpose: Win competitive shoppers considering Toyota/Subaru
+Segments: Competitive Auto Toyota/Subaru (3.2M reach)
+Expected: 10.3M impressions, 18.5K clicks
+Strategy: Aggressive messaging, frequency cap at 5/week
 
-5. RETARGETING:
-   Reach users who visited POB website but didn't purchase.
-   Critical for high-consideration outdoor gear purchases.
-```
+## CONVERSION TIER (15% = $75K)
+Purpose: Capture users closest to purchase decision
+Segments: In-Market Auto Near Purchase (2.1M reach)
+Expected: 5M impressions, 14K clicks
+Strategy: Strong CTA, dealer locator, frequency cap at 6/week
 
-**Newton's Recommendation:**
-```
-RECOMMENDED STRATEGY: Allocate 100% of $50K budget to Yahoo DSP
+## RETARGETING TIER (5% = $25K)
+Purpose: Re-engage Honda.com visitors with highest intent
+Segments:
+  - CR-V Page Visitors (450K reach)
+  - Build & Price Abandoners (180K reach)
+Expected: 5M impressions, 25K clicks
+Strategy: Sequential messaging, high frequency (10/week)
 
-RATIONALE:
-The target audience for Performance Outerwear Brand is too specific
-for broad publisher placements. While ESPN and CNN offer lower base
-CPMs, the audience mismatch makes them extremely inefficient.
+# TOTAL CAMPAIGN PROJECTIONS
 
-Yahoo DSP's audience targeting capabilities are perfectly aligned
-with POB's target customer:
-- "outdoor_enthusiasts" segment (EXACT match)
-- "eco_conscious_consumers" segment (EXACT match)  
-- "sustainable_shoppers" segment (EXACT match)
+Budget: $500,000
+Duration: 90 days (Q1 2026)
+Total Impressions: ~61M
+Unique Reach: ~15M users
+Avg Frequency: 4.1
+Expected Clicks: 113K (0.19% avg CTR)
+Expected Conversions: 2,850 (2.5% avg conv rate)
+Expected Dealer Visits: 5,700 (0.94% dealer visit rate)
 
-The higher CPM ($8.00 vs $5.00) is more than offset by 80%
-audience precision vs 5% for ESPN. Effective cost per target
-impression is $10 vs $100 - a 10X improvement.
-
-Additionally, conversion tracking will enable us to measure actual
-hiking gear purchases and optimize the campaign in real-time.
-
-Expected outcome: 
-- 5M relevant impressions (vs 500K on ESPN)
-- Measurable conversion tracking
-- Audience insights for future campaigns
-- 10X better cost efficiency
+Blended CPM: $8.20
+Cost Per Click: $4.42
+Cost Per Conversion: $175
+Cost Per Dealer Visit: $88
 ```
 
 ---
 
-### **Act 2: Campaign Execution**
+### **Act 4: Campaign Execution**
 
-Newton executes the buy on Yahoo DSP with precision audience targeting.
+Newton executes the buy using standard AdCP tools with selected segments.
 
 ```python
-# Step 1: Sync Creative
+# Step 1: Sync Creatives
 mcp_yahoo.sync_creatives(
     creatives=[
         {
-            "creative_id": "pob_sustainable_hiking_300x250",
-            "name": "Performance Outerwear Brand - Sustainable Hiking Collection",
+            "creative_id": "honda_crv_spring_2026_300x250_awareness",
+            "name": "Honda CR-V - Adventure Awaits (Awareness)",
             "format_id": "display_300x250",
-            "click_through_url": "https://performanceouterwear.com/sustainable-hiking",
-            "preview_url": "https://cdn.performanceouterwear.com/ad_sustainable_hiking.jpg",
+            "click_through_url": "https://automobiles.honda.com/cr-v",
+            "preview_url": "https://cdn.honda.com/ads/crv_spring_awareness.jpg",
             "assets": {
                 "image": {
-                    "url": "https://cdn.performanceouterwear.com/ad_sustainable_hiking.jpg",
+                    "url": "https://cdn.honda.com/ads/crv_spring_awareness.jpg",
                     "width": 300,
                     "height": 250
+                }
+            }
+        },
+        {
+            "creative_id": "honda_crv_spring_2026_300x250_conquest",
+            "name": "Honda CR-V - Compare & Win (Conquest)",
+            "format_id": "display_300x250",
+            "click_through_url": "https://automobiles.honda.com/cr-v/compare",
+            "preview_url": "https://cdn.honda.com/ads/crv_spring_conquest.jpg"
+        },
+        {
+            "creative_id": "honda_crv_spring_2026_300x250_dealer",
+            "name": "Honda CR-V - Find Your Dealer (Conversion)",
+            "format_id": "display_300x250",
+            "click_through_url": "https://automobiles.honda.com/tools/dealer-locator",
+            "preview_url": "https://cdn.honda.com/ads/crv_spring_dealer.jpg"
+        },
+        {
+            "creative_id": "honda_crv_spring_2026_300x250_retarget",
+            "name": "Honda CR-V - Complete Your Build (Retargeting)",
+            "format_id": "display_300x250",
+            "click_through_url": "https://automobiles.honda.com/cr-v/build",
+            "preview_url": "https://cdn.honda.com/ads/crv_spring_retarget.jpg"
+        }
+    ]
+)
+```
+
+```python
+# Step 2: Create Media Buy with Funnel-Based Allocation
+mcp_yahoo.create_media_buy(
+    buyer_ref="honda_crv_yahoo_dsp_q1_2026",
+    brand_manifest={
+        "name": "Honda",
+        "url": "https://honda.com",
+        "industry": "automotive"
+    },
+    start_time="2026-01-01T00:00:00Z",
+    end_time="2026-03-31T23:59:59Z",
+    packages=[
+        # AWARENESS TIER (35% = $175K)
+        {
+            "package_id": "awareness_auto_intenders",
+            "product_id": "yahoo_display_300x250",
+            "budget": 175000,
+            "impressions": 26900000,
+            "creative_ids": ["honda_crv_spring_2026_300x250_awareness"],
+            "pacing": "even",
+            "targeting_overlay": {
+                "segment_ids": [98765],  # Auto Intenders SUV/Crossover
+                "geo_country_any_of": ["US"],
+                "frequency_cap": {
+                    "limit": 4,
+                    "duration": 7,
+                    "duration_unit": "DAY"
+                }
+            }
+        },
+        # CONSIDERATION TIER (25% = $125K)
+        {
+            "package_id": "consideration_premium_intenders",
+            "product_id": "yahoo_display_300x250",
+            "budget": 125000,
+            "impressions": 13900000,
+            "creative_ids": ["honda_crv_spring_2026_300x250_awareness"],
+            "pacing": "even",
+            "targeting_overlay": {
+                "segment_ids": [98772, 98767],  # SUV Premium + Honda LAL
+                "segment_exclusions": [98765],  # Exclude awareness tier
+                "geo_country_any_of": ["US"],
+                "frequency_cap": {
+                    "limit": 3,
+                    "duration": 7,
+                    "duration_unit": "DAY"
+                }
+            }
+        },
+        # CONQUEST TIER (20% = $100K)
+        {
+            "package_id": "conquest_competitive_auto",
+            "product_id": "yahoo_display_300x250",
+            "budget": 100000,
+            "impressions": 10300000,
+            "creative_ids": ["honda_crv_spring_2026_300x250_conquest"],
+            "pacing": "even",
+            "targeting_overlay": {
+                "segment_ids": [98766],  # Competitive Toyota/Subaru
+                "segment_exclusions": [98765, 98772, 98767],  # Exclude other tiers
+                "geo_country_any_of": ["US"],
+                "frequency_cap": {
+                    "limit": 5,
+                    "duration": 7,
+                    "duration_unit": "DAY"
+                }
+            }
+        },
+        # CONVERSION TIER (15% = $75K)
+        {
+            "package_id": "conversion_inmarket",
+            "product_id": "yahoo_display_300x250",
+            "budget": 75000,
+            "impressions": 5000000,
+            "creative_ids": ["honda_crv_spring_2026_300x250_dealer"],
+            "pacing": "even",
+            "targeting_overlay": {
+                "segment_ids": [98768],  # In-Market Near Purchase
+                "segment_exclusions": [98774, 98775],  # Exclude retargeting
+                "geo_country_any_of": ["US"],
+                "frequency_cap": {
+                    "limit": 6,
+                    "duration": 7,
+                    "duration_unit": "DAY"
+                }
+            }
+        },
+        # RETARGETING TIER (5% = $25K)
+        {
+            "package_id": "retargeting_honda_visitors",
+            "product_id": "yahoo_display_300x250",
+            "budget": 25000,
+            "impressions": 5000000,
+            "creative_ids": ["honda_crv_spring_2026_300x250_retarget"],
+            "pacing": "even",
+            "targeting_overlay": {
+                "segment_ids": [98774, 98775],  # CR-V Visitors + Abandoners
+                "geo_country_any_of": ["US"],
+                "frequency_cap": {
+                    "limit": 10,
+                    "duration": 7,
+                    "duration_unit": "DAY"
                 }
             }
         }
     ]
 )
-
-# Step 2: Create Media Buy with Audience Targeting
-mcp_yahoo.create_media_buy(
-    buyer_ref="pob_yahoo_sustainable_hiking_dec_2025",
-    brand_manifest={
-        "name": "Performance Outerwear Brand",
-        "url": "https://performanceouterwear.com"
-    },
-    start_time="2025-12-01T00:00:00Z",
-    end_time="2025-12-31T23:59:59Z",
-    packages=[{
-        "package_id": "pob_audience_campaign",
-        "product_id": "yahoo_display_300x250",
-        "budget": 50000,
-        "impressions": 6250000,  # $50K ÷ $8 CPM
-        "creative_ids": ["pob_sustainable_hiking_300x250"],
-        "pacing": "even",
-        "pricing_option_id": "cpm_usd_auction",
-        
-        # KEY: Audience targeting overlay
-        "targeting_overlay": {
-            "audiences_any_of": [
-                "outdoor_enthusiasts",        # PRIMARY
-                "eco_conscious_consumers",    # PRIMARY
-                "adventure_travelers",        # SECONDARY
-                "sustainable_shoppers"        # SECONDARY
-            ],
-            "signals": [
-                "hiking_gear_interest",
-                "camping_equipment_research",
-                "sustainable_products_affinity"
-            ],
-            "geo_country_any_of": ["US"]
-        }
-    }]
-)
 ```
 
-**Yahoo DSP Response:**
+---
 
-> **Note:** Yahoo DSP uses specific terminology aligned with their API:
-> - **Campaign** = Order (contains multiple Lines)
-> - **Line** = Ad Group (targeting + budget + bidding)
-> - **Ad** = Creative assignment
-> - Status values: `ACTIVE`, `PENDING_REVIEW`, `PAUSED`, `STOP_DAILY_BUDGET`, etc.
+#### **Yahoo DSP Response: Campaign Created**
 
 ```json
 {
   "status": "pending",
-  "media_buy_id": "yahoo_dsp_pob_20251201",
+  "media_buy_id": "honda_crv_yahoo_dsp_q1_2026",
   "external_ids": {
-    "yahoo_campaign_id": "yahoo_dsp_pob_20251201",
-    "yahoo_order_id": 567890,
-    "line_ids": [1234567]
+    "yahoo_campaign_id": "honda_crv_yahoo_dsp_q1_2026",
+    "yahoo_order_id": 789012
   },
-  "packages": [{
-    "package_id": "pob_audience_campaign",
-    "status": "pending",
-    "external_id": "1234567"  // Yahoo DSP Line ID
-  }],
   
-  // Full Line details (Yahoo DSP API structure):
-  "lines": [{
-    "id": 1234567,
-    "name": "Performance Outerwear Brand - pob_audience_campaign",
-    "orderId": 567890,
-    "mediaType": "DISPLAY",
-    "status": "PENDING_REVIEW",
-    
-    // Dates
-    "startDate": "2025-12-01",
-    "endDate": "2025-12-31",
-    
-    // Budget (Yahoo DSP style)
-    "scheduleBudget": 50000,
-    "dailyBudget": 1612.90,
-    
-    // Enhanced Bidding Configuration (Yahoo DSP API)
-    "biddingConfig": {
-      "bidStrategy": "AUTOBID",
-      "bidType": "DYNAMIC",
-      "goalType": "CLICK",
-      "maxBid": 8.00,
-      "pacingType": "EVEN",
-      
-      // Learning phase tracking (new!)
-      "learningPhase": {
-        "enabled": true,
-        "durationDays": 3,
-        "minDataPoints": 100,
-        "status": "NOT_STARTED"
-      },
-      
-      // Pacing details
-      "pacingDetails": {
-        "algorithm": "time_weighted",
-        "dailyBudget": 1612.90,
-        "overspendAllowed": false
-      },
-      
-      // Bid adjustments (AUTOBID feature)
-      "bidAdjustments": {
-        "enabled": true,
-        "maxAdjustment": 0.50,
-        "factors": {
-          "deviceType": {"mobile": 1.1, "desktop": 1.0, "ctv": 1.2},
-          "dayOfWeek": {"weekday": 1.0, "weekend": 0.95},
-          "timeOfDay": {"evening": 1.15, "night": 0.8}
-        }
-      },
-      
-      // Target CTR for CLICK goal type
-      "targetCtr": 0.001
-    },
-    
-    // Enhanced Frequency Cap (with presets)
-    "frequencyCap": {
-      "type": "IMPRESSION",
-      "limit": 3,
-      "duration": 1,
-      "durationUnit": "DAY",
-      "scope": "LINE",
-      "effectivePeriodSeconds": 86400,
-      "description": "Max 3 impressions per user per 1 day(s) at line level"
-    },
-    
-    // Exchanges targeted (with metadata)
-    "exchanges": ["YAHOO_EXCHANGE", "INDEX_EXCHANGE", "MAGNITE", "OPEN_EXCHANGE"],
-    
-    // Audience segments with Yahoo DSP metadata
-    "audienceSegments": [
-      {
-        "id": "seg_12345",
-        "name": "Outdoor Enthusiasts",
-        "type": "YAHOO_OWNED",
-        "provider": "Yahoo",
-        "reach": 3500000,
-        "cpmLift": 0.25,
-        "recency": "30_DAYS",
-        "qualityScore": 0.89
-      },
-      {
-        "id": "seg_23456",
-        "name": "Eco Conscious Consumers",
-        "type": "THIRD_PARTY",
-        "provider": "Oracle Data Cloud",
-        "reach": 2800000,
-        "cpmLift": 0.30,
-        "recency": "60_DAYS",
-        "qualityScore": 0.85
-      },
-      {
-        "id": "seg_34567",
-        "name": "Adventure Travelers",
-        "type": "YAHOO_OWNED",
-        "provider": "Yahoo",
-        "reach": 1900000,
-        "cpmLift": 0.28,
-        "recency": "45_DAYS",
-        "qualityScore": 0.82
-      },
-      {
-        "id": "seg_45678",
-        "name": "Sustainable Shoppers",
-        "type": "THIRD_PARTY",
-        "provider": "Experian",
-        "reach": 1500000,
-        "cpmLift": 0.35,
-        "recency": "30_DAYS",
-        "qualityScore": 0.80
+  "packages": [
+    {
+      "package_id": "awareness_auto_intenders",
+      "status": "pending",
+      "external_id": "2345678",
+      "line": {
+        "id": 2345678,
+        "name": "Honda CR-V Q1 2026 - Awareness",
+        "status": "PENDING_REVIEW",
+        "scheduleBudget": 175000,
+        "dailyBudget": 1944.44,
+        "segmentIds": [98765],
+        "estimatedReach": 6800000,
+        "estimatedImpressions": 26900000,
+        "estimatedFrequency": 3.96
       }
-    ]
-  }],
+    },
+    {
+      "package_id": "consideration_premium_intenders",
+      "status": "pending",
+      "external_id": "2345679",
+      "line": {
+        "id": 2345679,
+        "name": "Honda CR-V Q1 2026 - Consideration",
+        "status": "PENDING_REVIEW",
+        "scheduleBudget": 125000,
+        "dailyBudget": 1388.89,
+        "segmentIds": [98772, 98767],
+        "estimatedReach": 4200000,
+        "estimatedImpressions": 13900000,
+        "estimatedFrequency": 3.31
+      }
+    },
+    {
+      "package_id": "conquest_competitive_auto",
+      "status": "pending",
+      "external_id": "2345680",
+      "line": {
+        "id": 2345680,
+        "name": "Honda CR-V Q1 2026 - Conquest",
+        "status": "PENDING_REVIEW",
+        "scheduleBudget": 100000,
+        "dailyBudget": 1111.11,
+        "segmentIds": [98766],
+        "estimatedReach": 2400000,
+        "estimatedImpressions": 10300000,
+        "estimatedFrequency": 4.29
+      }
+    },
+    {
+      "package_id": "conversion_inmarket",
+      "status": "pending",
+      "external_id": "2345681",
+      "line": {
+        "id": 2345681,
+        "name": "Honda CR-V Q1 2026 - Conversion",
+        "status": "PENDING_REVIEW",
+        "scheduleBudget": 75000,
+        "dailyBudget": 833.33,
+        "segmentIds": [98768],
+        "estimatedReach": 1500000,
+        "estimatedImpressions": 5000000,
+        "estimatedFrequency": 3.33
+      }
+    },
+    {
+      "package_id": "retargeting_honda_visitors",
+      "status": "pending",
+      "external_id": "2345682",
+      "line": {
+        "id": 2345682,
+        "name": "Honda CR-V Q1 2026 - Retargeting",
+        "status": "PENDING_REVIEW",
+        "scheduleBudget": 25000,
+        "dailyBudget": 277.78,
+        "segmentIds": [98774, 98775],
+        "estimatedReach": 520000,
+        "estimatedImpressions": 5000000,
+        "estimatedFrequency": 9.62
+      }
+    }
+  ],
   
-  // Reach estimate
-  "reachEstimate": {
-    "estimatedUniqueUsers": 5200000,
-    "estimatedImpressions": 18200000,
-    "estimatedDailyImpressions": 586000,
-    "confidence": 0.87
+  "campaignSummary": {
+    "totalBudget": 500000,
+    "totalEstimatedImpressions": 61100000,
+    "totalEstimatedReach": 15420000,
+    "averageFrequency": 3.96,
+    "blendedCPM": 8.18,
+    "segmentsUsed": 7,
+    "creativesAssigned": 4
   },
   
-  // Bid landscape data:
-  "bidLandscape": {
-    "medianWinningBid": 8.40,
-    "percentile25": 6.72,
-    "percentile75": 10.00,
-    "percentile90": 12.00,
-    "competitionLevel": "MEDIUM",
-    "estimatedWinRateAtBid": {
-      "$6.40": 0.25,
-      "$8.00": 0.45,
-      "$9.60": 0.65,
-      "$12.00": 0.85
+  "biddingConfig": {
+    "bidStrategy": "AUTOBID",
+    "goalType": "CLICK",
+    "pacingType": "EVEN",
+    "learningPhase": {
+      "enabled": true,
+      "durationDays": 7,
+      "status": "NOT_STARTED"
     }
+  },
+  
+  "audienceOverlapMitigation": {
+    "strategy": "EXCLUSIONS",
+    "exclusionsApplied": 4,
+    "estimatedDuplicateReduction": "18%"
   }
 }
 ```
 
-**Newton's Observation:**
+---
+
+**Newton's Execution Summary:**
+
 ```
-Yahoo DSP Campaign Analysis:
+CAMPAIGN BOOKED: Honda CR-V Q1 2026 - Yahoo DSP
 
-AUDIENCE VALIDATION:
-✅ Total addressable audience: 5.2M users
-✅ Estimated unique reach: 4.16M users
-✅ Segment quality scores: 0.80-0.89 (high quality)
-✅ Segment providers: Yahoo (owned) + Oracle + Experian (third-party)
+✅ ALLOCATION EXECUTED:
+   Total Budget: $500,000
+   Platform: Yahoo DSP
+   Flight: Jan 1 - Mar 31, 2026 (90 days)
 
-COMPETITIVE LANDSCAPE:
-- Median winning bid: $8.40 (our max bid: $8.00)
-- Estimated win rate at $8.00: 45%
-- Competition level: MEDIUM
-- Bid landscape shows $9.60 would achieve 65% win rate
+✅ SEGMENTS ACTIVATED (7 segments across funnel):
+   
+   AWARENESS (35%): Auto Intenders SUV/Crossover
+   ├── Budget: $175K
+   ├── Reach: 6.8M users
+   └── Impressions: 26.9M
+   
+   CONSIDERATION (25%): SUV Premium + Honda LAL
+   ├── Budget: $125K
+   ├── Reach: 4.2M users
+   └── Impressions: 13.9M
+   
+   CONQUEST (20%): Competitive Toyota/Subaru
+   ├── Budget: $100K
+   ├── Reach: 2.4M users
+   └── Impressions: 10.3M
+   
+   CONVERSION (15%): In-Market Near Purchase
+   ├── Budget: $75K
+   ├── Reach: 1.5M users
+   └── Impressions: 5.0M
+   
+   RETARGETING (5%): Honda.com Visitors + Abandoners
+   ├── Budget: $25K
+   ├── Reach: 520K users
+   └── Impressions: 5.0M
 
-BIDDING STRATEGY CONFIGURED:
-- Strategy: AUTOBID (dynamic optimization)
-- Goal type: CLICK (optimize for CTR)
-- Target CTR: 0.1%
-- Learning phase: 3 days, 100 data points minimum
-- Bid adjustments enabled: +10% mobile, +20% CTV, +15% evening
-
-EXCHANGE STRATEGY:
-Targeting 4 exchanges for optimal reach/quality balance:
-- YAHOO_EXCHANGE: Premium owned inventory (72% viewability, 0.95 brand safety)
-- INDEX_EXCHANGE: Header bidding SSP (71% viewability)
-- MAGNITE: Premium publishers (ESPN, CNN, NYT access)
-- OPEN_EXCHANGE: Scale inventory (lower viewability, requires filtering)
-
-FREQUENCY CAP:
-- Preset: "consideration" (3 impressions/user/day at LINE level)
-- Prevents ad fatigue while maintaining reach
-
-STRATEGY CONFIRMATION:
-The audience segments are EXACTLY aligned with POB's target:
-- outdoor_enthusiasts: 3.5M reach, Yahoo-owned data (PRIMARY)
-- eco_conscious_consumers: 2.8M reach, Oracle Data Cloud (PRIMARY)
-- Combined quality score: 0.85+ (excellent)
-
-AUTOBID will optimize bids between $6-10 to maximize clicks within budget.
-Learning phase will complete in ~3 days with bid adjustment refinements.
+✅ CAMPAIGN PROJECTIONS:
+   Total Reach: 15.4M unique users
+   Total Impressions: 61.1M
+   Avg Frequency: 4.0
+   Blended CPM: $8.18
+   
+✅ OPTIMIZATION:
+   Audience overlap exclusions applied (18% duplicate reduction)
+   AUTOBID enabled with 7-day learning phase
+   Frequency caps set per tier
 
 Campaign pending review. Expected approval within 24 hours.
 ```
 
 ---
 
-### **Act 3: Performance Monitoring (Week 2)**
+### **Act 5: Performance Monitoring (Week 4)**
 
-Newton checks performance after 2 weeks to evaluate the audience-targeted approach.
+Newton checks performance after 4 weeks to validate segment selection and funnel strategy.
 
 ```python
 mcp_yahoo.get_media_buy_delivery(
-    media_buy_ids=["yahoo_dsp_pob_20251201"],
-    start_date="2025-12-01",
-    end_date="2025-12-14"
+    media_buy_ids=["honda_crv_yahoo_dsp_q1_2026"],
+    start_date="2026-01-01",
+    end_date="2026-01-28"
 )
 ```
 
-**Yahoo DSP Performance Report:**
+---
 
-> **Yahoo DSP Reporting API** provides detailed metrics at Line level with
-> DSP-specific dimensions (exchange breakdown, device breakdown, win rate, viewability).
-> 29 metrics available across volume, cost, rate, quality, auction, and reach categories.
+#### **Yahoo DSP Performance Report**
 
 ```json
 {
-  "packages": [{
-    "package_id": "pob_audience_campaign",
-    "external_id": "1234567",
-    "status": "delivering",
-    
-    // Standard AdCP metrics:
-    "impressions": 3100000,
-    "clicks": 34100,
-    "spend": 24800.00,
-    
-    // Yahoo DSP Line-level metrics (in metadata):
-    "metadata": {
-      // Line info (Yahoo DSP terminology)
-      "lineId": 1234567,
-      "lineName": "Performance Outerwear Brand - pob_audience_campaign",
-      "lineStatus": "ACTIVE",
-      "mediaType": "DISPLAY",
-      "goalType": "CLICK",
-      
-      // Bidding performance (DSP-specific)
-      "bidRequests": 10800000,
-      "bidsSubmitted": 8640000,
-      "bidsWon": 3100000,
-      "winRate": 0.287,
-      "avgBid": 8.00,
-      "avgWinPrice": 8.00,
-      
-      // Performance metrics
-      "ctr": 0.011,
-      "conversions": 682,
-      "conversionRate": 0.020,
-      "cpm": 8.00,
-      "cpc": 0.73,
-      "cpa": 36.36,
-      
-      // Viewability metrics (MRC standard)
-      "viewableImpressions": 2325000,
-      "viewabilityRate": 0.75,
-      "measurableImpressions": 2945000,
-      "measurabilityRate": 0.95,
-      
-      // Reach metrics (new!)
-      "uniqueUsers": 886000,
-      "frequency": 3.5,
-      
-      // Budget tracking
-      "scheduleBudget": 50000,
-      "dailyBudget": 1612.90,
-      "spend": 24800.00,
-      "budgetUtilization": 0.496,
-      "budgetRemaining": 25200.00,
-      
-      // Cost breakdown (new!)
-      "mediaCost": 21080.00,
-      "dataFees": 2480.00,
-      "platformFees": 1240.00,
-      
-      // Audience segments active
-      "audienceSegments": 4,
-      
-      // Enhanced Exchange breakdown (with per-exchange metrics)
-      "exchangeBreakdown": {
-        "YAHOO_EXCHANGE": {
-          "exchangeId": 1,
-          "exchangeName": "Yahoo Exchange",
-          "exchangeType": "owned",
-          "impressions": 1395000,
-          "viewableImpressions": 1004400,
-          "viewabilityRate": 0.72,
-          "clicks": 16740,
-          "ctr": 0.012,
-          "avgCpm": 6.50,
-          "spend": 9067.50,
-          "fraudRate": 0.02,
-          "brandSafetyScore": 0.95
-        },
-        "INDEX_EXCHANGE": {
-          "exchangeId": 5,
-          "exchangeName": "Index Exchange",
-          "exchangeType": "ssp",
-          "impressions": 930000,
-          "viewableImpressions": 660300,
-          "viewabilityRate": 0.71,
-          "clicks": 10230,
-          "ctr": 0.011,
-          "avgCpm": 7.50,
-          "spend": 6975.00,
-          "fraudRate": 0.04,
-          "brandSafetyScore": 0.90
-        },
-        "MAGNITE": {
-          "exchangeId": 3,
-          "exchangeName": "Magnite (Rubicon)",
-          "exchangeType": "ssp",
-          "impressions": 465000,
-          "viewableImpressions": 316200,
-          "viewabilityRate": 0.68,
-          "clicks": 4185,
-          "ctr": 0.009,
-          "avgCpm": 8.50,
-          "spend": 3952.50,
-          "fraudRate": 0.05,
-          "brandSafetyScore": 0.88
-        },
-        "OPEN_EXCHANGE": {
-          "exchangeId": 99,
-          "exchangeName": "Open RTB Marketplace",
-          "exchangeType": "open",
-          "impressions": 310000,
-          "viewableImpressions": 170500,
-          "viewabilityRate": 0.55,
-          "clicks": 2945,
-          "ctr": 0.0095,
-          "avgCpm": 4.00,
-          "spend": 1240.00,
-          "fraudRate": 0.12,
-          "brandSafetyScore": 0.70
-        }
-      },
-      
-      // Device breakdown (new!)
-      "deviceBreakdown": {
-        "mobile": {
-          "impressions": 1705000,
-          "clicks": 20460,
-          "ctr": 0.012,
-          "share": 0.55
-        },
-        "desktop": {
-          "impressions": 930000,
-          "clicks": 9300,
-          "ctr": 0.010,
-          "share": 0.30
-        },
-        "tablet": {
-          "impressions": 248000,
-          "clicks": 2232,
-          "ctr": 0.009,
-          "share": 0.08
-        },
-        "ctv": {
-          "impressions": 155000,
-          "clicks": 1705,
-          "ctr": 0.011,
-          "share": 0.05
-        },
-        "other": {
-          "impressions": 62000,
-          "clicks": 403,
-          "ctr": 0.0065,
-          "share": 0.02
-        }
-      }
-    }
-  }],
-  
-  // Totals
-  "totals": {
-    "impressions": 3100000,
-    "clicks": 34100,
-    "spend": 24800.00
-  }
-}
-```
-
-**Segment-Level Performance (Yahoo DSP Audience Insights):**
-```json
-{
-  "audienceInsights": {
-    "topPerformingSegment": "outdoor_enthusiasts",
-    "segmentPerformance": {
-      "outdoor_enthusiasts": {
-        "type": "YAHOO_OWNED",
-        "provider": "Yahoo",
-        "impressions": 1400000,
-        "clicks": 19600,
-        "ctr": 0.014,
-        "conversions": 372,
-        "conversionRate": 0.019
-      },
-      "eco_conscious_consumers": {
-        "type": "THIRD_PARTY",
-        "provider": "Oracle Data Cloud",
-        "impressions": 900000,
-        "clicks": 9900,
-        "ctr": 0.011,
-        "conversions": 198,
-        "conversionRate": 0.020
-      },
-      "adventure_travelers": {
-        "type": "YAHOO_OWNED",
-        "provider": "Yahoo",
-        "impressions": 500000,
-        "clicks": 3000,
-        "ctr": 0.006,
-        "conversions": 72,
-        "conversionRate": 0.024
-      },
-      "sustainable_shoppers": {
-        "type": "THIRD_PARTY",
-        "provider": "Experian",
-        "impressions": 300000,
-        "clicks": 1600,
-        "ctr": 0.005,
-        "conversions": 40,
-        "conversionRate": 0.025
+  "packages": [
+    {
+      "package_id": "awareness_auto_intenders",
+      "external_id": "2345678",
+      "status": "delivering",
+      "impressions": 9200000,
+      "clicks": 11040,
+      "spend": 59800.00,
+      "metadata": {
+        "lineId": 2345678,
+        "lineName": "Honda CR-V Q1 2026 - Awareness",
+        "lineStatus": "ACTIVE",
+        "segmentId": 98765,
+        "segmentName": "Auto Intenders - SUV/Crossover",
+        "ctr": 0.0012,
+        "cpm": 6.50,
+        "viewabilityRate": 0.72,
+        "uniqueUsers": 2350000,
+        "frequency": 3.91,
+        "budgetUtilization": 0.342
       }
     },
-    
-    // Optimization insights (AUTOBID adjustments):
-    "bidOptimization": {
-      "optimalBid": 7.85,
-      "bidAdjustments": {
-        "outdoor_enthusiasts": "+15%",
-        "sustainable_shoppers": "+20%",
-        "adventure_travelers": "+10%",
-        "eco_conscious_consumers": "0%"
+    {
+      "package_id": "consideration_premium_intenders",
+      "external_id": "2345679",
+      "status": "delivering",
+      "impressions": 4650000,
+      "clicks": 7440,
+      "spend": 42750.00,
+      "metadata": {
+        "lineId": 2345679,
+        "lineName": "Honda CR-V Q1 2026 - Consideration",
+        "lineStatus": "ACTIVE",
+        "segmentIds": [98772, 98767],
+        "ctr": 0.0016,
+        "cpm": 9.19,
+        "viewabilityRate": 0.71,
+        "uniqueUsers": 1420000,
+        "frequency": 3.27,
+        "conversions": 130,
+        "conversionRate": 0.0175,
+        "budgetUtilization": 0.342
+      }
+    },
+    {
+      "package_id": "conquest_competitive_auto",
+      "external_id": "2345680",
+      "status": "delivering",
+      "impressions": 3500000,
+      "clicks": 6650,
+      "spend": 33950.00,
+      "metadata": {
+        "lineId": 2345680,
+        "lineName": "Honda CR-V Q1 2026 - Conquest",
+        "lineStatus": "ACTIVE",
+        "segmentId": 98766,
+        "segmentName": "Competitive Auto - Toyota/Subaru",
+        "ctr": 0.0019,
+        "cpm": 9.70,
+        "viewabilityRate": 0.69,
+        "uniqueUsers": 820000,
+        "frequency": 4.27,
+        "conversions": 155,
+        "conversionRate": 0.0233,
+        "dealerVisits": 310,
+        "dealerVisitRate": 0.0047,
+        "budgetUtilization": 0.340
+      }
+    },
+    {
+      "package_id": "conversion_inmarket",
+      "external_id": "2345681",
+      "status": "delivering",
+      "impressions": 1680000,
+      "clicks": 4704,
+      "spend": 25200.00,
+      "metadata": {
+        "lineId": 2345681,
+        "lineName": "Honda CR-V Q1 2026 - Conversion",
+        "lineStatus": "ACTIVE",
+        "segmentId": 98768,
+        "segmentName": "In-Market Auto - Near Purchase",
+        "ctr": 0.0028,
+        "cpm": 15.00,
+        "viewabilityRate": 0.76,
+        "uniqueUsers": 510000,
+        "frequency": 3.29,
+        "conversions": 220,
+        "conversionRate": 0.0468,
+        "dealerVisits": 485,
+        "dealerVisitRate": 0.0103,
+        "budgetUtilization": 0.336
+      }
+    },
+    {
+      "package_id": "retargeting_honda_visitors",
+      "external_id": "2345682",
+      "status": "delivering",
+      "impressions": 1650000,
+      "clicks": 7425,
+      "spend": 8250.00,
+      "metadata": {
+        "lineId": 2345682,
+        "lineName": "Honda CR-V Q1 2026 - Retargeting",
+        "lineStatus": "ACTIVE",
+        "segmentIds": [98774, 98775],
+        "ctr": 0.0045,
+        "cpm": 5.00,
+        "viewabilityRate": 0.79,
+        "uniqueUsers": 175000,
+        "frequency": 9.43,
+        "conversions": 410,
+        "conversionRate": 0.0552,
+        "dealerVisits": 248,
+        "dealerVisitRate": 0.0033,
+        "budgetUtilization": 0.330
       }
     }
+  ],
+  
+  "totals": {
+    "impressions": 20680000,
+    "clicks": 37259,
+    "spend": 169950.00,
+    "conversions": 915,
+    "dealerVisits": 1043
+  },
+  
+  "campaignMetrics": {
+    "blendedCPM": 8.22,
+    "blendedCTR": 0.0018,
+    "blendedConversionRate": 0.0245,
+    "costPerClick": 4.56,
+    "costPerConversion": 185.74,
+    "costPerDealerVisit": 163.04,
+    "uniqueReach": 5275000,
+    "avgFrequency": 3.92,
+    "budgetUtilization": 0.340,
+    "paceStatus": "ON_TRACK"
   }
 }
 ```
 
 ---
 
-### **Act 4: Newton's Strategic Analysis**
-
-**Newton's Deep Performance Analysis:**
+### **Newton's Performance Analysis**
 
 ```markdown
-# Performance Outerwear Brand Campaign Analysis - Week 2
+# Honda CR-V Q1 2026 - Yahoo DSP Campaign Analysis (Week 4)
 
 ## Campaign Overview
-- Platform: Yahoo DSP (100% of budget)
-- Budget: $50,000
-- Spend to date: $24,800 (49.6% of budget)
-- Duration: 14 days of 31 (45% elapsed)
-- Status: AHEAD OF SCHEDULE
+- Platform: Yahoo DSP
+- Budget: $500,000 (allocated by MMM)
+- Spend to date: $169,950 (34% of budget)
+- Duration: 28 days of 90 (31% elapsed)
+- Status: ON TRACK ✅
 
-## Performance Results
+## Funnel Performance Analysis
 
-### Volume Metrics
-- Impressions: 3.1M (50% of goal, ON TRACK)
-- Clicks: 34,100 (1.1% CTR - EXCELLENT)
-- Conversions: 682 gear purchases (MEASURABLE ROI)
+### By Tier Performance:
 
-### Cost Efficiency
-- Avg CPM: $8.03 (bid-based, stable)
-- Cost per click: $0.73 ($24,800 / 34,100 clicks)
-- Cost per conversion: $36.36 ($24,800 / 682 conversions)
+| Tier | Budget | Spend | Imps | CTR | Conv | Conv% | Dealer Visits | DVR |
+|------|--------|-------|------|-----|------|-------|---------------|-----|
+| Awareness | $175K | $59.8K | 9.2M | 0.12% | - | - | - | - |
+| Consideration | $125K | $42.8K | 4.7M | 0.16% | 130 | 1.75% | - | - |
+| Conquest | $100K | $34.0K | 3.5M | 0.19% | 155 | 2.33% | 310 | 0.47% |
+| Conversion | $75K | $25.2K | 1.7M | 0.28% | 220 | 4.68% | 485 | 1.03% |
+| Retargeting | $25K | $8.3K | 1.7M | 0.45% | 410 | 5.52% | 248 | 0.33% |
 
-### Quality Metrics
-- Viewability: 75% (HIGH - impressions were actually seen)
-- Measurability: 95% (excellent measurement coverage)
-- Win rate: 28.7% (won ~3M of 10.8M auction opportunities)
-- CTR: 1.1% (2X industry average of 0.5%)
+### KEY INSIGHTS:
 
-### Reach Metrics (NEW)
-- Unique users: 886K (reached nearly 1M people)
-- Frequency: 3.5 impressions/user (within 3/day cap)
+1. **RETARGETING OUTPERFORMING** 🌟
+   - Highest CTR (0.45%) and conversion rate (5.52%)
+   - Only 5% of budget but driving 45% of conversions
+   - Consider increasing allocation in optimization
 
-### Cost Breakdown (NEW)
-- Media cost: $21,080 (85% of spend)
-- Data fees: $2,480 (10% - audience segment costs)
-- Platform fees: $1,240 (5%)
+2. **IN-MARKET SEGMENT VALIDATES PREMIUM CPM**
+   - $15 CPM (highest) but 1.03% dealer visit rate (highest)
+   - Cost per dealer visit: $52 (EXCELLENT)
+   - Polk/IHS Markit data proving valuable
 
-### Exchange Performance (NEW)
-| Exchange | Impressions | Viewability | CTR | Brand Safety |
-|----------|-------------|-------------|-----|--------------|
-| Yahoo Exchange | 1.4M (45%) | 72% | 1.2% | 0.95 |
-| Index Exchange | 930K (30%) | 71% | 1.1% | 0.90 |
-| Magnite | 465K (15%) | 68% | 0.9% | 0.88 |
-| Open RTB | 310K (10%) | 55% | 0.95% | 0.70 |
+3. **CONQUEST STRATEGY WORKING**
+   - Competitive Toyota/Subaru shoppers converting at 2.33%
+   - 310 dealer visits from competitive considerers
+   - Winning share from competition
 
-KEY INSIGHT: Yahoo Exchange delivers highest CTR (1.2%) and brand safety.
-Consider increasing Yahoo Exchange allocation in optimization.
+4. **AWARENESS TIER EFFICIENT**
+   - $6.50 CPM delivering scale
+   - 2.35M unique users reached
+   - Setting up lower funnel success
 
-### Device Performance (NEW)
-| Device | Impressions | CTR | Share |
-|--------|-------------|-----|-------|
-| Mobile | 1.7M | 1.2% | 55% |
-| Desktop | 930K | 1.0% | 30% |
-| Tablet | 248K | 0.9% | 8% |
-| CTV | 155K | 1.1% | 5% |
+## Segment-Level Performance
 
-KEY INSIGHT: Mobile driving best performance (1.2% CTR).
-AUTOBID bid adjustment (+10% mobile) is working.
+### TOP PERFORMING SEGMENTS:
 
-## Audience Insights (KEY FINDING)
+1. **Build & Price Abandoners** (Retargeting)
+   - Conversion Rate: 12.5%
+   - Dealer Visit Rate: 2.8%
+   - STATUS: ⭐ STAR PERFORMER
 
-The audience-targeted approach VALIDATED:
+2. **In-Market Near Purchase** (Polk/IHS)
+   - Conversion Rate: 4.68%
+   - Dealer Visit Rate: 1.03%
+   - STATUS: ⭐ HIGH INTENT VALIDATED
 
-### Segment Performance Ranking:
+3. **Honda Website Converters LAL**
+   - Conversion Rate: 3.1%
+   - Dealer Visit Rate: 0.62%
+   - STATUS: ✅ CORE PERFORMER
 
-1. **outdoor_enthusiasts** (BEST VOLUME)
-   - 1.4M impressions, 19.6K clicks (1.4% CTR)
-   - 372 conversions, 1.9% conversion rate
-   - STATUS: Primary driver of results
+4. **Competitive Auto Toyota/Subaru**
+   - Conversion Rate: 2.33%
+   - Dealer Visit Rate: 0.47%
+   - STATUS: ✅ CONQUEST WORKING
 
-2. **sustainable_shoppers** (BEST CONVERSION RATE)
-   - 300K impressions, 1.6K clicks (0.5% CTR)
-   - 40 conversions, 2.5% conversion rate ← HIGHEST
-   - STATUS: Small but HIGHLY qualified audience
+## ROI Analysis
 
-3. **adventure_travelers** (BEST BALANCE)
-   - 500K impressions, 3K clicks (0.6% CTR)
-   - 72 conversions, 2.4% conversion rate
-   - STATUS: High conversion efficiency
+### Conversions (Form Fills, Quote Requests):
+- Total Conversions: 915
+- Cost Per Conversion: $185.74
+- Projected Full Campaign: 2,690 conversions
 
-4. **eco_conscious_consumers** (MODERATE)
-   - 900K impressions, 9.9K clicks (1.1% CTR)
-   - 198 conversions, 2.0% conversion rate
-   - STATUS: Solid performance, good volume
+### Dealer Visits (Measured via Yahoo + Honda):
+- Total Dealer Visits: 1,043
+- Cost Per Dealer Visit: $163.04
+- Projected Full Campaign: 3,067 dealer visits
 
-## Algorithmic Optimization Working
+### Assuming 5% dealer visit to sale conversion:
+- Estimated Sales: 52 vehicles (month 1)
+- Projected Campaign Sales: 153 vehicles
+- At $35K avg vehicle price: $5.36M revenue
+- Campaign ROAS: 10.7X ($5.36M / $500K)
 
-Yahoo DSP's AUTOBID made intelligent adjustments after learning phase:
+## Optimization Recommendations
 
-### Learning Phase Status: COMPLETED ✅
-- Duration: 3 days
-- Data points collected: 847 (exceeded 100 minimum)
-- Status: Algorithm now fully optimized
+### 1. INCREASE RETARGETING BUDGET ✅ RECOMMENDED
+Current: 5% ($25K) → Proposed: 10% ($50K)
+Rationale: Highest conversion rate (5.52%), efficient CPM ($5.00)
+Expected Impact: +400 additional conversions
 
-### Bid Adjustments Applied:
-| Factor | Adjustment | Reason |
-|--------|------------|--------|
-| outdoor_enthusiasts | +15% | Best volume driver |
-| sustainable_shoppers | +20% | Highest conversion rate |
-| Mobile device | +10% | Best CTR (1.2%) |
-| Evening hours | +15% | Peak engagement time |
-| Weekend | -5% | Lower conversion rate |
-| Open Exchange | -10% | Lower viewability (55%) |
+### 2. EXPAND IN-MARKET SEGMENT
+Consider adding:
+- In-Market Auto - 60 day window (broader reach)
+- Dealer Lot Visitors (geo-targeting)
+Expected Impact: +25% conversion volume
 
-### Results:
-- Found optimal bid: $7.85 (vs initial $8.00 max)
-- Bid range used: $6.28 - $9.42 (within $6-10 range)
-- Result: 2% cost savings while maintaining reach
-- Win rate improved: 28.7% → 31.2% (after optimization)
+### 3. TEST SEQUENTIAL MESSAGING
+Move awareness converters to consideration creative
+Move consideration converters to dealer-focused creative
+Expected Impact: +15% funnel efficiency
 
-## Comparative Analysis: What If We'd Chosen ESPN?
+### 4. REDUCE AWARENESS ALLOCATION
+Current: 35% → Proposed: 30%
+Shift 5% to retargeting
+Rationale: Awareness tier at efficient reach, lower funnel needs scale
 
-### ESPN Projection (Hypothetical):
-- Budget: $24,800 spent
-- CPM: $5.00 (fixed)
-- Impressions: 4.96M (59% more impressions!)
-- Relevant impressions: 248K (5% audience match)
-- Estimated clicks: 1,240 (0.5% CTR)
-- Estimated conversions: 25 (2% conversion rate)
-- Cost per conversion: $992
+## Next Steps
 
-### Yahoo DSP Actual:
-- Impressions: 3.1M (38% FEWER impressions)
-- Relevant impressions: 2.48M (80% audience match = 10X MORE relevant reach)
-- Clicks: 34,100 (27X MORE clicks)
-- Conversions: 682 (27X MORE conversions)
-- Cost per conversion: $36.36 (27X LOWER cost)
-
-**KEY INSIGHT:** 
-ESPN would have delivered MORE total impressions (4.96M vs 3.1M)
-but FEWER relevant impressions (248K vs 2.48M). Audience targeting
-delivered 10X more relevant reach despite lower total volume.
-
-## ROI Calculation
-
-Assumptions:
-- Average order value: $150 (hiking jacket/pants)
-- Profit margin: 40% ($60 profit per sale)
-
-Results:
-- 682 conversions × $150 AOV = $102,300 in revenue
-- 682 conversions × $60 profit = $40,920 in gross profit
-- Campaign spend: $24,800
-- Net profit: $16,120
-- ROI: 65% ($16,120 / $24,800)
-
-**Campaign is PROFITABLE at week 2 mark.**
-
-If trend continues:
-- Projected conversions (full 31 days): ~1,500
-- Projected revenue: ~$225,000
-- Projected profit: ~$90,000
-- Projected net profit: ~$40,000
-- Projected ROI: 80%
-
-## Strategic Recommendations
-
-### Option A: Stay the Course ✅ RECOMMENDED
-- Current strategy is working exceptionally well
-- All audience segments performing
-- Algorithm optimizing bids effectively
-- Campaign is profitable
-- Action: Continue with no changes
-
-### Option B: Budget Increase (If Available)
-- Performance justifies increased investment
-- Current ROI: 65% (highly profitable)
-- Could increase budget by 50% ($25K → $75K total)
-- Expected: Maintain profitability at scale
-
-### Option C: Audience Refinement
-- "sustainable_shoppers" has HIGHEST conversion rate (2.5%)
-- Consider creating dedicated campaign for this segment
-- Allocate 20% of remaining budget to pure sustainability focus
-- Test: Sustainability-focused creative messaging
-
-### Option D: Lookalike Expansion
-- Yahoo DSP can create lookalike audiences from converters
-- Find similar users to the 682 people who purchased
-- Expand addressable audience by 2-3X
-- Risk: Lower quality, but worth testing with 10-20% of budget
-
-## Key Learnings
-
-1. **Audience Targeting Delivers ROI**
-   - 80% precision vs 5% for broad placement
-   - 27X more conversions than ESPN would deliver
-   - 27X lower cost per conversion
-
-2. **Higher CPM Can Mean Lower Cost**
-   - Yahoo DSP: $8 CPM → $36.36 cost per conversion
-   - ESPN (projected): $5 CPM → $992 cost per conversion
-   - Precision beats price
-
-3. **Measurement Enables Optimization**
-   - Conversion tracking shows ROI
-   - Segment insights guide strategy
-   - Auto-bidding improves efficiency
-   - ESPN couldn't provide any of this data
-
-4. **Small Audiences Can Outperform**
-   - "sustainable_shoppers" = smallest segment (300K impressions)
-   - "sustainable_shoppers" = HIGHEST conversion rate (2.5%)
-   - Quality > Quantity
-
-## Recommended Action
-
-✅ CONTINUE YAHOO DSP STRATEGY
-
-The audience-targeted approach is working exactly as predicted:
-- Reaching the right people (outdoor enthusiasts + eco-conscious)
-- Driving measurable conversions (682 gear purchases)
-- Delivering profitable ROI (65% at week 2, projecting 80% at completion)
-- Enabling ongoing optimization (algorithm improving bids)
-
-NO changes needed. Let the campaign run its course.
+1. ✅ Continue current strategy through week 6 (learning phase complete)
+2. 📊 Request mid-campaign optimization call with Yahoo DSP
+3. 🎯 Prepare retargeting budget increase proposal
+4. 📈 Generate dealer visit attribution report
 ```
 
 ---
 
 ## 🎭 Demo Flow Summary
 
-### **What Newton Demonstrates:**
-
-1. **Audience-First Thinking**
-   - Recognizes POB needs a SPECIFIC audience
-   - Rejects broad placement strategies (ESPN)
-   - Prioritizes audience match over CPM
-
-2. **Strategic Comparison**
-   - Queries multiple agents systematically
-   - Calculates effective CPM (accounts for waste)
-   - Makes data-driven recommendation with clear math
-
-3. **Precision Execution**
-   - Configures audience targeting (4 segments)
-   - Enables auto-optimization (bid strategy)
-   - Sets up conversion tracking
-
-4. **Performance Intelligence**
-   - Interprets rich DSP metrics
-   - Identifies best-performing segments
-   - Compares actual results vs ESPN projection (27X better!)
-   - Calculates ROI ($16K profit at week 2)
-
-5. **Strategic Insights**
-   - Small audiences can outperform (sustainable_shoppers)
-   - Higher CPM ≠ higher cost (precision reduces waste)
-   - Measurement enables optimization
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                           HONDA + YAHOO DSP DEMO SEQUENCE                                      │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│   AGENCY/MMM           NEWTON                    YAHOO DSP                                    │
+│      │                    │                          │                                         │
+│      │ ① Strategic Brief  │                          │                                         │
+│      │   $500K to Yahoo   │                          │                                         │
+│      │   Auto intenders   │                          │                                         │
+│      │ ─────────────────> │                          │                                         │
+│      │                    │                          │                                         │
+│      │                    │ ② getAudienceSegments()  │                                         │
+│      │                    │    (INTEREST, FACT,      │                                         │
+│      │                    │     LOOKALIKE, CONVERSIONRULE)                                     │
+│      │                    │ ────────────────────────>│                                         │
+│      │                    │                          │                                         │
+│      │                    │ ③ 9 segments discovered  │                                         │
+│      │                    │ <────────────────────────│                                         │
+│      │                    │                          │                                         │
+│      │                    │ ④ Get_analytics_for_     │                                         │
+│      │                    │    audiences_segment()   │                                         │
+│      │                    │ ────────────────────────>│                                         │
+│      │                    │                          │                                         │
+│      │                    │ ⑤ Segment analytics      │                                         │
+│      │                    │    (reach, CPM, conv%)   │                                         │
+│      │                    │ <────────────────────────│                                         │
+│      │                    │                          │                                         │
+│      │               ┌────┴────┐                     │                                         │
+│      │               │ SELECT  │                     │                                         │
+│      │               │SEGMENTS │                     │                                         │
+│      │               │ Funnel  │                     │                                         │
+│      │               │ based   │                     │                                         │
+│      │               └────┬────┘                     │                                         │
+│      │                    │                          │                                         │
+│      │                    │ ⑥ sync_creatives()       │                                         │
+│      │                    │ ────────────────────────>│                                         │
+│      │                    │                          │                                         │
+│      │                    │ ⑦ create_media_buy()     │                                         │
+│      │                    │    (5 packages/tiers)    │                                         │
+│      │                    │ ────────────────────────>│                                         │
+│      │                    │                          │                                         │
+│      │                    │ ⑧ Campaign created       │                                         │
+│      │                    │    61M imps, 15M reach   │                                         │
+│      │                    │ <────────────────────────│                                         │
+│      │                    │                          │                                         │
+│      │ ⑨ CONFIRMATION    │                          │                                         │
+│      │   5 tiers active  │                          │                                         │
+│      │ <───────────────── │                          │                                         │
+│      │                    │                          │                                         │
+│      │  ═══════════════════════  WEEK 4  ═══════════════════════════                          │
+│      │                    │                          │                                         │
+│      │                    │ ⑩ get_media_buy_delivery()                                        │
+│      │                    │ ────────────────────────>│                                         │
+│      │                    │                          │                                         │
+│      │                    │ ⑪ Performance report     │                                         │
+│      │                    │    915 conv, 1043 visits │                                         │
+│      │                    │ <────────────────────────│                                         │
+│      │                    │                          │                                         │
+│      │ ⑫ ANALYSIS        │                          │                                         │
+│      │   10.7X ROAS      │                          │                                         │
+│      │   Optimization    │                          │                                         │
+│      │   recommendations │                          │                                         │
+│      │ <───────────────── │                          │                                         │
+│      │                    │                          │                                         │
+│      ▼                    ▼                          ▼                                         │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -1215,39 +1224,30 @@ NO changes needed. Let the campaign run its course.
 
 ### **For Audience:**
 
-1. **"Newton understands audience strategy"**
-   - Not just "buy cheapest inventory"
-   - Recognizes when audience precision matters
-   - Calculates effective cost, not just CPM
-   - Evaluates segment quality scores and data providers
+1. **"Newton operationalizes strategic decisions"**
+   - MMM determines allocation ($500K to Yahoo DSP)
+   - Audience modeling defines target (auto intenders 25-54)
+   - Newton executes using native DSP tools
 
-2. **"Newton makes the math work"**
-   - ESPN: $5 CPM = $100 effective CPM (95% waste)
-   - Yahoo DSP: $8 CPM = $10 effective CPM (20% waste)
-   - 10X cost efficiency through targeting
-   - Cost breakdown transparency (media 85%, data 10%, platform 5%)
+2. **"Newton uses REAL Yahoo DSP tools"**
+   - `getAudienceSegments` - Discovers 9 segments across 4 types
+   - `Get_analytics_for_audiences_segment` - Evaluates reach, CPM, conversion rates
+   - Not simulated - actual Yahoo DSP API integration
 
-3. **"Newton leverages programmatic advantages"**
-   - 4 audience segments with provider metadata (Yahoo, Oracle, Experian)
-   - 9 exchanges with quality metrics (viewability, brand safety, fraud rate)
-   - AUTOBID optimization with learning phase (3 days, 100+ data points)
-   - Bid adjustments by device (+10% mobile), time (+15% evening), exchange
-   - Conversion tracking (682 measurable purchases)
-   - Segment insights (sustainable_shoppers = best conversion rate)
+3. **"Intelligent segment selection"**
+   - Newton evaluates segments on multiple dimensions
+   - Allocates budget by funnel stage (awareness → retargeting)
+   - Applies overlap exclusions to avoid waste (18% duplicate reduction)
 
-4. **"Newton proves ROI with rich reporting"**
-   - Week 2: 65% ROI ($16K profit on $24.8K spend)
-   - Projected: 80% ROI at campaign completion
-   - ESPN would have delivered 1/27th the conversions
-   - Exchange breakdown shows Yahoo Exchange = best CTR (1.2%)
-   - Device breakdown shows Mobile = best performance (55% share, 1.2% CTR)
-   - Reach metrics: 886K unique users at 3.5 frequency
+4. **"Funnel-based strategy proves out"**
+   - Retargeting: 5% budget → 45% of conversions
+   - In-Market: Highest CPM ($15) but best dealer visit rate (1.03%)
+   - Premium data (Polk/IHS) justifies premium price
 
-5. **"AdCP protocol enables all of this"**
-   - Same tools work across publisher (ESPN) and DSP (Yahoo)
-   - Newton doesn't need to know implementation details
-   - Audience capabilities surfaced through product responses
-   - Yahoo DSP API terminology exposed (Lines, AUTOBID, goalType)
+5. **"Measurable business outcomes"**
+   - 915 conversions at $185 CPA
+   - 1,043 dealer visits at $163 cost
+   - Projected 10.7X ROAS ($5.36M revenue on $500K spend)
 
 ---
 
@@ -1255,53 +1255,45 @@ NO changes needed. Let the campaign run its course.
 
 ### **Setup (Before Demo):**
 
-1. Ensure services running:
+1. Ensure Yahoo DSP service is running:
    ```bash
-   aws ecs describe-services --cluster salesagent-espn --services salesagent-espn --region us-east-1
-   aws ecs describe-services --cluster salesagent-cnn --services salesagent-cnn --region us-east-1
    aws ecs describe-services --cluster salesagent-yahoo --services salesagent-yahoo --region us-east-1
    ```
 
-2. Verify Newton has MCP servers registered:
-   - `mcp_espn` → `http://espn.salesagent.local:9580/mcp`
-   - `mcp_cnn` → `http://cnn.salesagent.local:9580/mcp`
+2. Verify Newton has MCP server registered:
    - `mcp_yahoo` → `http://yahoo.salesagent.local:9580/mcp`
 
-3. Clean previous demo data (optional):
-   ```python
-   mcp_espn.clean_demo_data(tenant_id="espn")
-   mcp_cnn.clean_demo_data(tenant_id="cnn")
-   mcp_yahoo.clean_demo_data(tenant_id="yahoo")
-   ```
+3. Confirm Honda advertiser ID is configured (accountId: 12345)
 
 ### **Demo Execution:**
 
 Run Newton with the scenario prompt:
 
 ```
-PROMPT: "I'm planning a campaign for Performance Outerwear Brand to launch 
-their new sustainable hiking collection. Budget: $50K for 31 days in December.
+PROMPT: "Honda has allocated $500K to Yahoo DSP for their CR-V Spring Launch 
+campaign (Q1 2026). This allocation came from their Media Mix Model.
 
-Target audience (pre-identified through analysis):
-- Outdoor enthusiasts (hiking, camping, trail running)
-- Eco-conscious consumers who value sustainability
-- Age 25-45, household income $75K+
-- Active lifestyle, weekend adventurers
+The audience modeling team identified the target: Auto intenders considering 
+SUVs, age 25-54, with a focus on competitive conquesting (Toyota RAV4, 
+Subaru Outback considerers).
 
-Compare inventory options across ESPN, CNN, and Yahoo DSP. Determine which 
-platform can BEST REACH this specific audience. Make a strategic recommendation, 
-execute the buy, and after 2 weeks analyze performance to validate the strategy."
+Your job is to:
+1. Discover available audience segments on Yahoo DSP
+2. Evaluate segment quality and fit
+3. Select the optimal segment mix for a funnel-based strategy
+4. Execute the $500K buy across awareness, consideration, conquest, 
+   conversion, and retargeting tiers
+5. After 4 weeks, analyze performance and recommend optimizations"
 ```
 
 Newton will:
-1. Call `get_products` on ESPN, CNN, and Yahoo DSP
-2. Analyze audience match for each platform
-3. Calculate effective CPM (accounting for waste)
-4. Recommend Yahoo DSP based on audience precision
-5. Execute `sync_creatives` + `create_media_buy` with audience targeting
-6. Call `get_media_buy_delivery` after simulated 2 weeks
-7. Analyze segment performance and ROI
-8. Compare actual results vs ESPN projection (27X better)
+1. Call `getAudienceSegments` (4 segment types: INTEREST, FACT, LOOKALIKE, CONVERSIONRULE)
+2. Call `Get_analytics_for_audiences_segment` to evaluate candidates
+3. Analyze and select optimal segments by funnel stage
+4. Execute `sync_creatives` + `create_media_buy` with 5 packages
+5. Call `get_media_buy_delivery` after simulated 4 weeks
+6. Analyze funnel performance and calculate ROAS
+7. Recommend optimizations (increase retargeting, expand in-market)
 
 ---
 
@@ -1309,68 +1301,69 @@ Newton will:
 
 ### **Audience Takeaways:**
 
-1. ✅ **Newton makes intelligent strategic decisions**
-   - Not just executing orders
-   - Analyzing audience fit with segment quality scores
-   - Calculating true cost efficiency
-   - Evaluating exchange quality (viewability, brand safety)
-   
-2. ✅ **Audience targeting has measurable value**
-   - 10X more relevant reach (2.48M vs 248K)
-   - 27X more conversions (682 vs 25 projected)
-   - 27X lower cost per conversion ($36 vs $992)
-   - 886K unique users reached at optimal frequency
-   
-3. ✅ **Higher CPM can mean lower cost**
-   - $8 CPM with 80% precision = $10 effective
-   - $5 CPM with 5% precision = $100 effective
-   - Precision beats price
-   - Cost transparency: media 85%, data fees 10%, platform 5%
-   
-4. ✅ **Yahoo DSP delivers unique value**
-   - Audience segments with provider metadata (Yahoo, Oracle, Experian)
-   - 9 exchanges with quality metrics
-   - AUTOBID with learning phase and bid adjustments
-   - Conversion tracking (682 measurable purchases)
-   - Segment insights (sustainable_shoppers = best conversion rate)
-   - Exchange insights (Yahoo Exchange = best CTR)
-   - Device insights (Mobile = 55% share, best performance)
-   
-5. ✅ **AdCP protocol is flexible**
-   - Same tools work for publisher and DSP
-   - Audience capabilities surfaced naturally
-   - Yahoo DSP API terminology exposed (Lines, AUTOBID, goalType)
-   - Rich reporting dimensions (exchange, device, audience)
-   - Newton adapts strategy to product responses
+1. ✅ **Newton works with native DSP tools**
+   - Not just AdCP abstractions
+   - Uses actual Yahoo DSP audience discovery APIs
+   - Evaluates real segment analytics
+
+2. ✅ **Strategic execution, not just order-taking**
+   - Receives allocation from MMM (strategy)
+   - Makes intelligent segment selection decisions (tactics)
+   - Allocates budget by funnel stage (execution)
+
+3. ✅ **Data-driven optimization**
+   - Segment analytics inform selection
+   - Overlap exclusions reduce waste (18%)
+   - Performance data drives recommendations
+
+4. ✅ **Measurable business outcomes**
+   - Dealer visits tracked (1,043)
+   - ROAS calculated (10.7X)
+   - Clear path to vehicle sales
+
+5. ✅ **Funnel strategy validated**
+   - Retargeting: Smallest budget, biggest impact
+   - Premium data: Higher CPM justified by results
+   - Full-funnel approach > single-tier buying
 
 ---
 
 ## 📝 Demo Notes
 
 **Preparation time:** 5 minutes  
-**Demo duration:** 12-18 minutes (live)  
-**Technical level:** Medium (assumes AdCP knowledge)
+**Demo duration:** 15-20 minutes (live)  
+**Technical level:** Medium-High (assumes DSP/audience knowledge)
 
 **Key moments to emphasize:**
-1. Newton's audience match analysis (ESPN: 5%, Yahoo: 80%)
-2. Effective CPM calculation ($100 vs $10)
-3. Exchange selection with quality metrics (viewability, brand safety)
-4. AUTOBID learning phase and bid adjustments
-5. Week 2 results: 682 conversions, 65% ROI
-6. Exchange breakdown: Yahoo Exchange = best CTR (1.2%)
-7. Device breakdown: Mobile = best performance (55% share)
-8. ESPN comparison: 27X better performance
+1. Newton calling `getAudienceSegments` with different segment types
+2. Segment analytics comparison (reach vs CPM vs conversion rate)
+3. Funnel-based budget allocation logic
+4. Overlap exclusion strategy (18% waste reduction)
+5. Week 4 performance: Retargeting outperformance
+6. ROAS calculation: 10.7X ($5.36M on $500K)
 
-**New features to highlight:**
-- 9 exchanges with rich metadata (avgCpm, viewabilityRate, brandSafetyScore)
-- AUTOBID with learning phase (3 days, 100 data points)
-- Bid adjustments by device, time, exchange
-- Frequency cap presets (awareness, consideration, conversion)
-- Cost breakdown (media, data fees, platform fees)
-- 29 reporting metrics across 4 dimensions
+**Native Yahoo tools highlighted:**
+- `getAudienceSegments` - 4 segment types (INTEREST, FACT, LOOKALIKE, CONVERSIONRULE)
+- `Get_analytics_for_audiences_segment` - Reach, CPM, CTR, conversion rate, overlap
 
 **Backup plan:** Pre-recorded responses if live demo fails
 
 ---
 
-This demo powerfully demonstrates Newton's intelligence in audience strategy and Yahoo DSP's unique programmatic value aligned with the actual Yahoo DSP API! 🏔️🚀
+## 🔗 Related Demos
+
+This demo complements the **NBCU/FreeWheel Linear + Streaming Demo**:
+
+| Aspect | Yahoo DSP Demo | NBCU Demo |
+|--------|----------------|-----------|
+| Channel | Programmatic Display | Linear TV + Streaming |
+| Targeting | Audience segments | Programming/Daypart |
+| Pricing | Auction (CPM) | Guaranteed (Unit rate) |
+| Native Tools | `getAudienceSegments` | `get_products` |
+| Measurement | Conversions, Dealer Visits | GRPs, Impressions |
+
+**Together they show:** Newton can orchestrate cross-channel campaigns using native tools from each platform while maintaining strategic coherence.
+
+---
+
+This demo powerfully demonstrates Newton using **real Yahoo DSP tools** to operationalize strategic media decisions! 🚗🚀

@@ -186,28 +186,43 @@ def create_demo_tenants():
             else:
                 print(f"  ℹ️ Principal already exists for {tenant_id}")
 
+            # For Yahoo DSP: Create Honda advertiser principal for demo
+            if config.get("tenant_type") == "dsp":
+                stmt = select(Principal).filter_by(principal_id="honda_advertiser", tenant_id=tenant_id)
+                honda_principal = session.scalars(stmt).first()
+                if not honda_principal:
+                    honda_principal = Principal(
+                        principal_id="honda_advertiser",
+                        tenant_id=tenant_id,
+                        name="Honda Motor Company",
+                        access_token="honda-demo-token",
+                        platform_mappings={
+                            "yahoo_dsp": {
+                                "advertiser_id": "12345",
+                                "seat_id": "honda_seat_001",
+                                "account_name": "Honda Motor Company"
+                            }
+                        },
+                    )
+                    session.add(honda_principal)
+                    print(f"  ✓ Created Honda Principal for {tenant_id}")
+                else:
+                    print(f"  ℹ️ Honda Principal already exists for {tenant_id}")
+
             # Create sample products (different for DSP vs publisher)
             if config.get("tenant_type") == "dsp":
                 # DSP products: Audience-focused, programmatic
                 # Aligned with Yahoo DSP API terminology (Lines, Exchanges, Deals)
+                # AUTOMOTIVE-FOCUSED for Honda demo
                 products_data = [
                     {
-                        "name": "Audience-Targeted Display (Open Exchange)",
-                        "format": "display_728x90",
-                        "description": "Reach high-value audiences across Yahoo Exchange + open web. "
-                                       "Supports outdoor_enthusiasts, eco_conscious_consumers, sustainable_shoppers, "
-                                       "adventure_travelers audience segments. AUTOBID optimization available.",
-                        "pricing_model": "CPM",
-                        "rate": 6.50,
-                        "is_fixed": False,  # Bid-based (auction)
-                        "price_guidance": {"floor": 5.00, "p50": 6.50, "p75": 8.00},
-                        "product_suffix": "",  # Use default product_id format
-                    },
-                    {
-                        "name": "Premium Display + Retargeting",
+                        "name": "Audience-Targeted Display",
                         "format": "display_300x250",
-                        "description": "Medium rectangle with site retargeting pools for abandoned cart recovery. "
-                                       "Supports FIRST_PARTY retargeting audiences. Higher CPM for precision targeting.",
+                        "description": "Programmatic display with advanced audience targeting across Yahoo Exchange and open web. "
+                                       "Supports INTEREST, FACT, LOOKALIKE, and CONVERSIONRULE segment types. "
+                                       "Auto intender segments available (SUV, Crossover, In-Market). "
+                                       "AUTOBID optimization with learning phase support. "
+                                       "Use getAudienceSegments to discover available segments.",
                         "pricing_model": "CPM",
                         "rate": 8.00,
                         "is_fixed": False,  # Bid-based (auction)
@@ -215,39 +230,65 @@ def create_demo_tenants():
                         "product_suffix": "",
                     },
                     {
-                        "name": "Mobile Audience Network",
-                        "format": "display_320x50",
-                        "description": "Mobile inventory with behavioral targeting across Yahoo mobile properties. "
-                                       "Supports fitness_enthusiasts, travel_enthusiasts audience segments.",
-                        "pricing_model": "CPM",
-                        "rate": 5.50,
-                        "is_fixed": False,  # Bid-based (auction)
-                        "price_guidance": {"floor": 4.00, "p50": 5.50, "p75": 7.00},
-                        "product_suffix": "",
-                    },
-                    {
-                        "name": "Premium PMP Deal - Sports & Outdoor Publishers",
+                        "name": "Premium PMP Deal - Automotive Publishers",
                         "format": "display_300x250",
-                        "description": "Private Marketplace (PMP) deal with premium sports and outdoor publishers. "
-                                       "PREFERRED_DEAL type with fixed floor price. Higher viewability (75%+) and "
-                                       "brand-safe inventory. Ideal for outdoor_enthusiasts, adventure_travelers targeting.",
+                        "description": "Private Marketplace (PMP) deal with premium automotive publishers (KBB, Edmunds, Cars.com, MotorTrend). "
+                                       "PREFERRED_DEAL type with fixed floor price. "
+                                       "Higher viewability (75%+) and brand-safe inventory. "
+                                       "Ideal for auto intender and competitive conquest targeting.",
                         "pricing_model": "CPM",
                         "rate": 12.00,  # Higher CPM for premium PMP inventory
                         "is_fixed": False,  # Still auction-based but with floor
                         "price_guidance": {"floor": 10.00, "p50": 12.00, "p75": 15.00},
-                        "product_suffix": "_pmp_sports",  # Special suffix for PMP deal
+                        "product_suffix": "_pmp_auto",  # Special suffix for automotive PMP deal
+                    },
+                    {
+                        "name": "Mobile Audience Network",
+                        "format": "display_320x50",
+                        "description": "Mobile inventory with behavioral targeting across Yahoo mobile properties. "
+                                       "Strong performance for auto intenders on mobile devices. "
+                                       "Supports location-based targeting near dealerships.",
+                        "pricing_model": "CPM",
+                        "rate": 5.50,
+                        "is_fixed": False,  # Bid-based (auction)
+                        "price_guidance": {"floor": 4.00, "p50": 5.50, "p75": 7.00},
+                        "product_suffix": "_mobile",
+                    },
+                    {
+                        "name": "Retargeting Display",
+                        "format": "display_300x250",
+                        "description": "Site retargeting for users who visited advertiser websites. "
+                                       "Supports CONVERSIONRULE segments (page visitors, build & price abandoners, dealer locator users). "
+                                       "Highest conversion rates at efficient CPMs.",
+                        "pricing_model": "CPM",
+                        "rate": 5.00,
+                        "is_fixed": False,
+                        "price_guidance": {"floor": 4.00, "p50": 5.00, "p75": 6.00},
+                        "product_suffix": "_retarget",
                     },
                     {
                         "name": "Video Pre-Roll (Programmatic)",
                         "format": "video_30sec",
                         "description": "30-second video pre-roll across Yahoo video network and exchange partners. "
                                        "Supports VIDEO mediaType with video completion tracking. "
-                                       "Optimized for VIEWABLE_IMPRESSION goal type.",
+                                       "Strong brand impact for automotive launches.",
                         "pricing_model": "CPM",
                         "rate": 15.00,  # Video typically higher CPM
                         "is_fixed": False,
                         "price_guidance": {"floor": 12.00, "p50": 15.00, "p75": 20.00},
                         "product_suffix": "_video",
+                    },
+                    {
+                        "name": "Leaderboard Display",
+                        "format": "display_728x90",
+                        "description": "Leaderboard display with audience targeting across Yahoo Exchange + open web. "
+                                       "Good for brand awareness campaigns with broad reach. "
+                                       "Supports all segment types.",
+                        "pricing_model": "CPM",
+                        "rate": 6.50,
+                        "is_fixed": False,
+                        "price_guidance": {"floor": 5.00, "p50": 6.50, "p75": 8.00},
+                        "product_suffix": "",
                     },
                 ]
             else:
