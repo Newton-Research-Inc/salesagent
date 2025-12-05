@@ -8,6 +8,7 @@ from src.adapters.google_ad_manager import GoogleAdManager
 from src.adapters.kevel import Kevel
 from src.adapters.mock_ad_server import MockAdServer as MockAdServerAdapter
 from src.adapters.triton_digital import TritonDigital
+from src.adapters.yahoo_dsp import YahooDSP
 from src.core.config_loader import get_current_tenant
 from src.core.database.database_session import get_db_session
 from src.core.database.models import AdapterConfig
@@ -16,7 +17,7 @@ from src.core.schemas import Principal
 
 def get_adapter(
     principal: Principal, dry_run: bool = False, testing_context: Any = None
-) -> MockAdServerAdapter | GoogleAdManager | Kevel | TritonDigital:
+) -> MockAdServerAdapter | GoogleAdManager | Kevel | TritonDigital | YahooDSP:
     """Get the appropriate adapter instance for the selected adapter type."""
     import logging
 
@@ -130,8 +131,12 @@ def get_adapter(
         return Kevel(adapter_config, principal, dry_run, tenant_id=tenant_id)
     elif selected_adapter in ["triton", "triton_digital"]:
         return TritonDigital(adapter_config, principal, dry_run, tenant_id=tenant_id)
+    elif selected_adapter == "yahoo_dsp":
+        logger.info("[ADAPTER_SELECT] Instantiating YahooDSP")
+        return YahooDSP(adapter_config, principal, dry_run, tenant_id=tenant_id)
     else:
         # Default to mock for unsupported adapters
+        logger.warning(f"[ADAPTER_SELECT] Unknown adapter '{selected_adapter}', falling back to MockAdServer")
         return MockAdServerAdapter(
             adapter_config, principal, dry_run, tenant_id=tenant_id, strategy_context=testing_context
         )
