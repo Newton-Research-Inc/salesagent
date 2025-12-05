@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _get_audience_segments_impl(
-    account_id: int | None,
+    account_id: str | int | None,
     segment_type: str | None,
     status: str,
     keywords: str | None,
@@ -105,10 +105,24 @@ async def _get_audience_segments_impl(
             f"Got: {adapter.adapter_name}"
         )
     
+    # Convert account_id to int if it's a numeric string, otherwise ignore non-numeric values
+    resolved_account_id = None
+    if account_id is not None:
+        if isinstance(account_id, int):
+            resolved_account_id = account_id
+        elif isinstance(account_id, str):
+            # Try to parse as int, otherwise ignore (it might be a name like "Honda")
+            try:
+                resolved_account_id = int(account_id)
+            except ValueError:
+                # Non-numeric string like "Honda" - ignore it, we'll return all segments
+                logger.info(f"accountId '{account_id}' is not numeric, ignoring filter")
+                resolved_account_id = None
+    
     # Call adapter method
     try:
         result = adapter.get_audience_segments(
-            account_id=account_id,
+            account_id=resolved_account_id,
             segment_type=segment_type,
             status=status,
             keywords=keywords,
@@ -203,7 +217,7 @@ async def _get_segment_analytics_impl(
 
 
 async def getAudienceSegments(
-    accountId: int | None = None,
+    accountId: str | int | None = None,
     segmentType: str | None = None,
     status: str = "ACTIVE",
     keywords: str | None = None,
