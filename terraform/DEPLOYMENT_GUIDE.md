@@ -66,10 +66,10 @@ aws ecr get-login-password --region us-east-1 | \
   docker login --username AWS --password-stdin $ECR_URL
 
 # Tag image
-docker tag salesagent:staging $ECR_URL:latest
+docker tag salesagent:staging ${ECR_URL}:latest
 
 # Push to ECR
-docker push $ECR_URL:latest
+docker push ${ECR_URL}:latest
 ```
 
 > **Note:** If you get `Output "ecr_repository_url" not found`, either:
