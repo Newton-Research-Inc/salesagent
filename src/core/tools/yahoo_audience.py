@@ -213,6 +213,8 @@ async def getAudienceSegments(
     limit: int = 50,
     includeIabDataLabels: bool = False,
     ctx: Context | None = None,
+    # Newton-specific parameters (ignored but accepted for compatibility)
+    super_access: bool = False,
 ) -> ToolResult:
     """
     Returns a list of audience segments based on the provided filters.
@@ -273,6 +275,8 @@ async def getAudienceSegments(
 async def Get_analytics_for_audiences_segment(
     segmentIds: str,
     ctx: Context | None = None,
+    # Newton-specific parameters (ignored but accepted for compatibility)
+    super_access: bool = False,
 ) -> ToolResult:
     """
     Retrieve analytics for specific audience segments by segmentId.
