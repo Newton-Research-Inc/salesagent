@@ -20,6 +20,12 @@ from src.core.tools.products import get_products_raw
 from src.core.tools.properties import list_authorized_properties_raw
 from src.core.tools.signals import get_signals_raw
 
+# Yahoo DSP-specific audience tools (only work with Yahoo DSP adapter)
+from src.core.tools.yahoo_audience import (
+    get_audience_segments_raw,
+    get_segment_analytics_raw,
+)
+
 __all__ = [
     "get_products_raw",
     "get_signals_raw",
@@ -31,4 +37,7 @@ __all__ = [
     "update_media_buy_raw",
     "get_media_buy_delivery_raw",
     "update_performance_index_raw",
+    # Yahoo DSP-specific
+    "get_audience_segments_raw",
+    "get_segment_analytics_raw",
 ]

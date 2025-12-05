@@ -1042,6 +1042,12 @@ from src.core.tools.products import get_products  # noqa: E402, F401
 from src.core.tools.properties import list_authorized_properties  # noqa: E402, F401
 from src.core.tools.signals import activate_signal, get_signals  # noqa: E402, F401
 
+# Yahoo DSP-specific audience tools (only work with Yahoo DSP adapter)
+from src.core.tools.yahoo_audience import (  # noqa: E402, F401
+    getAudienceSegments,
+    Get_analytics_for_audiences_segment,
+)
+
 
 # ============================================================================
 # Demo Management Tool (Demo Mode Only)
@@ -1159,3 +1165,7 @@ mcp.tool()(create_media_buy)
 mcp.tool()(update_media_buy)
 mcp.tool()(get_media_buy_delivery)
 mcp.tool()(update_performance_index)
+
+# Yahoo DSP-specific audience tools (only available for Yahoo DSP adapter)
+mcp.tool()(getAudienceSegments)
+mcp.tool()(Get_analytics_for_audiences_segment)

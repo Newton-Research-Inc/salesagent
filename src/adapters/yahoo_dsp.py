@@ -328,8 +328,25 @@ class YahooDSP(AdServerAdapter):
     }
 
     # =========================================================================
-    # Yahoo DSP Audience Segment Types
+    # Yahoo DSP Audience Segment Types (aligned with Yahoo DSP API)
+    # https://help.yahooinc.com/dsp-api/docs/audiences
     # =========================================================================
+    SEGMENT_TYPES = {
+        "COMPOSITE": "Composite Audiences - Combined segment logic",
+        "CONVERSIONRULE": "Conversion Rule Audience - Pixel-based retargeting",
+        "CUSTOM": "Device ID Audiences - Custom device lists",
+        "EMAIL": "Email/Phone Number Audiences - CRM match",
+        "IPADDRESS": "IP Address Audiences - B2B targeting",
+        "EVENTLEVEL": "Mail Event Audience - Email engagement",
+        "FACT": "Third-party Fact data segments - Oracle, Experian, Polk",
+        "GEORETARGET": "POI Audiences - Point of Interest visits",
+        "INTEREST": "Yahoo Interest Category segments - Behavioral",
+        "LOOKALIKE": "Lookalike Audience - Modeled from seed",
+        "MRT": "Mail Domain Audiences - Email domain targeting",
+        "SRT": "Search Keyword Audiences - Search behavior",
+    }
+
+    # Legacy alias for backward compatibility
     AUDIENCE_TYPES = {
         "FIRST_PARTY": "Advertiser's own data (CRM, site visitors)",
         "THIRD_PARTY": "Data provider segments (Oracle, Experian)",
@@ -338,7 +355,329 @@ class YahooDSP(AdServerAdapter):
         "RETARGETING": "Site/app visitor retargeting",
     }
 
-    # DSP-specific: Supported audience segments with realistic metadata
+    # =========================================================================
+    # Comprehensive Audience Segment Database (for getAudienceSegments API)
+    # Organized by segment ID for efficient lookup
+    # Includes automotive-focused segments for Honda demo
+    # =========================================================================
+    AUDIENCE_SEGMENT_DATABASE: dict[int, dict[str, Any]] = {
+        # =====================================================================
+        # INTEREST Segments (Yahoo Behavioral Data)
+        # =====================================================================
+        98765: {
+            "id": 98765,
+            "name": "Auto Intenders - SUV/Crossover",
+            "segmentType": "INTEREST",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 8500000,
+            "cpmLift": 0.15,
+            "recency": "30_DAYS",
+            "description": "Users actively researching SUVs and crossovers based on Yahoo search and content consumption",
+            "keywords": ["auto", "SUV", "crossover", "vehicle", "car shopping", "honda", "toyota", "suv buyer"],
+            "countryCodes": ["USA", "CAN"],
+        },
+        98770: {
+            "id": 98770,
+            "name": "Auto Enthusiasts - New Vehicle Research",
+            "segmentType": "INTEREST",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 12000000,
+            "cpmLift": 0.10,
+            "recency": "45_DAYS",
+            "description": "Users consuming automotive content and comparing vehicles",
+            "keywords": ["auto", "car", "vehicle", "automotive", "new car", "car research"],
+            "countryCodes": ["USA", "CAN", "GBR"],
+        },
+        98771: {
+            "id": 98771,
+            "name": "Family Vehicle Shoppers",
+            "segmentType": "INTEREST",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 6200000,
+            "cpmLift": 0.18,
+            "recency": "30_DAYS",
+            "description": "Users researching family-friendly vehicles, safety ratings, cargo space",
+            "keywords": ["family car", "minivan", "safety", "car seats", "family SUV", "honda pilot", "cr-v"],
+            "countryCodes": ["USA"],
+        },
+        98780: {
+            "id": 98780,
+            "name": "Outdoor Enthusiasts",
+            "segmentType": "INTEREST",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 3500000,
+            "cpmLift": 0.25,
+            "recency": "30_DAYS",
+            "description": "Users interested in outdoor activities, camping, hiking",
+            "keywords": ["outdoor", "camping", "hiking", "adventure", "nature"],
+            "countryCodes": ["USA", "CAN"],
+        },
+        98781: {
+            "id": 98781,
+            "name": "Eco-Conscious Consumers",
+            "segmentType": "INTEREST",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 4200000,
+            "cpmLift": 0.22,
+            "recency": "30_DAYS",
+            "description": "Users interested in sustainability, green products, eco-friendly lifestyle",
+            "keywords": ["eco", "sustainable", "green", "environment", "hybrid", "electric vehicle"],
+            "countryCodes": ["USA", "CAN", "GBR"],
+        },
+        
+        # =====================================================================
+        # FACT Segments (Third-Party Data Providers)
+        # =====================================================================
+        98766: {
+            "id": 98766,
+            "name": "Competitive Auto - Toyota/Subaru Considerers",
+            "segmentType": "FACT",
+            "status": "ACTIVE",
+            "provider": "Oracle Data Cloud",
+            "reach": 3200000,
+            "cpmLift": 0.35,
+            "dataFee": 1.50,
+            "recency": "60_DAYS",
+            "description": "Users who have shown purchase intent for Toyota RAV4, Subaru Outback, Forester",
+            "keywords": ["toyota", "subaru", "rav4", "outback", "forester", "competitive", "auto intender"],
+            "countryCodes": ["USA"],
+        },
+        98768: {
+            "id": 98768,
+            "name": "In-Market Auto - Near Purchase (90 days)",
+            "segmentType": "FACT",
+            "status": "ACTIVE",
+            "provider": "Polk/IHS Markit",
+            "reach": 2100000,
+            "cpmLift": 0.65,
+            "dataFee": 2.50,
+            "recency": "30_DAYS",
+            "description": "Users predicted to purchase a vehicle within 90 days based on registration and financial data",
+            "keywords": ["in-market", "auto", "purchase", "near purchase", "vehicle buyer", "dealership"],
+            "countryCodes": ["USA"],
+        },
+        98772: {
+            "id": 98772,
+            "name": "SUV/Crossover Intenders - Premium",
+            "segmentType": "FACT",
+            "status": "ACTIVE",
+            "provider": "Experian",
+            "reach": 4800000,
+            "cpmLift": 0.45,
+            "dataFee": 2.00,
+            "recency": "45_DAYS",
+            "description": "High-confidence SUV purchase intenders based on credit and lifestyle data",
+            "keywords": ["SUV", "crossover", "premium", "auto intender", "vehicle purchase"],
+            "countryCodes": ["USA", "CAN"],
+        },
+        98782: {
+            "id": 98782,
+            "name": "High Income Households ($100K+)",
+            "segmentType": "FACT",
+            "status": "ACTIVE",
+            "provider": "Experian",
+            "reach": 4200000,
+            "cpmLift": 0.35,
+            "dataFee": 1.75,
+            "recency": "90_DAYS",
+            "description": "Households with annual income over $100,000",
+            "keywords": ["high income", "affluent", "premium", "luxury"],
+            "countryCodes": ["USA"],
+        },
+        98783: {
+            "id": 98783,
+            "name": "Auto Service - Recent Maintenance",
+            "segmentType": "FACT",
+            "status": "ACTIVE",
+            "provider": "Oracle Data Cloud",
+            "reach": 5500000,
+            "cpmLift": 0.20,
+            "dataFee": 1.25,
+            "recency": "30_DAYS",
+            "description": "Vehicle owners who recently had maintenance or service performed",
+            "keywords": ["auto service", "maintenance", "car repair", "oil change"],
+            "countryCodes": ["USA"],
+        },
+        
+        # =====================================================================
+        # LOOKALIKE Segments (Modeled Audiences)
+        # =====================================================================
+        98767: {
+            "id": 98767,
+            "name": "Honda Website Converters - Lookalike",
+            "segmentType": "LOOKALIKE",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 5100000,
+            "cpmLift": 0.25,
+            "recency": "FRESH",
+            "seedAudience": "Honda.com build & price completers",
+            "seedSize": 125000,
+            "similarityScore": 0.85,
+            "description": "Users similar to those who completed build & price on Honda.com",
+            "keywords": ["honda", "lookalike", "converters", "build price"],
+            "countryCodes": ["USA"],
+        },
+        98773: {
+            "id": 98773,
+            "name": "Honda Dealer Visitors - Lookalike",
+            "segmentType": "LOOKALIKE",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 3800000,
+            "cpmLift": 0.28,
+            "recency": "FRESH",
+            "seedAudience": "Honda dealer website visitors",
+            "seedSize": 85000,
+            "similarityScore": 0.82,
+            "description": "Users similar to those who visited Honda dealer websites",
+            "keywords": ["honda", "dealer", "lookalike", "dealership"],
+            "countryCodes": ["USA"],
+        },
+        98784: {
+            "id": 98784,
+            "name": "SUV Buyers - Lookalike",
+            "segmentType": "LOOKALIKE",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 6200000,
+            "cpmLift": 0.30,
+            "recency": "FRESH",
+            "seedAudience": "Recent SUV purchasers (all brands)",
+            "seedSize": 200000,
+            "similarityScore": 0.78,
+            "description": "Users similar to those who recently purchased an SUV",
+            "keywords": ["SUV", "buyer", "lookalike", "purchase"],
+            "countryCodes": ["USA", "CAN"],
+        },
+        
+        # =====================================================================
+        # CONVERSIONRULE Segments (Retargeting/Pixel-Based)
+        # =====================================================================
+        98774: {
+            "id": 98774,
+            "name": "Honda.com - CR-V Page Visitors",
+            "segmentType": "CONVERSIONRULE",
+            "status": "ACTIVE",
+            "provider": "Honda",
+            "reach": 450000,
+            "cpmLift": 0.0,
+            "recency": "30_DAYS",
+            "description": "Users who visited CR-V pages on Honda.com in last 30 days",
+            "keywords": ["honda", "cr-v", "retargeting", "website visitor"],
+            "countryCodes": ["USA"],
+            "pixelId": "honda_crv_pixel",
+        },
+        98775: {
+            "id": 98775,
+            "name": "Honda.com - Build & Price Abandoners",
+            "segmentType": "CONVERSIONRULE",
+            "status": "ACTIVE",
+            "provider": "Honda",
+            "reach": 180000,
+            "cpmLift": 0.0,
+            "recency": "14_DAYS",
+            "description": "Users who started but didn't complete build & price",
+            "keywords": ["honda", "abandoner", "build price", "retargeting"],
+            "countryCodes": ["USA"],
+            "pixelId": "honda_bp_abandon_pixel",
+        },
+        98785: {
+            "id": 98785,
+            "name": "Honda.com - All Site Visitors",
+            "segmentType": "CONVERSIONRULE",
+            "status": "ACTIVE",
+            "provider": "Honda",
+            "reach": 1200000,
+            "cpmLift": 0.0,
+            "recency": "30_DAYS",
+            "description": "All Honda.com visitors in last 30 days",
+            "keywords": ["honda", "retargeting", "website visitor", "site visitor"],
+            "countryCodes": ["USA"],
+            "pixelId": "honda_site_pixel",
+        },
+        98786: {
+            "id": 98786,
+            "name": "Honda.com - Dealer Locator Users",
+            "segmentType": "CONVERSIONRULE",
+            "status": "ACTIVE",
+            "provider": "Honda",
+            "reach": 320000,
+            "cpmLift": 0.0,
+            "recency": "14_DAYS",
+            "description": "Users who used the dealer locator tool",
+            "keywords": ["honda", "dealer locator", "retargeting", "high intent"],
+            "countryCodes": ["USA"],
+            "pixelId": "honda_dealer_locator_pixel",
+        },
+        
+        # =====================================================================
+        # SRT Segments (Search Keyword Audiences)
+        # =====================================================================
+        98790: {
+            "id": 98790,
+            "name": "SUV Search - Recent Queries",
+            "segmentType": "SRT",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 2800000,
+            "cpmLift": 0.40,
+            "recency": "14_DAYS",
+            "description": "Users who searched for SUV-related terms on Yahoo",
+            "keywords": ["SUV", "search", "crossover search", "best SUV"],
+            "countryCodes": ["USA"],
+        },
+        98791: {
+            "id": 98791,
+            "name": "Honda Search - Brand Queries",
+            "segmentType": "SRT",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 1500000,
+            "cpmLift": 0.50,
+            "recency": "14_DAYS",
+            "description": "Users who searched for Honda brand terms on Yahoo",
+            "keywords": ["honda", "cr-v", "accord", "civic", "honda search"],
+            "countryCodes": ["USA"],
+        },
+        
+        # =====================================================================
+        # GEORETARGET Segments (Point of Interest)
+        # =====================================================================
+        98795: {
+            "id": 98795,
+            "name": "Auto Dealership Visitors",
+            "segmentType": "GEORETARGET",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 3500000,
+            "cpmLift": 0.55,
+            "recency": "30_DAYS",
+            "description": "Users who visited auto dealerships in the past 30 days",
+            "keywords": ["dealership", "geo", "auto dealer", "car lot"],
+            "countryCodes": ["USA"],
+        },
+        98796: {
+            "id": 98796,
+            "name": "Honda Dealership Visitors",
+            "segmentType": "GEORETARGET",
+            "status": "ACTIVE",
+            "provider": "Yahoo",
+            "reach": 450000,
+            "cpmLift": 0.60,
+            "recency": "30_DAYS",
+            "description": "Users who visited Honda dealerships specifically",
+            "keywords": ["honda", "dealership", "geo", "honda dealer"],
+            "countryCodes": ["USA"],
+        },
+    }
+
+    # Legacy: Keep old format for backward compatibility with existing code
     SUPPORTED_AUDIENCE_SEGMENTS = {
         "outdoor_enthusiasts": {
             "type": "YAHOO_OWNED",
@@ -549,6 +888,301 @@ class YahooDSP(AdServerAdapter):
     def get_supported_pricing_models(self) -> set[str]:
         """Yahoo DSP supports programmatic pricing models."""
         return {"cpm", "cpc", "cpcv", "cpa"}  # No flat_rate (programmatic only)
+
+    # =========================================================================
+    # Yahoo DSP Audience Tools (getAudienceSegments, Get_analytics_for_audiences)
+    # https://help.yahooinc.com/dsp-api/docs/audiences
+    # =========================================================================
+
+    def get_audience_segments(
+        self,
+        account_id: int | None = None,
+        segment_type: str | None = None,
+        status: str = "ACTIVE",
+        keywords: str | None = None,
+        query: str | None = None,
+        country_codes: str | None = None,
+        page: int = 1,
+        limit: int = 50,
+        include_iab_data_labels: bool = False,
+    ) -> dict[str, Any]:
+        """
+        Query available audience segments (Yahoo DSP getAudienceSegments API).
+        
+        Aligned with Yahoo DSP Traffic API:
+        https://help.yahooinc.com/dsp-api/docs/audiences
+        
+        Args:
+            account_id: Advertiser ID (optional filter)
+            segment_type: Filter by type (INTEREST, FACT, LOOKALIKE, CONVERSIONRULE, SRT, GEORETARGET)
+            status: Segment status (ACTIVE, INACTIVE)
+            keywords: Comma-separated search strings for name and description
+            query: Search by name
+            country_codes: Country ISO3 codes (comma-separated)
+            page: Page number (1-indexed)
+            limit: Results per page (max 100)
+            include_iab_data_labels: Include IAB data labels in response
+            
+        Returns:
+            Dict with segments list, pagination info, and total count
+        """
+        self.log(f"🔍 Yahoo DSP: Querying audience segments")
+        self.log(f"   Filters: type={segment_type}, keywords={keywords}, status={status}")
+        
+        # Start with all segments from the database
+        all_segments = list(self.AUDIENCE_SEGMENT_DATABASE.values())
+        
+        # Apply filters
+        filtered_segments = []
+        for segment in all_segments:
+            # Filter by status
+            if status and segment.get("status") != status:
+                continue
+            
+            # Filter by segment type
+            if segment_type and segment.get("segmentType") != segment_type:
+                continue
+            
+            # Filter by country codes
+            if country_codes:
+                requested_countries = set(c.strip().upper() for c in country_codes.split(","))
+                segment_countries = set(segment.get("countryCodes", []))
+                if not requested_countries & segment_countries:
+                    continue
+            
+            # Filter by keywords (search in name, description, and keywords field)
+            if keywords:
+                keyword_list = [k.strip().lower() for k in keywords.split(",")]
+                segment_text = " ".join([
+                    segment.get("name", "").lower(),
+                    segment.get("description", "").lower(),
+                    " ".join(segment.get("keywords", [])).lower(),
+                ]).lower()
+                
+                # Check if any keyword matches
+                if not any(kw in segment_text for kw in keyword_list):
+                    continue
+            
+            # Filter by query (search in name only)
+            if query:
+                if query.lower() not in segment.get("name", "").lower():
+                    continue
+            
+            filtered_segments.append(segment)
+        
+        # Sort by reach (descending)
+        filtered_segments.sort(key=lambda s: s.get("reach", 0), reverse=True)
+        
+        # Pagination
+        total_count = len(filtered_segments)
+        start_idx = (page - 1) * limit
+        end_idx = start_idx + limit
+        paginated_segments = filtered_segments[start_idx:end_idx]
+        
+        # Build response in Yahoo DSP API format
+        response_segments = []
+        for seg in paginated_segments:
+            response_seg = {
+                "id": seg["id"],
+                "name": seg["name"],
+                "segmentType": seg["segmentType"],
+                "status": seg.get("status", "ACTIVE"),
+                "reach": seg.get("reach", 0),
+                "description": seg.get("description", ""),
+                "recency": seg.get("recency", "30_DAYS"),
+                "cpmLift": seg.get("cpmLift", 0),
+            }
+            
+            # Add provider info if available
+            if "provider" in seg:
+                response_seg["provider"] = seg["provider"]
+            
+            # Add data fee for FACT segments
+            if seg["segmentType"] == "FACT" and "dataFee" in seg:
+                response_seg["dataFee"] = seg["dataFee"]
+            
+            # Add lookalike-specific fields
+            if seg["segmentType"] == "LOOKALIKE":
+                if "seedAudience" in seg:
+                    response_seg["seedAudience"] = seg["seedAudience"]
+                if "seedSize" in seg:
+                    response_seg["seedSize"] = seg["seedSize"]
+                if "similarityScore" in seg:
+                    response_seg["similarityScore"] = seg["similarityScore"]
+            
+            # Add pixel info for CONVERSIONRULE segments
+            if seg["segmentType"] == "CONVERSIONRULE" and "pixelId" in seg:
+                response_seg["pixelId"] = seg["pixelId"]
+            
+            response_segments.append(response_seg)
+        
+        self.log(f"   ✓ Found {total_count} segments, returning {len(response_segments)} (page {page})")
+        
+        return {
+            "segments": response_segments,
+            "totalCount": total_count,
+            "page": page,
+            "limit": limit,
+            "hasMore": end_idx < total_count,
+        }
+
+    def get_segment_analytics(
+        self,
+        segment_ids: list[int],
+    ) -> dict[str, Any]:
+        """
+        Get analytics for specific audience segments.
+        
+        Aligned with Yahoo DSP Get_analytics_for_audiences_segment API.
+        
+        Args:
+            segment_ids: List of segment IDs to get analytics for
+            
+        Returns:
+            Dict with segment analytics including reach, CPM, CTR, conversion rates, and overlap
+        """
+        self.log(f"📊 Yahoo DSP: Getting analytics for {len(segment_ids)} segments")
+        
+        analytics = []
+        segment_data_for_overlap = {}  # For overlap calculation
+        
+        for seg_id in segment_ids:
+            segment = self.AUDIENCE_SEGMENT_DATABASE.get(seg_id)
+            if not segment:
+                self.log(f"   ⚠️ Segment {seg_id} not found")
+                continue
+            
+            segment_data_for_overlap[seg_id] = segment
+            
+            # Calculate simulated performance metrics based on segment type
+            base_cpm = 6.50
+            base_ctr = 0.0012
+            base_conversion_rate = 0.020
+            base_viewability = 0.70
+            base_dealer_visit_rate = 0.004
+            
+            # Adjust metrics based on segment type
+            segment_type = segment.get("segmentType", "INTEREST")
+            
+            if segment_type == "FACT":
+                # Third-party data: higher CPM, higher conversion
+                data_fee = segment.get("dataFee", 1.50)
+                base_cpm += data_fee
+                base_ctr *= 1.3
+                base_conversion_rate *= 1.5
+                base_dealer_visit_rate *= 1.8
+            elif segment_type == "LOOKALIKE":
+                # Lookalike: moderate lift
+                base_ctr *= 1.5
+                base_conversion_rate *= 1.6
+                base_dealer_visit_rate *= 1.5
+            elif segment_type == "CONVERSIONRULE":
+                # Retargeting: highest conversion
+                base_ctr *= 3.0
+                base_conversion_rate *= 4.0
+                base_dealer_visit_rate *= 2.5
+            elif segment_type == "SRT":
+                # Search: high intent
+                base_ctr *= 2.0
+                base_conversion_rate *= 2.5
+                base_dealer_visit_rate *= 2.2
+            elif segment_type == "GEORETARGET":
+                # POI: strong physical intent
+                base_ctr *= 1.8
+                base_conversion_rate *= 2.0
+                base_dealer_visit_rate *= 3.0
+            
+            # Apply CPM lift from segment data
+            cpm_lift = segment.get("cpmLift", 0)
+            effective_cpm = round(base_cpm * (1 + cpm_lift), 2)
+            
+            # Add variance
+            ctr = round(base_ctr * random.uniform(0.85, 1.15), 5)
+            conversion_rate = round(base_conversion_rate * random.uniform(0.85, 1.15), 4)
+            viewability = round(base_viewability * random.uniform(0.95, 1.05), 3)
+            dealer_visit_rate = round(base_dealer_visit_rate * random.uniform(0.85, 1.15), 5)
+            
+            # Build recommendation based on segment type
+            if segment_type == "CONVERSIONRULE":
+                recommendation = "RETARGETING - Highest conversion, limited scale"
+            elif segment_type == "FACT" and "in-market" in segment.get("name", "").lower():
+                recommendation = "CONVERSION - Highest intent, justify premium CPM"
+            elif segment_type == "FACT" and "competitive" in segment.get("name", "").lower():
+                recommendation = "CONQUEST - High intent, competitive shoppers"
+            elif segment_type == "LOOKALIKE":
+                recommendation = "CORE - High-quality lookalike, strong conversion"
+            elif segment.get("reach", 0) > 5000000:
+                recommendation = "SCALE - High reach, efficient CPM"
+            else:
+                recommendation = "CONSIDERATION - Good balance of reach and quality"
+            
+            # Calculate performance index (0-100)
+            performance_index = min(100, int(
+                (ctr * 10000) * 0.25 +
+                (conversion_rate * 100) * 0.35 +
+                (viewability * 100) * 0.20 +
+                (dealer_visit_rate * 10000) * 0.20
+            ))
+            
+            segment_analytics = {
+                "segmentId": seg_id,
+                "name": segment["name"],
+                "segmentType": segment_type,
+                "reach": segment.get("reach", 0),
+                "avgCPM": effective_cpm,
+                "historicalCTR": ctr,
+                "viewabilityRate": viewability,
+                "conversionRate": conversion_rate,
+                "dealerVisitRate": dealer_visit_rate,
+                "performanceIndex": performance_index,
+                "recommendation": recommendation,
+                "frequencyCapRecommendation": 4 if segment_type == "CONVERSIONRULE" else 3,
+            }
+            
+            # Add provider info
+            if "provider" in segment:
+                segment_analytics["provider"] = segment["provider"]
+            
+            # Add data fee if applicable
+            if segment_type == "FACT" and "dataFee" in segment:
+                segment_analytics["dataFee"] = segment["dataFee"]
+                segment_analytics["effectiveCPM"] = effective_cpm
+            
+            analytics.append(segment_analytics)
+        
+        # Calculate overlap between segments
+        overlap_analysis = {}
+        if len(segment_data_for_overlap) > 1:
+            seg_ids = list(segment_data_for_overlap.keys())
+            for i, seg_id1 in enumerate(seg_ids):
+                overlap_analysis[seg_id1] = {}
+                for seg_id2 in seg_ids[i+1:]:
+                    # Simulate overlap based on keyword similarity
+                    seg1_keywords = set(segment_data_for_overlap[seg_id1].get("keywords", []))
+                    seg2_keywords = set(segment_data_for_overlap[seg_id2].get("keywords", []))
+                    
+                    if seg1_keywords and seg2_keywords:
+                        keyword_overlap = len(seg1_keywords & seg2_keywords) / len(seg1_keywords | seg2_keywords)
+                        overlap_pct = round(keyword_overlap * random.uniform(0.3, 0.5), 2)
+                    else:
+                        overlap_pct = round(random.uniform(0.15, 0.35), 2)
+                    
+                    overlap_analysis[seg_id1][seg_id2] = overlap_pct
+                    if seg_id2 not in overlap_analysis:
+                        overlap_analysis[seg_id2] = {}
+                    overlap_analysis[seg_id2][seg_id1] = overlap_pct
+        
+        # Add overlap analysis to each segment's analytics
+        for seg_analytics in analytics:
+            seg_id = seg_analytics["segmentId"]
+            if seg_id in overlap_analysis:
+                seg_analytics["overlapAnalysis"] = overlap_analysis[seg_id]
+        
+        self.log(f"   ✓ Generated analytics for {len(analytics)} segments")
+        
+        return {
+            "segmentAnalytics": analytics,
+        }
 
     def _validate_targeting(self, targeting_overlay):
         """Validate DSP targeting - DSPs support rich targeting."""
