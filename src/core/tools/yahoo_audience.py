@@ -18,7 +18,7 @@ from fastmcp.tools.tool import ToolResult
 
 from src.adapters import get_adapter
 from src.core.auth import get_principal_from_context
-from src.core.config_loader import get_current_tenant, load_config
+from src.core.config_loader import load_config
 from src.core.database.database_session import get_db_session
 from src.core.database.models import Tenant
 
@@ -66,18 +66,28 @@ async def _get_audience_segments_impl(
     Raises:
         ToolError: If adapter is not Yahoo DSP or other errors occur
     """
-    # Get tenant context
-    tenant_id = get_current_tenant()
-    if not tenant_id:
-        raise ToolError("No tenant context available")
+    from src.core.config_loader import set_current_tenant
+    from src.core.schemas import Principal
     
-    # Load tenant config
+    # IMPORTANT: Must call get_principal_from_context FIRST to set up tenant context
+    # For discovery endpoints, authentication is optional (require_valid_token=False)
+    principal_id, tenant = get_principal_from_context(ctx, require_valid_token=False)
+    
+    if tenant:
+        set_current_tenant(tenant)
+        tenant_id = tenant.get("tenant_id")
+    else:
+        raise ToolError("No tenant context available. Please ensure request includes proper authentication headers.")
+    
+    # Load tenant config from database
     with get_db_session() as session:
-        tenant = session.query(Tenant).filter_by(tenant_id=tenant_id).first()
-        if not tenant:
+        from sqlalchemy import select
+        stmt = select(Tenant).filter_by(tenant_id=tenant_id)
+        tenant_obj = session.scalars(stmt).first()
+        if not tenant_obj:
             raise ToolError(f"Tenant {tenant_id} not found")
         
-        adapter_type = tenant.ad_server
+        adapter_type = tenant_obj.ad_server
     
     # Verify this is a Yahoo DSP tenant
     if adapter_type != "yahoo_dsp":
@@ -86,13 +96,21 @@ async def _get_audience_segments_impl(
             f"Current adapter: {adapter_type}"
         )
     
-    # Get principal for adapter
+    # Create a Principal object for the adapter
     principal = None
-    if ctx:
-        try:
-            principal = get_principal_from_context(ctx)
-        except Exception:
-            pass  # Principal is optional for audience queries
+    if principal_id:
+        # Get principal data from database
+        with get_db_session() as session:
+            from src.core.database.models import Principal as ModelPrincipal
+            from sqlalchemy import select
+            stmt = select(ModelPrincipal).filter_by(principal_id=principal_id, tenant_id=tenant_id)
+            principal_row = session.scalars(stmt).first()
+            if principal_row:
+                principal = Principal(
+                    principal_id=principal_row.principal_id,
+                    name=principal_row.name,
+                    platform_mappings=principal_row.platform_mappings or {},
+                )
     
     # Load config and create adapter
     config = load_config()
@@ -159,18 +177,27 @@ async def _get_segment_analytics_impl(
     Raises:
         ToolError: If adapter is not Yahoo DSP or other errors occur
     """
-    # Get tenant context
-    tenant_id = get_current_tenant()
-    if not tenant_id:
-        raise ToolError("No tenant context available")
+    from src.core.config_loader import set_current_tenant
+    from src.core.schemas import Principal
     
-    # Load tenant config
+    # IMPORTANT: Must call get_principal_from_context FIRST to set up tenant context
+    principal_id, tenant = get_principal_from_context(ctx, require_valid_token=False)
+    
+    if tenant:
+        set_current_tenant(tenant)
+        tenant_id = tenant.get("tenant_id")
+    else:
+        raise ToolError("No tenant context available. Please ensure request includes proper authentication headers.")
+    
+    # Load tenant config from database
     with get_db_session() as session:
-        tenant = session.query(Tenant).filter_by(tenant_id=tenant_id).first()
-        if not tenant:
+        from sqlalchemy import select
+        stmt = select(Tenant).filter_by(tenant_id=tenant_id)
+        tenant_obj = session.scalars(stmt).first()
+        if not tenant_obj:
             raise ToolError(f"Tenant {tenant_id} not found")
         
-        adapter_type = tenant.ad_server
+        adapter_type = tenant_obj.ad_server
     
     # Verify this is a Yahoo DSP tenant
     if adapter_type != "yahoo_dsp":
@@ -179,13 +206,20 @@ async def _get_segment_analytics_impl(
             f"Current adapter: {adapter_type}"
         )
     
-    # Get principal for adapter
+    # Create a Principal object for the adapter
     principal = None
-    if ctx:
-        try:
-            principal = get_principal_from_context(ctx)
-        except Exception:
-            pass  # Principal is optional for analytics queries
+    if principal_id:
+        with get_db_session() as session:
+            from src.core.database.models import Principal as ModelPrincipal
+            from sqlalchemy import select
+            stmt = select(ModelPrincipal).filter_by(principal_id=principal_id, tenant_id=tenant_id)
+            principal_row = session.scalars(stmt).first()
+            if principal_row:
+                principal = Principal(
+                    principal_id=principal_row.principal_id,
+                    name=principal_row.name,
+                    platform_mappings=principal_row.platform_mappings or {},
+                )
     
     # Load config and create adapter
     config = load_config()
