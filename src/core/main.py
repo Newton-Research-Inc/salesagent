@@ -1055,7 +1055,8 @@ from src.core.tools.yahoo_audience import (  # noqa: E402, F401
 @mcp.tool()
 def clean_demo_data(
     tenant_id: str,
-    ctx: Context | None = None
+    ctx: Context | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ) -> dict[str, Any]:
     """Clean all demo data for a tenant (demo mode only).
     

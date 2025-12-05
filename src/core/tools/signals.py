@@ -202,7 +202,11 @@ async def _get_signals_impl(req: GetSignalsRequest, context: Context | ToolConte
     return GetSignalsResponse(signals=signals)
 
 
-async def get_signals(req: GetSignalsRequest, context: Context | ToolContext | None = None):
+async def get_signals(
+    req: GetSignalsRequest,
+    context: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
+):
     """Optional endpoint for discovering available signals (audiences, contextual, etc.)
 
     MCP tool wrapper that delegates to the shared implementation.
@@ -320,6 +324,7 @@ async def activate_signal(
     media_buy_id: str = None,
     context: dict | None = None,  # payload-level context
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Activate a signal for use in campaigns.
 

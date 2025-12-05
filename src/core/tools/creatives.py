@@ -1713,6 +1713,7 @@ async def sync_creatives(
     push_notification_config: dict | None = None,
     context: dict | None = None,  # Application level context per adcp spec
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Sync creative assets to centralized library (AdCP v2.4 spec compliant endpoint).
 
@@ -2112,6 +2113,7 @@ async def list_creatives(
     webhook_url: str | None = None,
     context: dict | None = None,  # Application level context per adcp spec
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """List and filter creative assets from the centralized library.
 

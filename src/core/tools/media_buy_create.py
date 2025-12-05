@@ -3391,6 +3391,7 @@ async def create_media_buy(
     context: dict[str, Any] | None = None,  # payload-level context
     webhook_url: str | None = None,
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Create a media buy with the specified parameters.
 

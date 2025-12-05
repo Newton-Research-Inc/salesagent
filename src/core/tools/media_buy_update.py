@@ -1079,6 +1079,7 @@ def update_media_buy(
     push_notification_config: dict | None = None,
     context: dict | None = None,  # payload-level context
     ctx: Context | ToolContext | None = None,
+    super_access: bool = False,  # Accept but ignore (Newton compatibility)
 ):
     """Update a media buy with campaign-level and/or package-level changes.
 
