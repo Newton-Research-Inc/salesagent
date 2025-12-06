@@ -154,6 +154,10 @@ def _initialize_default_cache():
         "video_640x480": DEFAULT_AGENT_URL,
         "video_1280x720": DEFAULT_AGENT_URL,
         "video_1920x1080": DEFAULT_AGENT_URL,
+        # CTV Video formats
+        "ctv_video_15s": DEFAULT_AGENT_URL,
+        "ctv_video_30s": DEFAULT_AGENT_URL,
+        "ctv_video_60s": DEFAULT_AGENT_URL,
         # Audio formats
         "audio_30s": DEFAULT_AGENT_URL,
         "audio_60s": DEFAULT_AGENT_URL,
