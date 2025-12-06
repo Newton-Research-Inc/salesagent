@@ -572,39 +572,7 @@ async def _activate_campaign_impl(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Implementation for activating a Yahoo DSP campaign."""
-    from src.core.config_loader import get_current_tenant, set_current_tenant
-    
-    # Setup context
-    principal_id, tenant = get_principal_from_context(ctx, require_valid_token=False)
-    
-    if tenant:
-        set_current_tenant(tenant)
-    else:
-        tenant = get_current_tenant()
-    
-    if not tenant:
-        raise ToolError("No tenant context available")
-    
-    # Get adapter
-    from sqlalchemy import select
-    from src.core.database.models import Principal
-    
-    with get_db_session() as session:
-        stmt = select(Principal).filter_by(tenant_id=tenant["tenant_id"])
-        principal = session.scalars(stmt).first()
-        
-        if not principal:
-            # Create dummy principal for API calls
-            principal = Principal(
-                tenant_id=tenant["tenant_id"],
-                principal_id="discovery_user",
-                name="Discovery User",
-            )
-    
-    adapter = get_adapter(tenant, principal)
-    
-    if adapter.adapter_name != "yahoo_dsp":
-        raise ToolError("activateCampaign is only available for Yahoo DSP sales agents")
+    adapter = _setup_yahoo_dsp_context(ctx, "activateCampaign")
     
     # Simulate campaign activation
     logger.info(f"📺 Yahoo DSP: Activating campaign {campaign_id}")
