@@ -328,6 +328,372 @@ class YahooDSP(AdServerAdapter):
     }
 
     # =========================================================================
+    # CTV Publisher Deals Database (Pre-negotiated deals for Honda demo)
+    # These represent deals negotiated between the agency and each CTV publisher,
+    # now loaded into Yahoo DSP for programmatic execution.
+    # =========================================================================
+    CTV_DEALS_DATABASE: dict[str, dict[str, Any]] = {
+        # Premium Streaming - Programmatic Guaranteed
+        "DSE-HONDA-Q1-2026": {
+            "deal_id": "DSE-HONDA-Q1-2026",
+            "publisher": "Disney Streaming (DSE)",
+            "publisher_id": "disney_streaming",
+            "deal_type": "PROGRAMMATIC_GUARANTEED",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 42.00,
+            "guaranteed_impressions": 5000000,
+            "min_spend": 210000,
+            "inventory": ["Disney+", "Hulu", "ESPN+"],
+            "content_categories": ["Entertainment", "Sports", "Family"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s", "60s"],
+                "max_file_size_mb": 100,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "content_rating": True,
+                "genre": True,
+            },
+            "brand_safety_tier": "PREMIUM",
+            "viewability_guarantee": 0.85,
+        },
+        "PARA-HONDA-Q1-2026": {
+            "deal_id": "PARA-HONDA-Q1-2026",
+            "publisher": "Paramount",
+            "publisher_id": "paramount",
+            "deal_type": "PROGRAMMATIC_GUARANTEED",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 38.00,
+            "guaranteed_impressions": 4000000,
+            "min_spend": 152000,
+            "inventory": ["Paramount+", "Pluto TV", "CBS Sports"],
+            "content_categories": ["Entertainment", "Sports", "News"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 75,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "content_rating": True,
+                "genre": True,
+            },
+            "brand_safety_tier": "PREMIUM",
+            "viewability_guarantee": 0.82,
+        },
+        "WBD-HONDA-Q1-2026": {
+            "deal_id": "WBD-HONDA-Q1-2026",
+            "publisher": "Warner Bros. Discovery",
+            "publisher_id": "wbd",
+            "deal_type": "PROGRAMMATIC_GUARANTEED",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 40.00,
+            "guaranteed_impressions": 4000000,
+            "min_spend": 160000,
+            "inventory": ["Max", "Discovery+", "CNN+", "TNT Sports"],
+            "content_categories": ["Entertainment", "Sports", "News", "Documentary"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s", "60s"],
+                "max_file_size_mb": 100,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "content_rating": True,
+                "genre": True,
+            },
+            "brand_safety_tier": "PREMIUM",
+            "viewability_guarantee": 0.83,
+        },
+        "HBO-HONDA-Q1-2026": {
+            "deal_id": "HBO-HONDA-Q1-2026",
+            "publisher": "HBO Max",
+            "publisher_id": "hbo_max",
+            "deal_type": "PROGRAMMATIC_GUARANTEED",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 45.00,
+            "guaranteed_impressions": 3000000,
+            "min_spend": 135000,
+            "inventory": ["HBO Max", "HBO Originals"],
+            "content_categories": ["Premium Entertainment", "Drama", "Documentary"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 100,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "content_rating": True,
+            },
+            "brand_safety_tier": "ULTRA_PREMIUM",
+            "viewability_guarantee": 0.90,
+        },
+        # AVOD / FAST - Private Marketplace (Auction-based)
+        "TUBI-HONDA-Q1-2026": {
+            "deal_id": "TUBI-HONDA-Q1-2026",
+            "publisher": "Tubi",
+            "publisher_id": "tubi",
+            "deal_type": "PRIVATE_AUCTION",
+            "media_type": "CTV_VIDEO",
+            "floor_cpm": 22.00,
+            "avg_win_cpm": 26.50,
+            "available_impressions": 8000000,
+            "estimated_win_rate": 0.65,
+            "inventory": ["Tubi"],
+            "content_categories": ["Movies", "TV Shows", "Sports"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 50,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "genre": True,
+            },
+            "brand_safety_tier": "STANDARD",
+            "viewability_guarantee": 0.75,
+        },
+        "FOX-HONDA-Q1-2026": {
+            "deal_id": "FOX-HONDA-Q1-2026",
+            "publisher": "Fox Sports",
+            "publisher_id": "fox_sports",
+            "deal_type": "PRIVATE_AUCTION",
+            "media_type": "CTV_VIDEO",
+            "floor_cpm": 35.00,
+            "avg_win_cpm": 42.00,
+            "available_impressions": 4000000,
+            "estimated_win_rate": 0.55,
+            "inventory": ["Fox Sports Live", "FS1", "FS2"],
+            "content_categories": ["Sports", "Live Events"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 75,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "sport_type": True,
+            },
+            "brand_safety_tier": "PREMIUM",
+            "viewability_guarantee": 0.80,
+        },
+        "ROKU-HONDA-Q1-2026": {
+            "deal_id": "ROKU-HONDA-Q1-2026",
+            "publisher": "Roku",
+            "publisher_id": "roku",
+            "deal_type": "PRIVATE_AUCTION",
+            "media_type": "CTV_VIDEO",
+            "floor_cpm": 28.00,
+            "avg_win_cpm": 33.00,
+            "available_impressions": 6000000,
+            "estimated_win_rate": 0.60,
+            "inventory": ["The Roku Channel", "Roku Originals"],
+            "content_categories": ["Entertainment", "Movies", "Live TV"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 50,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "household": True,
+            },
+            "brand_safety_tier": "STANDARD",
+            "viewability_guarantee": 0.78,
+            "special_features": ["ACR Data", "Household Targeting"],
+        },
+        "VEVO-HONDA-Q1-2026": {
+            "deal_id": "VEVO-HONDA-Q1-2026",
+            "publisher": "VEVO",
+            "publisher_id": "vevo",
+            "deal_type": "PRIVATE_AUCTION",
+            "media_type": "CTV_VIDEO",
+            "floor_cpm": 18.00,
+            "avg_win_cpm": 22.00,
+            "available_impressions": 5000000,
+            "estimated_win_rate": 0.70,
+            "inventory": ["VEVO Music Videos", "VEVO TV"],
+            "content_categories": ["Music", "Entertainment"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 50,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "music_genre": True,
+            },
+            "brand_safety_tier": "STANDARD",
+            "viewability_guarantee": 0.72,
+            "audience_skew": "18-34",
+        },
+        # OEM / Device Manufacturers - Preferred Deals
+        "VIZIO-HONDA-Q1-2026": {
+            "deal_id": "VIZIO-HONDA-Q1-2026",
+            "publisher": "Vizio",
+            "publisher_id": "vizio",
+            "deal_type": "PREFERRED_DEAL",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 20.00,
+            "available_impressions": 4000000,
+            "inventory": ["WatchFree+", "Vizio Home Screen"],
+            "content_categories": ["Entertainment", "Movies", "TV Shows"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 50,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "household": True,
+                "acr_data": True,
+            },
+            "brand_safety_tier": "STANDARD",
+            "viewability_guarantee": 0.76,
+            "special_features": ["ACR Data", "Native CTV Placement"],
+        },
+        "SAMG-HONDA-Q1-2026": {
+            "deal_id": "SAMG-HONDA-Q1-2026",
+            "publisher": "Samsung",
+            "publisher_id": "samsung",
+            "deal_type": "PREFERRED_DEAL",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 22.00,
+            "available_impressions": 3000000,
+            "inventory": ["Samsung TV+", "Samsung Home Screen"],
+            "content_categories": ["Entertainment", "News", "Sports"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 50,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "household": True,
+                "acr_data": True,
+            },
+            "brand_safety_tier": "STANDARD",
+            "viewability_guarantee": 0.74,
+            "special_features": ["ACR Data", "First Screen Ads"],
+        },
+        "LG-HONDA-Q1-2026": {
+            "deal_id": "LG-HONDA-Q1-2026",
+            "publisher": "LG",
+            "publisher_id": "lg",
+            "deal_type": "PREFERRED_DEAL",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 20.00,
+            "available_impressions": 2000000,
+            "inventory": ["LG Channels", "LG Home Dashboard"],
+            "content_categories": ["Entertainment", "News"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 50,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "household": True,
+            },
+            "brand_safety_tier": "STANDARD",
+            "viewability_guarantee": 0.73,
+        },
+        "DISC-HONDA-Q1-2026": {
+            "deal_id": "DISC-HONDA-Q1-2026",
+            "publisher": "Discovery+",
+            "publisher_id": "discovery_plus",
+            "deal_type": "PROGRAMMATIC_GUARANTEED",
+            "media_type": "CTV_VIDEO",
+            "cpm_rate": 32.00,
+            "guaranteed_impressions": 3000000,
+            "min_spend": 96000,
+            "inventory": ["Discovery+", "Food Network", "HGTV", "TLC"],
+            "content_categories": ["Lifestyle", "Documentary", "Reality"],
+            "start_date": "2026-01-01",
+            "end_date": "2026-03-31",
+            "status": "ACTIVE",
+            "creative_specs": {
+                "formats": ["15s", "30s"],
+                "max_file_size_mb": 75,
+                "aspect_ratios": ["16:9"],
+                "audio_required": True,
+            },
+            "targeting_available": {
+                "geo": True,
+                "daypart": True,
+                "device": True,
+                "content_rating": True,
+            },
+            "brand_safety_tier": "PREMIUM",
+            "viewability_guarantee": 0.80,
+        },
+    }
+
+    # =========================================================================
     # Yahoo DSP Audience Segment Types (aligned with Yahoo DSP API)
     # https://help.yahooinc.com/dsp-api/docs/audiences
     # =========================================================================
@@ -1182,6 +1548,689 @@ class YahooDSP(AdServerAdapter):
         
         return {
             "segmentAnalytics": analytics,
+        }
+
+    # =========================================================================
+    # Yahoo DSP Deal Management Tools (/traffic/deals)
+    # https://help.yahooinc.com/dsp-api/docs/traffic-api
+    # =========================================================================
+
+    def list_deals(
+        self,
+        advertiser_id: str | None = None,
+        status: str = "ACTIVE",
+        deal_type: list[str] | None = None,
+        media_type: str | None = None,
+        publisher: str | None = None,
+        page: int = 1,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """
+        List available PMP/PG deals for an advertiser.
+        
+        Aligned with Yahoo DSP Traffic API /traffic/deals endpoint.
+        
+        Args:
+            advertiser_id: Advertiser ID (optional, for filtering deals by access)
+            status: Deal status filter (ACTIVE, INACTIVE, EXPIRED)
+            deal_type: Filter by deal types (PROGRAMMATIC_GUARANTEED, PRIVATE_AUCTION, PREFERRED_DEAL)
+            media_type: Filter by media type (CTV_VIDEO, DISPLAY, AUDIO)
+            publisher: Filter by publisher name (partial match)
+            page: Page number (1-indexed)
+            limit: Results per page (max 100)
+            
+        Returns:
+            Dict with deals list, pagination, and summary statistics
+        """
+        self.log(f"🤝 Yahoo DSP: Listing available deals")
+        self.log(f"   Filters: status={status}, deal_type={deal_type}, media_type={media_type}")
+        
+        # Start with all deals
+        all_deals = list(self.CTV_DEALS_DATABASE.values())
+        
+        # Apply filters
+        filtered_deals = []
+        for deal in all_deals:
+            # Filter by status
+            if status and deal.get("status") != status:
+                continue
+            
+            # Filter by deal type
+            if deal_type:
+                if deal.get("deal_type") not in deal_type:
+                    continue
+            
+            # Filter by media type
+            if media_type and deal.get("media_type") != media_type:
+                continue
+            
+            # Filter by publisher (partial match)
+            if publisher:
+                if publisher.lower() not in deal.get("publisher", "").lower():
+                    continue
+            
+            filtered_deals.append(deal)
+        
+        # Sort by CPM (highest first for PG, lowest floor for PMP)
+        def sort_key(d):
+            if d.get("deal_type") == "PROGRAMMATIC_GUARANTEED":
+                return d.get("cpm_rate", 0)
+            else:
+                return d.get("floor_cpm", d.get("cpm_rate", 0))
+        
+        filtered_deals.sort(key=sort_key, reverse=True)
+        
+        # Pagination
+        total_count = len(filtered_deals)
+        start_idx = (page - 1) * limit
+        end_idx = start_idx + limit
+        paginated_deals = filtered_deals[start_idx:end_idx]
+        
+        # Calculate summary statistics
+        total_impressions = 0
+        total_budget_at_rate = 0
+        pg_deals = 0
+        pmp_deals = 0
+        
+        for deal in filtered_deals:
+            if deal.get("deal_type") == "PROGRAMMATIC_GUARANTEED":
+                imps = deal.get("guaranteed_impressions", 0)
+                rate = deal.get("cpm_rate", 0)
+                pg_deals += 1
+            else:
+                imps = deal.get("available_impressions", 0)
+                rate = deal.get("floor_cpm", deal.get("cpm_rate", 0))
+                pmp_deals += 1
+            
+            total_impressions += imps
+            total_budget_at_rate += (imps / 1000) * rate
+        
+        # Build response
+        response_deals = []
+        for deal in paginated_deals:
+            response_deal = {
+                "deal_id": deal["deal_id"],
+                "publisher": deal["publisher"],
+                "deal_type": deal["deal_type"],
+                "media_type": deal["media_type"],
+                "inventory": deal.get("inventory", []),
+                "content_categories": deal.get("content_categories", []),
+                "start_date": deal.get("start_date"),
+                "end_date": deal.get("end_date"),
+                "status": deal.get("status"),
+                "brand_safety_tier": deal.get("brand_safety_tier"),
+                "viewability_guarantee": deal.get("viewability_guarantee"),
+            }
+            
+            # Add pricing based on deal type
+            if deal["deal_type"] == "PROGRAMMATIC_GUARANTEED":
+                response_deal["cpm_rate"] = deal.get("cpm_rate")
+                response_deal["guaranteed_impressions"] = deal.get("guaranteed_impressions")
+                response_deal["min_spend"] = deal.get("min_spend")
+            else:
+                response_deal["floor_cpm"] = deal.get("floor_cpm")
+                response_deal["avg_win_cpm"] = deal.get("avg_win_cpm")
+                response_deal["available_impressions"] = deal.get("available_impressions")
+                response_deal["estimated_win_rate"] = deal.get("estimated_win_rate")
+                if deal["deal_type"] == "PREFERRED_DEAL":
+                    response_deal["cpm_rate"] = deal.get("cpm_rate")
+            
+            response_deals.append(response_deal)
+        
+        self.log(f"   ✓ Found {total_count} deals ({pg_deals} PG, {pmp_deals} PMP)")
+        self.log(f"   📊 Total available impressions: {total_impressions:,}")
+        self.log(f"   💰 Total budget at rate: ${total_budget_at_rate:,.2f}")
+        
+        return {
+            "deals": response_deals,
+            "totalCount": total_count,
+            "page": page,
+            "limit": limit,
+            "hasMore": end_idx < total_count,
+            "summary": {
+                "totalAvailableImpressions": total_impressions,
+                "totalBudgetAtRate": round(total_budget_at_rate, 2),
+                "pgDeals": pg_deals,
+                "pmpDeals": pmp_deals,
+            },
+        }
+
+    def get_deal_details(
+        self,
+        deal_id: str,
+    ) -> dict[str, Any]:
+        """
+        Get detailed information about a specific deal.
+        
+        Aligned with Yahoo DSP Traffic API /traffic/deals/{dealId} endpoint.
+        
+        Args:
+            deal_id: The deal ID to retrieve
+            
+        Returns:
+            Dict with complete deal details including targeting options and creative specs
+        """
+        self.log(f"📋 Yahoo DSP: Getting details for deal {deal_id}")
+        
+        deal = self.CTV_DEALS_DATABASE.get(deal_id)
+        if not deal:
+            raise ValueError(f"Deal {deal_id} not found")
+        
+        # Build comprehensive response
+        response = {
+            "deal_id": deal["deal_id"],
+            "publisher": deal["publisher"],
+            "publisher_id": deal.get("publisher_id"),
+            "deal_type": deal["deal_type"],
+            "media_type": deal["media_type"],
+            "status": deal.get("status"),
+            
+            # Inventory details
+            "inventory": deal.get("inventory", []),
+            "content_categories": deal.get("content_categories", []),
+            
+            # Flight dates
+            "start_date": deal.get("start_date"),
+            "end_date": deal.get("end_date"),
+            
+            # Quality metrics
+            "brand_safety_tier": deal.get("brand_safety_tier"),
+            "viewability_guarantee": deal.get("viewability_guarantee"),
+            
+            # Creative specifications
+            "creative_specs": deal.get("creative_specs", {}),
+            
+            # Available targeting options
+            "targeting_available": deal.get("targeting_available", {}),
+            
+            # Special features (if any)
+            "special_features": deal.get("special_features", []),
+        }
+        
+        # Add pricing based on deal type
+        if deal["deal_type"] == "PROGRAMMATIC_GUARANTEED":
+            response["pricing"] = {
+                "type": "FIXED",
+                "cpm_rate": deal.get("cpm_rate"),
+                "guaranteed_impressions": deal.get("guaranteed_impressions"),
+                "min_spend": deal.get("min_spend"),
+                "currency": "USD",
+            }
+            # Calculate expected delivery
+            response["forecast"] = {
+                "guaranteed_impressions": deal.get("guaranteed_impressions"),
+                "estimated_reach": int(deal.get("guaranteed_impressions", 0) / 3.5),
+                "estimated_frequency": 3.5,
+                "confidence": 0.95,
+            }
+        elif deal["deal_type"] == "PRIVATE_AUCTION":
+            response["pricing"] = {
+                "type": "AUCTION",
+                "floor_cpm": deal.get("floor_cpm"),
+                "avg_win_cpm": deal.get("avg_win_cpm"),
+                "available_impressions": deal.get("available_impressions"),
+                "estimated_win_rate": deal.get("estimated_win_rate"),
+                "currency": "USD",
+            }
+            # Calculate expected delivery at suggested bid
+            win_rate = deal.get("estimated_win_rate", 0.5)
+            avail_imps = deal.get("available_impressions", 0)
+            response["forecast"] = {
+                "available_impressions": avail_imps,
+                "estimated_wins_at_floor": int(avail_imps * win_rate),
+                "recommended_bid": round(deal.get("avg_win_cpm", 0) * 1.05, 2),
+                "estimated_reach": int(avail_imps * win_rate / 3.0),
+                "confidence": 0.75,
+            }
+        else:  # PREFERRED_DEAL
+            response["pricing"] = {
+                "type": "FIXED_PRIORITY",
+                "cpm_rate": deal.get("cpm_rate"),
+                "available_impressions": deal.get("available_impressions"),
+                "priority_access": True,
+                "currency": "USD",
+            }
+            response["forecast"] = {
+                "available_impressions": deal.get("available_impressions"),
+                "estimated_reach": int(deal.get("available_impressions", 0) / 3.2),
+                "confidence": 0.85,
+            }
+        
+        # Add audience skew if available
+        if "audience_skew" in deal:
+            response["audience_insights"] = {
+                "primary_demographic": deal["audience_skew"],
+            }
+        
+        self.log(f"   ✓ Retrieved details for {deal['publisher']}")
+        
+        return response
+
+    def create_dsp_campaign(
+        self,
+        advertiser_id: str,
+        name: str,
+        budget: float,
+        currency: str = "USD",
+        start_date: str = None,
+        end_date: str = None,
+        goal_type: str = "IMPRESSION",
+        status: str = "INACTIVE",
+    ) -> dict[str, Any]:
+        """
+        Create a new campaign (order) in Yahoo DSP.
+        
+        Aligned with Yahoo DSP Traffic API /traffic/campaigns endpoint.
+        
+        Args:
+            advertiser_id: Advertiser ID
+            name: Campaign name
+            budget: Total campaign budget
+            currency: Currency code (default USD)
+            start_date: Campaign start date (YYYY-MM-DD)
+            end_date: Campaign end date (YYYY-MM-DD)
+            goal_type: Campaign goal (IMPRESSION, REACH, VIDEO_COMPLETION)
+            status: Initial status (INACTIVE, ACTIVE)
+            
+        Returns:
+            Dict with created campaign details including campaign_id
+        """
+        self.log(f"🎯 Yahoo DSP: Creating campaign '{name}'")
+        
+        # Generate campaign IDs
+        campaign_id = f"camp_{uuid.uuid4().hex[:12]}"
+        order_id = random.randint(100000, 999999)
+        
+        # Parse dates
+        if start_date:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=UTC)
+        else:
+            start_dt = datetime.now(UTC)
+        
+        if end_date:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=UTC)
+        else:
+            end_dt = start_dt + timedelta(days=30)
+        
+        campaign_days = max(1, (end_dt - start_dt).days)
+        
+        # Create campaign object
+        campaign = {
+            "campaign_id": campaign_id,
+            "order_id": order_id,
+            "advertiser_id": advertiser_id,
+            "name": name,
+            "budget": budget,
+            "currency": currency,
+            "daily_budget": round(budget / campaign_days, 2),
+            "start_date": start_date or start_dt.strftime("%Y-%m-%d"),
+            "end_date": end_date or end_dt.strftime("%Y-%m-%d"),
+            "goal_type": goal_type,
+            "status": status,
+            "lines": [],
+            "spend": 0,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        
+        # Store campaign
+        self._campaigns[campaign_id] = campaign
+        
+        self.log(f"   ✅ Campaign created: {campaign_id}")
+        self.log(f"   📋 Order ID: {order_id}")
+        self.log(f"   💰 Budget: ${budget:,.2f}")
+        
+        return {
+            "campaign_id": campaign_id,
+            "order_id": order_id,
+            "advertiser_id": advertiser_id,
+            "name": name,
+            "budget": budget,
+            "daily_budget": campaign["daily_budget"],
+            "currency": currency,
+            "start_date": campaign["start_date"],
+            "end_date": campaign["end_date"],
+            "goal_type": goal_type,
+            "status": status,
+        }
+
+    def create_line(
+        self,
+        campaign_id: str,
+        name: str,
+        budget: float,
+        deal_ids: list[str],
+        pacing: str = "EVEN",
+        bid_strategy: str = "AUTOBID",
+        frequency_cap: dict | None = None,
+        targeting: dict | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Create a line item targeting specific deals.
+        
+        Aligned with Yahoo DSP Traffic API /traffic/lines endpoint.
+        
+        Args:
+            campaign_id: Parent campaign ID
+            name: Line name
+            budget: Line budget
+            deal_ids: List of deal IDs to target
+            pacing: Pacing type (EVEN, ACCELERATED)
+            bid_strategy: Bid strategy (AUTOBID, MAXBID)
+            frequency_cap: Frequency cap configuration
+            targeting: Additional targeting (geo, daypart, device)
+            start_date: Line start date (optional, defaults to campaign dates)
+            end_date: Line end date (optional, defaults to campaign dates)
+            
+        Returns:
+            Dict with created line details including line_id and deal associations
+        """
+        self.log(f"📝 Yahoo DSP: Creating line '{name}' targeting {len(deal_ids)} deals")
+        
+        # Find campaign
+        campaign = self._campaigns.get(campaign_id)
+        if not campaign:
+            raise ValueError(f"Campaign {campaign_id} not found")
+        
+        # Generate line ID
+        line_id = random.randint(1000000, 9999999)
+        
+        # Validate and collect deal info
+        deals_info = []
+        total_available_impressions = 0
+        avg_cpm = 0
+        
+        for deal_id in deal_ids:
+            deal = self.CTV_DEALS_DATABASE.get(deal_id)
+            if not deal:
+                self.log(f"   ⚠️ Deal {deal_id} not found, skipping")
+                continue
+            
+            deals_info.append({
+                "deal_id": deal_id,
+                "publisher": deal["publisher"],
+                "deal_type": deal["deal_type"],
+                "cpm": deal.get("cpm_rate") or deal.get("floor_cpm", 0),
+            })
+            
+            if deal["deal_type"] == "PROGRAMMATIC_GUARANTEED":
+                total_available_impressions += deal.get("guaranteed_impressions", 0)
+                avg_cpm += deal.get("cpm_rate", 0)
+            else:
+                total_available_impressions += deal.get("available_impressions", 0)
+                avg_cpm += deal.get("floor_cpm", deal.get("cpm_rate", 0))
+        
+        if deals_info:
+            avg_cpm = avg_cpm / len(deals_info)
+        
+        # Calculate campaign duration
+        line_start = start_date or campaign.get("start_date")
+        line_end = end_date or campaign.get("end_date")
+        
+        if line_start and line_end:
+            start_dt = datetime.strptime(line_start, "%Y-%m-%d")
+            end_dt = datetime.strptime(line_end, "%Y-%m-%d")
+            campaign_days = max(1, (end_dt - start_dt).days)
+        else:
+            campaign_days = 90
+        
+        daily_budget = round(budget / campaign_days, 2)
+        
+        # Build frequency cap
+        if frequency_cap:
+            freq_cap = {
+                "limit": frequency_cap.get("limit", 3),
+                "duration": frequency_cap.get("duration", 7),
+                "duration_unit": frequency_cap.get("unit", "DAY"),
+                "scope": "LINE",
+            }
+        else:
+            freq_cap = {
+                "limit": 3,
+                "duration": 7,
+                "duration_unit": "DAY",
+                "scope": "LINE",
+            }
+        
+        # Create line object
+        line = {
+            "line_id": line_id,
+            "campaign_id": campaign_id,
+            "name": name,
+            "budget": budget,
+            "daily_budget": daily_budget,
+            "deal_ids": deal_ids,
+            "deals": deals_info,
+            "pacing": pacing,
+            "bid_strategy": bid_strategy,
+            "max_bid": round(avg_cpm * 1.1, 2),  # 10% above average
+            "frequency_cap": freq_cap,
+            "targeting": targeting or {},
+            "start_date": line_start,
+            "end_date": line_end,
+            "status": "PENDING_REVIEW",
+            "media_type": "CTV_VIDEO",
+            "creative_ids": [],
+            "ad_ids": [],
+            "spend": 0,
+            "impressions": 0,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        
+        # Add to campaign
+        campaign["lines"].append(line)
+        
+        # Estimate delivery
+        estimated_impressions = min(
+            int(budget / avg_cpm * 1000) if avg_cpm > 0 else 0,
+            total_available_impressions
+        )
+        estimated_reach = int(estimated_impressions / 3.5)
+        
+        self.log(f"   ✅ Line created: {line_id}")
+        self.log(f"   💰 Budget: ${budget:,.2f} (${daily_budget}/day)")
+        self.log(f"   🎯 Targeting {len(deals_info)} deals")
+        self.log(f"   📊 Est. impressions: {estimated_impressions:,}")
+        
+        return {
+            "line_id": line_id,
+            "campaign_id": campaign_id,
+            "name": name,
+            "budget": budget,
+            "daily_budget": daily_budget,
+            "deal_ids": deal_ids,
+            "deals": deals_info,
+            "pacing": pacing,
+            "bid_strategy": bid_strategy,
+            "max_bid": line["max_bid"],
+            "frequency_cap": freq_cap,
+            "targeting": targeting,
+            "start_date": line_start,
+            "end_date": line_end,
+            "status": "PENDING_REVIEW",
+            "media_type": "CTV_VIDEO",
+            "estimated": {
+                "impressions": estimated_impressions,
+                "reach": estimated_reach,
+                "avg_frequency": 3.5,
+                "avg_cpm": round(avg_cpm, 2),
+            },
+        }
+
+    def create_dsp_ad(
+        self,
+        line_id: int,
+        creative_id: str,
+        name: str,
+        status: str = "ACTIVE",
+    ) -> dict[str, Any]:
+        """
+        Associate a creative with a line item (create an Ad object).
+        
+        Aligned with Yahoo DSP Traffic API /traffic/ads endpoint.
+        
+        Args:
+            line_id: Yahoo DSP Line ID
+            creative_id: Creative ID to associate
+            name: Ad name
+            status: Initial status (ACTIVE, PAUSED)
+            
+        Returns:
+            Dict with created ad details including ad_id
+        """
+        self.log(f"🎬 Yahoo DSP: Creating ad '{name}' for line {line_id}")
+        
+        # Generate ad ID
+        ad_id = random.randint(10000000, 99999999)
+        
+        # Find the line and update it
+        for campaign in self._campaigns.values():
+            for line in campaign.get("lines", []):
+                if line.get("line_id") == line_id:
+                    if creative_id not in line.get("creative_ids", []):
+                        line.setdefault("creative_ids", []).append(creative_id)
+                    line.setdefault("ad_ids", []).append(ad_id)
+                    break
+        
+        self.log(f"   ✅ Ad created: {ad_id}")
+        
+        return {
+            "ad_id": ad_id,
+            "line_id": line_id,
+            "creative_id": creative_id,
+            "name": name,
+            "status": status,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+
+    def get_campaign_delivery(
+        self,
+        campaign_id: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        breakdown: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Get delivery metrics for a campaign broken down by deal/line/creative.
+        
+        Aligned with Yahoo DSP Reporting API.
+        
+        Args:
+            campaign_id: Campaign ID to get delivery for
+            start_date: Report start date (YYYY-MM-DD)
+            end_date: Report end date (YYYY-MM-DD)
+            breakdown: Dimensions to break down by (deal, line, creative, device)
+            
+        Returns:
+            Dict with delivery metrics and breakdowns
+        """
+        self.log(f"📊 Yahoo DSP: Getting delivery for campaign {campaign_id}")
+        
+        campaign = self._campaigns.get(campaign_id)
+        if not campaign:
+            raise ValueError(f"Campaign {campaign_id} not found")
+        
+        breakdown = breakdown or ["deal", "line"]
+        
+        # Aggregate metrics
+        total_impressions = 0
+        total_clicks = 0
+        total_spend = 0
+        total_completions = 0
+        
+        line_metrics = []
+        deal_metrics = {}
+        
+        for line in campaign.get("lines", []):
+            # Simulate delivery based on budget
+            budget = line.get("budget", 0)
+            max_bid = line.get("max_bid", 30)
+            
+            # Calculate simulated metrics
+            line_impressions = int(budget / max_bid * 1000 * random.uniform(0.7, 0.95))
+            line_clicks = int(line_impressions * random.uniform(0.003, 0.008))  # 0.3-0.8% CTR for CTV
+            line_spend = round(budget * random.uniform(0.6, 0.85), 2)
+            line_completions = int(line_impressions * random.uniform(0.85, 0.95))  # Video completion
+            
+            total_impressions += line_impressions
+            total_clicks += line_clicks
+            total_spend += line_spend
+            total_completions += line_completions
+            
+            # Per-deal breakdown
+            deals = line.get("deals", [])
+            impressions_per_deal = line_impressions // len(deals) if deals else line_impressions
+            
+            for deal_info in deals:
+                deal_id = deal_info["deal_id"]
+                deal_imps = int(impressions_per_deal * random.uniform(0.9, 1.1))
+                deal_clicks = int(deal_imps * random.uniform(0.003, 0.008))
+                deal_spend = round((deal_imps / 1000) * deal_info["cpm"], 2)
+                deal_completions = int(deal_imps * random.uniform(0.85, 0.95))
+                
+                if deal_id not in deal_metrics:
+                    deal_metrics[deal_id] = {
+                        "deal_id": deal_id,
+                        "publisher": deal_info["publisher"],
+                        "deal_type": deal_info["deal_type"],
+                        "impressions": 0,
+                        "clicks": 0,
+                        "spend": 0,
+                        "video_completions": 0,
+                    }
+                
+                deal_metrics[deal_id]["impressions"] += deal_imps
+                deal_metrics[deal_id]["clicks"] += deal_clicks
+                deal_metrics[deal_id]["spend"] += deal_spend
+                deal_metrics[deal_id]["video_completions"] += deal_completions
+            
+            # Line metrics
+            line_metrics.append({
+                "line_id": line.get("line_id"),
+                "name": line.get("name"),
+                "budget": budget,
+                "spend": line_spend,
+                "pacing": round(line_spend / budget if budget > 0 else 0, 2),
+                "impressions": line_impressions,
+                "clicks": line_clicks,
+                "video_completions": line_completions,
+                "ctr": round(line_clicks / line_impressions if line_impressions > 0 else 0, 4),
+                "vcr": round(line_completions / line_impressions if line_impressions > 0 else 0, 3),
+                "cpm": round(line_spend / line_impressions * 1000 if line_impressions > 0 else 0, 2),
+            })
+        
+        # Finalize deal metrics with rates
+        for deal_id, metrics in deal_metrics.items():
+            imps = metrics["impressions"]
+            metrics["ctr"] = round(metrics["clicks"] / imps if imps > 0 else 0, 4)
+            metrics["vcr"] = round(metrics["video_completions"] / imps if imps > 0 else 0, 3)
+            metrics["cpm"] = round(metrics["spend"] / imps * 1000 if imps > 0 else 0, 2)
+        
+        self.log(f"   📈 Total impressions: {total_impressions:,}")
+        self.log(f"   🎬 Video completions: {total_completions:,} ({round(total_completions/total_impressions*100 if total_impressions else 0, 1)}% VCR)")
+        self.log(f"   💰 Total spend: ${total_spend:,.2f}")
+        
+        return {
+            "campaign_id": campaign_id,
+            "campaign_name": campaign.get("name"),
+            "report_period": {
+                "start_date": start_date or campaign.get("start_date"),
+                "end_date": end_date or campaign.get("end_date"),
+            },
+            "totals": {
+                "impressions": total_impressions,
+                "clicks": total_clicks,
+                "spend": round(total_spend, 2),
+                "video_completions": total_completions,
+                "ctr": round(total_clicks / total_impressions if total_impressions > 0 else 0, 4),
+                "vcr": round(total_completions / total_impressions if total_impressions > 0 else 0, 3),
+                "cpm": round(total_spend / total_impressions * 1000 if total_impressions > 0 else 0, 2),
+                "budget": campaign.get("budget", 0),
+                "pacing": round(total_spend / campaign.get("budget", 1) if campaign.get("budget") else 0, 2),
+            },
+            "by_line": line_metrics if "line" in breakdown else None,
+            "by_deal": list(deal_metrics.values()) if "deal" in breakdown else None,
         }
 
     def _validate_targeting(self, targeting_overlay):
