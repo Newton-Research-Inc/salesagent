@@ -376,7 +376,43 @@ def create_demo_tenants():
             print(f"✅ Created tenant {tenant_id} with products and principal")
 
 
+def populate_ctv_formats():
+    """Ensure CTV video formats exist in the database."""
+    from scripts.setup.populate_creative_formats import CTV_VIDEO_FORMATS
+    from src.core.database.models import CreativeFormat
+    import json
+    
+    with get_db_session() as session:
+        for fmt in CTV_VIDEO_FORMATS:
+            stmt = select(CreativeFormat).filter_by(format_id=fmt["format_id"])
+            existing = session.scalars(stmt).first()
+            
+            if existing:
+                print(f"  ℹ️ CTV format {fmt['format_id']} already exists")
+                continue
+            
+            new_format = CreativeFormat(
+                format_id=fmt["format_id"],
+                name=fmt["name"],
+                type=fmt["type"],
+                description=fmt["description"],
+                width=fmt.get("width"),
+                height=fmt.get("height"),
+                duration_seconds=fmt.get("duration_seconds"),
+                max_file_size_kb=fmt.get("max_file_size_kb"),
+                specs=json.dumps(fmt["specs"]),
+                is_standard=True,
+            )
+            session.add(new_format)
+            print(f"  ✓ Added CTV format: {fmt['name']}")
+        
+        session.commit()
+    print("✅ CTV video formats populated!")
+
+
 if __name__ == "__main__":
     create_demo_tenants()
+    print("\n📺 Populating CTV video formats...")
+    populate_ctv_formats()
     print("\n✅ All demo tenants initialized!")
 
