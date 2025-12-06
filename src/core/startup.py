@@ -8,6 +8,76 @@ from src.core.logging_config import setup_oauth_logging
 logger = logging.getLogger(__name__)
 
 
+def ensure_ctv_formats_exist() -> None:
+    """Ensure CTV video formats exist in the database."""
+    import json
+    from sqlalchemy import select
+    from src.core.database.database_session import get_db_session
+    from src.core.database.models import CreativeFormat
+    
+    CTV_FORMATS = [
+        {
+            "format_id": "ctv_video_15s",
+            "name": "CTV Video (15s)",
+            "type": "ctv_video",
+            "description": "15-second Connected TV video ad",
+            "width": 1920,
+            "height": 1080,
+            "duration_seconds": 15,
+            "max_file_size_kb": 102400,
+            "specs": {"aspect_ratios": ["16:9"], "audio_required": True, "vast_support": True},
+        },
+        {
+            "format_id": "ctv_video_30s",
+            "name": "CTV Video (30s)",
+            "type": "ctv_video",
+            "description": "30-second Connected TV video ad",
+            "width": 1920,
+            "height": 1080,
+            "duration_seconds": 30,
+            "max_file_size_kb": 204800,
+            "specs": {"aspect_ratios": ["16:9"], "audio_required": True, "vast_support": True},
+        },
+        {
+            "format_id": "ctv_video_60s",
+            "name": "CTV Video (60s)",
+            "type": "ctv_video",
+            "description": "60-second Connected TV video ad",
+            "width": 1920,
+            "height": 1080,
+            "duration_seconds": 60,
+            "max_file_size_kb": 409600,
+            "specs": {"aspect_ratios": ["16:9"], "audio_required": True, "vast_support": True},
+        },
+    ]
+    
+    try:
+        with get_db_session() as session:
+            for fmt in CTV_FORMATS:
+                stmt = select(CreativeFormat).filter_by(format_id=fmt["format_id"])
+                existing = session.scalars(stmt).first()
+                
+                if not existing:
+                    new_format = CreativeFormat(
+                        format_id=fmt["format_id"],
+                        name=fmt["name"],
+                        type=fmt["type"],
+                        description=fmt["description"],
+                        width=fmt.get("width"),
+                        height=fmt.get("height"),
+                        duration_seconds=fmt.get("duration_seconds"),
+                        max_file_size_kb=fmt.get("max_file_size_kb"),
+                        specs=json.dumps(fmt["specs"]),
+                        is_standard=True,
+                    )
+                    session.add(new_format)
+                    logger.info(f"📺 Added CTV format: {fmt['format_id']}")
+            
+            session.commit()
+    except Exception as e:
+        logger.warning(f"Could not ensure CTV formats: {e}")
+
+
 def initialize_application() -> None:
     """Initialize the application with configuration validation and setup.
 
@@ -26,6 +96,10 @@ def initialize_application() -> None:
         # Validate all configuration
         validate_configuration()
         logger.info("✅ Configuration validation passed")
+        
+        # Ensure CTV video formats exist (for Yahoo DSP demos)
+        ensure_ctv_formats_exist()
+        logger.info("✅ CTV formats verified")
 
         logger.info("🎉 Application initialization completed successfully")
 
