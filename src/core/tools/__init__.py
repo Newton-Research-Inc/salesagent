@@ -26,6 +26,16 @@ from src.core.tools.yahoo_audience import (
     get_segment_analytics_raw,
 )
 
+# Yahoo DSP-specific deal management tools (CTV workflow)
+from src.core.tools.yahoo_deals import (
+    list_deals_raw,
+    get_deal_details_raw,
+    create_campaign_raw,
+    create_line_raw,
+    create_ad_raw,
+    get_campaign_delivery_raw,
+)
+
 __all__ = [
     "get_products_raw",
     "get_signals_raw",
@@ -37,7 +47,14 @@ __all__ = [
     "update_media_buy_raw",
     "get_media_buy_delivery_raw",
     "update_performance_index_raw",
-    # Yahoo DSP-specific
+    # Yahoo DSP-specific audience tools
     "get_audience_segments_raw",
     "get_segment_analytics_raw",
+    # Yahoo DSP-specific deal management (CTV workflow)
+    "list_deals_raw",
+    "get_deal_details_raw",
+    "create_campaign_raw",
+    "create_line_raw",
+    "create_ad_raw",
+    "get_campaign_delivery_raw",
 ]

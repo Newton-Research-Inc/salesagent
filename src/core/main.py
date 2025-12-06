@@ -1048,6 +1048,16 @@ from src.core.tools.yahoo_audience import (  # noqa: E402, F401
     Get_analytics_for_audiences_segment,
 )
 
+# Yahoo DSP-specific deal management tools (CTV workflow)
+from src.core.tools.yahoo_deals import (  # noqa: E402, F401
+    listDeals,
+    getDealDetails,
+    createCampaign,
+    createLine,
+    createAd,
+    getCampaignDelivery,
+)
+
 
 # ============================================================================
 # Demo Management Tool (Demo Mode Only)
@@ -1170,3 +1180,11 @@ mcp.tool()(update_performance_index)
 # Yahoo DSP-specific audience tools (only available for Yahoo DSP adapter)
 mcp.tool()(getAudienceSegments)
 mcp.tool()(Get_analytics_for_audiences_segment)
+
+# Yahoo DSP-specific deal management tools (CTV workflow - only available for Yahoo DSP adapter)
+mcp.tool()(listDeals)
+mcp.tool()(getDealDetails)
+mcp.tool()(createCampaign)
+mcp.tool()(createLine)
+mcp.tool()(createAd)
+mcp.tool()(getCampaignDelivery)
