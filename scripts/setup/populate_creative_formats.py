@@ -127,6 +127,76 @@ STANDARD_VIDEO_FORMATS = [
     },
 ]
 
+# CTV Video formats (Connected TV)
+CTV_VIDEO_FORMATS = [
+    {
+        "format_id": "ctv_video_15s",
+        "name": "CTV Video (15s)",
+        "type": "ctv_video",
+        "description": "15-second Connected TV video ad for streaming platforms",
+        "duration_seconds": 15,
+        "width": 1920,
+        "height": 1080,
+        "max_file_size_kb": 102400,  # 100MB
+        "specs": {
+            "aspect_ratios": ["16:9"],
+            "resolutions": ["1920x1080", "1280x720", "3840x2160"],
+            "codecs": ["H.264", "H.265/HEVC"],
+            "container_formats": ["MP4", "MOV"],
+            "min_bitrate_kbps": 5000,
+            "max_bitrate_kbps": 25000,
+            "audio_required": True,
+            "audio_codec": "AAC",
+            "frame_rates": [23.976, 24, 25, 29.97, 30],
+            "vast_support": True,
+        },
+    },
+    {
+        "format_id": "ctv_video_30s",
+        "name": "CTV Video (30s)",
+        "type": "ctv_video",
+        "description": "30-second Connected TV video ad for streaming platforms",
+        "duration_seconds": 30,
+        "width": 1920,
+        "height": 1080,
+        "max_file_size_kb": 204800,  # 200MB
+        "specs": {
+            "aspect_ratios": ["16:9"],
+            "resolutions": ["1920x1080", "1280x720", "3840x2160"],
+            "codecs": ["H.264", "H.265/HEVC"],
+            "container_formats": ["MP4", "MOV"],
+            "min_bitrate_kbps": 5000,
+            "max_bitrate_kbps": 25000,
+            "audio_required": True,
+            "audio_codec": "AAC",
+            "frame_rates": [23.976, 24, 25, 29.97, 30],
+            "vast_support": True,
+        },
+    },
+    {
+        "format_id": "ctv_video_60s",
+        "name": "CTV Video (60s)",
+        "type": "ctv_video",
+        "description": "60-second Connected TV video ad for streaming platforms",
+        "duration_seconds": 60,
+        "width": 1920,
+        "height": 1080,
+        "max_file_size_kb": 409600,  # 400MB
+        "specs": {
+            "aspect_ratios": ["16:9"],
+            "resolutions": ["1920x1080", "1280x720", "3840x2160"],
+            "codecs": ["H.264", "H.265/HEVC"],
+            "container_formats": ["MP4", "MOV"],
+            "min_bitrate_kbps": 5000,
+            "max_bitrate_kbps": 25000,
+            "audio_required": True,
+            "audio_codec": "AAC",
+            "frame_rates": [23.976, 24, 25, 29.97, 30],
+            "vast_support": True,
+        },
+    },
+]
+
 # Standard native formats
 STANDARD_NATIVE_FORMATS = [
     {
@@ -156,7 +226,7 @@ def populate_creative_formats():
     """Populate the creative_formats table with standard IAB formats."""
     from sqlalchemy import select
     
-    all_formats = STANDARD_DISPLAY_FORMATS + STANDARD_VIDEO_FORMATS + STANDARD_NATIVE_FORMATS
+    all_formats = STANDARD_DISPLAY_FORMATS + STANDARD_VIDEO_FORMATS + CTV_VIDEO_FORMATS + STANDARD_NATIVE_FORMATS
 
     with get_db_session() as db_session:
         for fmt in all_formats:
