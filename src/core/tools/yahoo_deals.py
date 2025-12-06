@@ -66,6 +66,8 @@ async def _list_deals_impl(
 def _setup_yahoo_dsp_context(ctx: Context | None, tool_name: str):
     """Helper to set up tenant context and verify Yahoo DSP adapter."""
     from src.core.config_loader import set_current_tenant
+    from src.core.schemas import Principal
+    from src.core.database.models import Principal as ModelPrincipal
     from sqlalchemy import select
     
     principal_id, tenant = get_principal_from_context(ctx, require_valid_token=False)
@@ -89,8 +91,21 @@ def _setup_yahoo_dsp_context(ctx: Context | None, tool_name: str):
                 f"Current adapter: {tenant_obj.ad_server}"
             )
     
+    # Create a Principal object for the adapter
+    principal = None
+    if principal_id:
+        with get_db_session() as session:
+            stmt = select(ModelPrincipal).filter_by(principal_id=principal_id, tenant_id=tenant_id)
+            principal_row = session.scalars(stmt).first()
+            if principal_row:
+                principal = Principal(
+                    principal_id=principal_row.principal_id,
+                    name=principal_row.name,
+                    platform_mappings=principal_row.platform_mappings or {},
+                )
+    
     # Create adapter
-    adapter = get_adapter(None)
+    adapter = get_adapter(principal)
     return adapter
 
 
