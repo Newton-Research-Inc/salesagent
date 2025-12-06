@@ -30,16 +30,40 @@ def load_format_cache() -> dict[str, str]:
     Returns:
         Dict mapping format_id (string) to agent_url
     """
+    # Always include standard formats (ensures they work even if cache file is missing)
+    base_formats = {
+        # Display formats
+        "display_300x250": DEFAULT_AGENT_URL,
+        "display_728x90": DEFAULT_AGENT_URL,
+        "display_160x600": DEFAULT_AGENT_URL,
+        "display_300x600": DEFAULT_AGENT_URL,
+        "display_320x50": DEFAULT_AGENT_URL,
+        "display_970x250": DEFAULT_AGENT_URL,
+        # Video formats
+        "video_640x480": DEFAULT_AGENT_URL,
+        "video_1280x720": DEFAULT_AGENT_URL,
+        "video_1920x1080": DEFAULT_AGENT_URL,
+        # CTV Video formats
+        "ctv_video_15s": DEFAULT_AGENT_URL,
+        "ctv_video_30s": DEFAULT_AGENT_URL,
+        "ctv_video_60s": DEFAULT_AGENT_URL,
+        # Audio formats
+        "audio_30s": DEFAULT_AGENT_URL,
+        "audio_60s": DEFAULT_AGENT_URL,
+        # Native format
+        "native_1x1": DEFAULT_AGENT_URL,
+    }
+    
     if not CACHE_FILE.exists():
-        # Return empty cache - will use default agent URL
-        return {}
+        return base_formats
 
     try:
         with open(CACHE_FILE) as f:
             data = json.load(f)
-            return data.get("formats", {})
+            # Merge file cache with base formats (file takes precedence)
+            return {**base_formats, **data.get("formats", {})}
     except (OSError, json.JSONDecodeError):
-        return {}
+        return base_formats
 
 
 def save_format_cache(formats: dict[str, str]) -> None:
