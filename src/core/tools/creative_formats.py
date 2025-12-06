@@ -65,7 +65,7 @@ def _list_creative_formats_impl(
             Format(
                 format_id=FormatId(id="display_728x90", agent_url="https://creative.adcontextprotocol.org"),
                 name="Leaderboard 728x90",
-                type=FormatCategory.DISPLAY,
+                type=FormatCategory.display,
                 is_standard=True,
                 width=728,
                 height=90,
@@ -74,7 +74,7 @@ def _list_creative_formats_impl(
             Format(
                 format_id=FormatId(id="display_300x250", agent_url="https://creative.adcontextprotocol.org"),
                 name="Medium Rectangle 300x250",
-                type=FormatCategory.DISPLAY,
+                type=FormatCategory.display,
                 is_standard=True,
                 width=300,
                 height=250,
@@ -83,7 +83,7 @@ def _list_creative_formats_impl(
             Format(
                 format_id=FormatId(id="display_320x50", agent_url="https://creative.adcontextprotocol.org"),
                 name="Mobile Banner 320x50",
-                type=FormatCategory.DISPLAY,
+                type=FormatCategory.display,
                 is_standard=True,
                 width=320,
                 height=50,
@@ -93,7 +93,7 @@ def _list_creative_formats_impl(
             Format(
                 format_id=FormatId(id="ctv_video_15s", agent_url="https://creative.adcontextprotocol.org"),
                 name="CTV Video (15s)",
-                type=FormatCategory.VIDEO,
+                type=FormatCategory.video,
                 is_standard=True,
                 width=1920,
                 height=1080,
@@ -102,7 +102,7 @@ def _list_creative_formats_impl(
             Format(
                 format_id=FormatId(id="ctv_video_30s", agent_url="https://creative.adcontextprotocol.org"),
                 name="CTV Video (30s)",
-                type=FormatCategory.VIDEO,
+                type=FormatCategory.video,
                 is_standard=True,
                 width=1920,
                 height=1080,
@@ -111,7 +111,7 @@ def _list_creative_formats_impl(
             Format(
                 format_id=FormatId(id="ctv_video_60s", agent_url="https://creative.adcontextprotocol.org"),
                 name="CTV Video (60s)",
-                type=FormatCategory.VIDEO,
+                type=FormatCategory.video,
                 is_standard=True,
                 width=1920,
                 height=1080,
