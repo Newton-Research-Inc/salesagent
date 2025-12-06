@@ -215,10 +215,11 @@ def _sync_creatives_impl(
                             import os
                             demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
                             standard_formats = ["display_728x90", "display_300x250", "display_320x50", 
-                                              "display_160x600", "display_300x600", "display_970x250"]
+                                              "display_160x600", "display_300x600", "display_970x250",
+                                              "ctv_video_15s", "ctv_video_30s", "ctv_video_60s"]
                             
                             if demo_mode and format_id in standard_formats:
-                                logger.info(f"🔓 DEMO MODE: Accepting standard IAB format '{format_id}' without validation (agent unreachable)")
+                                logger.info(f"🔓 DEMO MODE: Accepting format '{format_id}' without validation (agent unreachable)")
                             else:
                                 raise ValueError(
                                     f"Cannot validate format '{format_id}': Creative agent at {agent_url} "
@@ -231,10 +232,11 @@ def _sync_creatives_impl(
                             import os
                             demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
                             standard_formats = ["display_728x90", "display_300x250", "display_320x50",
-                                              "display_160x600", "display_300x600", "display_970x250"]
+                                              "display_160x600", "display_300x600", "display_970x250",
+                                              "ctv_video_15s", "ctv_video_30s", "ctv_video_60s"]
                             
                             if demo_mode and format_id in standard_formats:
-                                logger.info(f"🔓 DEMO MODE: Accepting standard IAB format '{format_id}' without validation (format not found)")
+                                logger.info(f"🔓 DEMO MODE: Accepting format '{format_id}' without validation (format not found)")
                             else:
                                 raise ValueError(
                                     f"Unknown format '{format_id}' from agent {agent_url}. "

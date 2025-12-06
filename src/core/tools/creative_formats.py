@@ -57,10 +57,11 @@ def _list_creative_formats_impl(
     demo_mode = os.getenv("ADCP_DEMO_MODE", "false").lower() == "true"
     
     if demo_mode:
-        # Return standard IAB display formats for demo
+        # Return standard IAB display formats and CTV video formats for demo
         from adcp.types import Format, FormatCategory, FormatId
         
         formats = [
+            # Display formats
             Format(
                 format_id=FormatId(id="display_728x90", agent_url="https://creative.adcontextprotocol.org"),
                 name="Leaderboard 728x90",
@@ -87,6 +88,34 @@ def _list_creative_formats_impl(
                 width=320,
                 height=50,
                 description="Standard IAB mobile banner"
+            ),
+            # CTV Video formats
+            Format(
+                format_id=FormatId(id="ctv_video_15s", agent_url="https://creative.adcontextprotocol.org"),
+                name="CTV Video (15s)",
+                type=FormatCategory.VIDEO,
+                is_standard=True,
+                width=1920,
+                height=1080,
+                description="15-second Connected TV video ad (1920x1080, 16:9)"
+            ),
+            Format(
+                format_id=FormatId(id="ctv_video_30s", agent_url="https://creative.adcontextprotocol.org"),
+                name="CTV Video (30s)",
+                type=FormatCategory.VIDEO,
+                is_standard=True,
+                width=1920,
+                height=1080,
+                description="30-second Connected TV video ad (1920x1080, 16:9)"
+            ),
+            Format(
+                format_id=FormatId(id="ctv_video_60s", agent_url="https://creative.adcontextprotocol.org"),
+                name="CTV Video (60s)",
+                type=FormatCategory.VIDEO,
+                is_standard=True,
+                width=1920,
+                height=1080,
+                description="60-second Connected TV video ad (1920x1080, 16:9)"
             ),
         ]
     else:
