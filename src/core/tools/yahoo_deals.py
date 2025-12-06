@@ -92,6 +92,8 @@ def _setup_yahoo_dsp_context(ctx: Context | None, tool_name: str):
             )
     
     # Create a Principal object for the adapter
+    # For discovery endpoints (listDeals, getDealDetails), we don't need a real principal
+    # but the adapter base class requires one, so create a dummy if not authenticated
     principal = None
     if principal_id:
         with get_db_session() as session:
@@ -103,6 +105,14 @@ def _setup_yahoo_dsp_context(ctx: Context | None, tool_name: str):
                     name=principal_row.name,
                     platform_mappings=principal_row.platform_mappings or {},
                 )
+    
+    # If no principal found, create a dummy one for discovery endpoints
+    if principal is None:
+        principal = Principal(
+            principal_id="discovery_user",
+            name="Discovery User",
+            platform_mappings={},
+        )
     
     # Create adapter
     adapter = get_adapter(principal)
