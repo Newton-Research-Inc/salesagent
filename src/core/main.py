@@ -1056,6 +1056,7 @@ from src.core.tools.yahoo_deals import (  # noqa: E402, F401
     createLine,
     createAd,
     getCampaignDelivery,
+    activateCampaign,
 )
 
 
@@ -1188,3 +1189,4 @@ mcp.tool()(createCampaign)
 mcp.tool()(createLine)
 mcp.tool()(createAd)
 mcp.tool()(getCampaignDelivery)
+mcp.tool()(activateCampaign)
