@@ -35,6 +35,8 @@ from src.core.tools.yahoo_deals import (
     create_ad_raw,
     get_campaign_delivery_raw,
     activate_campaign_raw,
+    register_deal_raw,
+    register_innovid_tag_raw,
 )
 
 __all__ = [
@@ -59,4 +61,6 @@ __all__ = [
     "create_ad_raw",
     "get_campaign_delivery_raw",
     "activate_campaign_raw",
+    "register_deal_raw",
+    "register_innovid_tag_raw",
 ]
