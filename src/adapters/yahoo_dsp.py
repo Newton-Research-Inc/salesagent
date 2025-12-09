@@ -2233,6 +2233,270 @@ class YahooDSP(AdServerAdapter):
             "by_deal": list(deal_metrics.values()) if "deal" in breakdown else None,
         }
 
+    # =========================================================================
+    # Agency Workflow Methods (Prisma Integration)
+    # =========================================================================
+    
+    def register_deal(
+        self,
+        deal_id: str,
+        publisher: str,
+        impressions: int,
+        cpm_rate: float,
+        ssp: str = "FreeWheel",
+        advertiser_id: str = "honda_motor_company",
+        campaign_name: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Register a PG deal received from a publisher via email.
+        
+        This simulates the Yahoo DSP workflow where agencies:
+        1. Negotiate deals directly with publishers
+        2. Receive deal IDs via email
+        3. Register deals in Yahoo DSP
+        4. First deal creates campaign, subsequent deals add to it
+        
+        Args:
+            deal_id: Deal ID from publisher
+            publisher: Publisher name
+            impressions: Guaranteed impressions
+            cpm_rate: CPM rate in dollars
+            ssp: Supply-side platform
+            advertiser_id: Advertiser ID
+            campaign_name: Campaign name (for first deal)
+            
+        Returns:
+            Dict with registered deal, campaign, and line info
+        """
+        self.log(f"📝 Yahoo DSP: Registering deal {deal_id} from {publisher}")
+        self.log(f"   📺 SSP: {ssp} | Imps: {impressions:,} | CPM: ${cpm_rate}")
+        
+        # Calculate deal value
+        deal_value = round((impressions / 1000) * cpm_rate, 2)
+        
+        # Create deal entry
+        deal = {
+            "deal_id": deal_id,
+            "publisher": publisher,
+            "deal_type": "PROGRAMMATIC_GUARANTEED",
+            "status": "ACTIVE",
+            "media_type": "CTV_VIDEO",
+            "ssp": ssp,
+            "guaranteed_impressions": impressions,
+            "cpm_rate": cpm_rate,
+            "deal_value": deal_value,
+            "apps": [f"{publisher} App", f"{publisher}+ Streaming"],
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        
+        # Add to deals database
+        self.CTV_DEALS_DATABASE[deal_id] = deal
+        
+        # Check for existing campaign or create new one
+        campaign = None
+        campaign_created = False
+        
+        # Find campaign for this advertiser
+        for camp_id, camp in self._campaigns.items():
+            if camp.get("advertiser_id") == advertiser_id:
+                campaign = camp
+                break
+        
+        if not campaign:
+            # Create new campaign (first deal)
+            campaign_created = True
+            campaign_id = f"camp_{uuid.uuid4().hex[:12]}"
+            campaign_name = campaign_name or f"{advertiser_id.replace('_', ' ').title()} CTV Q1 2026"
+            
+            campaign = {
+                "campaign_id": campaign_id,
+                "advertiser_id": advertiser_id,
+                "name": campaign_name,
+                "budget": deal_value,  # Start with first deal value
+                "daily_budget": round(deal_value / 90, 2),
+                "currency": "USD",
+                "start_date": "2026-01-01",
+                "end_date": "2026-03-31",
+                "goal_type": "IMPRESSION",
+                "status": "INACTIVE",
+                "lines": [],
+                "deals": [deal_id],
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+            self._campaigns[campaign_id] = campaign
+            self.log(f"   🆕 Created new campaign: {campaign_name}")
+        else:
+            # Add to existing campaign
+            campaign["budget"] = round(campaign.get("budget", 0) + deal_value, 2)
+            campaign["daily_budget"] = round(campaign["budget"] / 90, 2)
+            campaign.setdefault("deals", []).append(deal_id)
+            campaign_id = campaign["campaign_id"]
+            self.log(f"   ➕ Added to existing campaign: {campaign.get('name')}")
+        
+        # Create line for this deal
+        line_id = random.randint(1000000, 9999999)
+        line = {
+            "line_id": line_id,
+            "campaign_id": campaign_id,
+            "name": f"{publisher} - PG",
+            "budget": deal_value,
+            "daily_budget": round(deal_value / 90, 2),
+            "deal_ids": [deal_id],
+            "deals": [{
+                "deal_id": deal_id,
+                "publisher": publisher,
+                "deal_type": "PROGRAMMATIC_GUARANTEED",
+                "cpm": cpm_rate,
+            }],
+            "pacing": "EVEN",
+            "bid_strategy": "AUTOBID",
+            "frequency_cap": {"limit": 3, "duration": 7, "duration_unit": "DAY"},
+            "start_date": campaign["start_date"],
+            "end_date": campaign["end_date"],
+            "status": "PENDING_REVIEW",
+            "media_type": "CTV_VIDEO",
+            "creative_ids": [],
+            "ad_ids": [],
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        campaign["lines"].append(line)
+        
+        # Count total deals and budget
+        total_deals = len(campaign.get("deals", []))
+        total_budget = campaign["budget"]
+        
+        self.log(f"   ✅ Deal registered successfully")
+        self.log(f"   📊 Campaign total: {total_deals} deals, ${total_budget:,.2f} budget")
+        
+        return {
+            "success": True,
+            "deal": {
+                "deal_id": deal_id,
+                "publisher": publisher,
+                "ssp": ssp,
+                "impressions": impressions,
+                "cpm_rate": cpm_rate,
+                "deal_value": deal_value,
+                "status": "ACTIVE",
+            },
+            "campaign": {
+                "campaign_id": campaign_id,
+                "name": campaign.get("name"),
+                "is_new": campaign_created,
+                "total_budget": total_budget,
+                "total_deals": total_deals,
+                "status": campaign["status"],
+            },
+            "line": {
+                "line_id": line_id,
+                "name": line["name"],
+                "budget": deal_value,
+                "deal_ids": [deal_id],
+                "status": "PENDING_REVIEW",
+            },
+            "message": f"Deal {deal_id} from {publisher} registered. " + (
+                f"Created new campaign '{campaign.get('name')}'" if campaign_created 
+                else f"Added to campaign '{campaign.get('name')}' ({total_deals} deals, ${total_budget:,.2f})"
+            ),
+        }
+
+    def register_innovid_tag(
+        self,
+        tag_url: str,
+        name: str,
+        duration: int = 30,
+        width: int = 1920,
+        height: int = 1080,
+        line_ids: list[int] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Register an Innovid VAST tag as a creative in Yahoo DSP.
+        
+        Innovid is a leading creative management platform for CTV.
+        This simulates registering their VAST tag URLs as Yahoo DSP creatives.
+        
+        Args:
+            tag_url: Innovid VAST tag URL
+            name: Creative name
+            duration: Video duration in seconds
+            width: Video width
+            height: Video height
+            line_ids: Line IDs to assign this creative to
+            
+        Returns:
+            Dict with registered creative and assignment info
+        """
+        self.log(f"🎬 Yahoo DSP: Registering Innovid tag '{name}'")
+        self.log(f"   📺 Format: {width}x{height}, {duration}s")
+        
+        # Generate creative ID
+        creative_id = f"crv_{uuid.uuid4().hex[:8]}"
+        
+        # Determine format
+        if duration <= 15:
+            format_id = "ctv_video_15s"
+        elif duration <= 30:
+            format_id = "ctv_video_30s"
+        else:
+            format_id = "ctv_video_60s"
+        
+        # Create creative record
+        creative = {
+            "creative_id": creative_id,
+            "name": name,
+            "type": "VAST_TAG",
+            "tag_url": tag_url,
+            "duration": duration,
+            "width": width,
+            "height": height,
+            "format_id": format_id,
+            "aspect_ratio": "16:9" if width/height > 1.5 else "4:3",
+            "status": "ACTIVE",
+            "assigned_lines": [],
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        
+        # Assign to lines if specified
+        assigned_lines = []
+        if line_ids:
+            for campaign in self._campaigns.values():
+                for line in campaign.get("lines", []):
+                    if line.get("line_id") in line_ids:
+                        if creative_id not in line.get("creative_ids", []):
+                            line.setdefault("creative_ids", []).append(creative_id)
+                        assigned_lines.append({
+                            "line_id": line["line_id"],
+                            "line_name": line["name"],
+                        })
+                        creative["assigned_lines"].append(line["line_id"])
+        
+        # Store creative
+        self._creatives[creative_id] = creative
+        
+        self.log(f"   ✅ Creative registered: {creative_id}")
+        if assigned_lines:
+            self.log(f"   🔗 Assigned to {len(assigned_lines)} lines")
+        
+        return {
+            "success": True,
+            "creative_id": creative_id,
+            "name": name,
+            "type": "VAST_TAG",
+            "format": {
+                "format_id": format_id,
+                "duration": duration,
+                "width": width,
+                "height": height,
+                "aspect_ratio": creative["aspect_ratio"],
+            },
+            "tag_url": tag_url,
+            "status": "ACTIVE",
+            "assigned_lines": assigned_lines,
+            "message": f"Innovid tag '{name}' registered as creative {creative_id}" + (
+                f" and assigned to {len(assigned_lines)} lines" if assigned_lines else ""
+            ),
+        }
+
     def _validate_targeting(self, targeting_overlay):
         """Validate DSP targeting - DSPs support rich targeting."""
         unsupported = []

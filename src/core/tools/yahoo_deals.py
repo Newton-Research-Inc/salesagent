@@ -564,6 +564,202 @@ async def getCampaignDelivery(
 
 
 # ============================================================================
+# Register Deal (Agency Workflow)
+# ============================================================================
+
+async def _register_deal_impl(
+    deal_id: str,
+    publisher: str,
+    impressions: int,
+    cpm_rate: float,
+    ssp: str = "FreeWheel",
+    advertiser_id: str = "honda_motor_company",
+    campaign_name: str | None = None,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Implementation for registering a deal from publisher email."""
+    adapter = _setup_yahoo_dsp_context(ctx, "registerDeal")
+    
+    logger.info(f"📺 Yahoo DSP: Registering deal {deal_id} from {publisher}")
+    
+    return adapter.register_deal(
+        deal_id=deal_id,
+        publisher=publisher,
+        impressions=impressions,
+        cpm_rate=cpm_rate,
+        ssp=ssp,
+        advertiser_id=advertiser_id,
+        campaign_name=campaign_name,
+    )
+
+
+async def registerDeal(
+    deal_id: str,
+    publisher: str,
+    impressions: int,
+    cpm_rate: float,
+    ssp: str = "FreeWheel",
+    advertiser_id: str = "honda_motor_company",
+    campaign_name: str | None = None,
+    ctx: Context | None = None,
+    super_access: bool = False,
+) -> ToolResult:
+    """
+    Register a PG deal received from a publisher via email.
+    
+    This tool is only available for Yahoo DSP sales agents.
+    
+    Use this when you receive deal IDs from CTV publishers. The typical workflow:
+    1. Publisher sends deal ID, SSP, CPM rate, and impressions via email
+    2. You register the deal using this tool
+    3. First deal automatically creates the campaign
+    4. Subsequent deals are added to the same campaign
+    
+    Args:
+        deal_id: Deal ID from publisher email (e.g., "DIS-PG-2026-HONDA")
+        publisher: Publisher name (e.g., "Disney", "Paramount", "Tubi")
+        impressions: Guaranteed impressions for this deal
+        cpm_rate: CPM rate in dollars (e.g., 28.00)
+        ssp: SSP name (default "FreeWheel"). Common SSPs:
+            - FreeWheel (Disney, Fox, NBCU, Paramount)
+            - Magnite (Roku, Vizio, Paramount)
+            - SpotX (connected TV inventory)
+            - PubMatic (various publishers)
+        advertiser_id: Advertiser ID (default "honda_motor_company")
+        campaign_name: Campaign name for first deal (optional, auto-generated if not provided)
+        ctx: MCP context (injected automatically)
+    
+    Returns:
+        ToolResult with registration confirmation:
+        - deal: Registered deal details
+        - campaign: Campaign created/updated (first deal creates campaign)
+        - line: Line item created for this deal
+    
+    Example:
+        # Register Disney deal from email
+        registerDeal(
+            deal_id="DIS-PG-2026-HONDA",
+            publisher="Disney",
+            impressions=5000000,
+            cpm_rate=28.00,
+            ssp="FreeWheel",
+            campaign_name="Honda CR-V Q1 2026 CTV"
+        )
+        
+        # Register subsequent Paramount deal (added to existing campaign)
+        registerDeal(
+            deal_id="PARA-PG-2026-HONDA",
+            publisher="Paramount",
+            impressions=4000000,
+            cpm_rate=26.50,
+            ssp="Magnite"
+        )
+    """
+    result = await _register_deal_impl(
+        deal_id=deal_id,
+        publisher=publisher,
+        impressions=impressions,
+        cpm_rate=cpm_rate,
+        ssp=ssp,
+        advertiser_id=advertiser_id,
+        campaign_name=campaign_name,
+        ctx=ctx,
+    )
+    return ToolResult(content=str(result), structured_content=result)
+
+
+# ============================================================================
+# Register Innovid Tag (Creative)
+# ============================================================================
+
+async def _register_innovid_tag_impl(
+    tag_url: str,
+    name: str,
+    duration: int = 30,
+    width: int = 1920,
+    height: int = 1080,
+    line_ids: list[int] | None = None,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Implementation for registering an Innovid VAST tag."""
+    adapter = _setup_yahoo_dsp_context(ctx, "registerInnovidTag")
+    
+    logger.info(f"📺 Yahoo DSP: Registering Innovid tag {name}")
+    
+    return adapter.register_innovid_tag(
+        tag_url=tag_url,
+        name=name,
+        duration=duration,
+        width=width,
+        height=height,
+        line_ids=line_ids,
+    )
+
+
+async def registerInnovidTag(
+    tag_url: str,
+    name: str,
+    duration: int = 30,
+    width: int = 1920,
+    height: int = 1080,
+    line_ids: list[int] | None = None,
+    ctx: Context | None = None,
+    super_access: bool = False,
+) -> ToolResult:
+    """
+    Register an Innovid VAST tag as a creative in Yahoo DSP.
+    
+    This tool is only available for Yahoo DSP sales agents.
+    
+    Innovid generates VAST tags for video creatives. Use this to:
+    1. Register the Innovid tag URL as a Yahoo DSP creative
+    2. Optionally assign to specific line items
+    
+    Args:
+        tag_url: Innovid VAST tag URL (e.g., "https://search.spotxchange.com/vast/...")
+        name: Creative name (e.g., "Honda CR-V 30s CTV")
+        duration: Video duration in seconds (default 30)
+        width: Video width in pixels (default 1920)
+        height: Video height in pixels (default 1080)
+        line_ids: Line IDs to assign this creative to (optional)
+        ctx: MCP context (injected automatically)
+    
+    Returns:
+        ToolResult with creative registration:
+        - creative_id: Unique creative identifier
+        - name, format, dimensions
+        - assigned_lines: Lines this creative is assigned to
+        - status: Creative status
+    
+    Example:
+        # Register 30s CTV spot
+        registerInnovidTag(
+            tag_url="https://search.spotxchange.com/vast/2.0/12345?cb=[CACHEBUSTER]",
+            name="Honda CR-V 30s CTV",
+            duration=30,
+            line_ids=[1001, 1002, 1003]  # Assign to Disney, Paramount, Tubi lines
+        )
+        
+        # Register 15s CTV spot
+        registerInnovidTag(
+            tag_url="https://search.spotxchange.com/vast/2.0/12346?cb=[CACHEBUSTER]",
+            name="Honda CR-V 15s CTV",
+            duration=15
+        )
+    """
+    result = await _register_innovid_tag_impl(
+        tag_url=tag_url,
+        name=name,
+        duration=duration,
+        width=width,
+        height=height,
+        line_ids=line_ids,
+        ctx=ctx,
+    )
+    return ToolResult(content=str(result), structured_content=result)
+
+
+# ============================================================================
 # Activate Campaign
 # ============================================================================
 
@@ -755,6 +951,50 @@ async def get_campaign_delivery_raw(
         start_date=start_date,
         end_date=end_date,
         breakdown=breakdown,
+        ctx=ctx,
+    )
+
+
+async def register_deal_raw(
+    deal_id: str,
+    publisher: str,
+    impressions: int,
+    cpm_rate: float,
+    ssp: str = "FreeWheel",
+    advertiser_id: str = "honda_motor_company",
+    campaign_name: str | None = None,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """A2A raw function for registerDeal."""
+    return await _register_deal_impl(
+        deal_id=deal_id,
+        publisher=publisher,
+        impressions=impressions,
+        cpm_rate=cpm_rate,
+        ssp=ssp,
+        advertiser_id=advertiser_id,
+        campaign_name=campaign_name,
+        ctx=ctx,
+    )
+
+
+async def register_innovid_tag_raw(
+    tag_url: str,
+    name: str,
+    duration: int = 30,
+    width: int = 1920,
+    height: int = 1080,
+    line_ids: list[int] | None = None,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """A2A raw function for registerInnovidTag."""
+    return await _register_innovid_tag_impl(
+        tag_url=tag_url,
+        name=name,
+        duration=duration,
+        width=width,
+        height=height,
+        line_ids=line_ids,
         ctx=ctx,
     )
 
