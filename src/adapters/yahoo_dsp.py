@@ -1238,6 +1238,10 @@ class YahooDSP(AdServerAdapter):
         """Initialize Yahoo DSP adapter."""
         super().__init__(config, principal, dry_run, creative_engine, tenant_id)
         
+        # In-memory storage for campaigns and creatives (demo/simulation mode)
+        self._campaigns: dict[str, dict] = {}
+        self._creatives: dict[str, dict] = {}
+        
         # DSP-specific configuration
         self.default_bid_strategy = config.get("default_bid_strategy", "AUTOBID")
         self.default_goal_type = config.get("default_goal_type", "IMPRESSION")
