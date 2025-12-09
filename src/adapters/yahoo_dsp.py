@@ -1234,13 +1234,19 @@ class YahooDSP(AdServerAdapter):
         "frequency": {"type": "rate", "description": "Average frequency per user"},
     }
 
+    # Class-level storage for campaigns and creatives (persists across adapter instances)
+    # This is needed because each tool call creates a new adapter instance
+    # In production, this would be stored in a database
+    _campaigns_store: dict[str, dict] = {}
+    _creatives_store: dict[str, dict] = {}
+
     def __init__(self, config, principal, dry_run=False, creative_engine=None, tenant_id=None):
         """Initialize Yahoo DSP adapter."""
         super().__init__(config, principal, dry_run, creative_engine, tenant_id)
         
-        # In-memory storage for campaigns and creatives (demo/simulation mode)
-        self._campaigns: dict[str, dict] = {}
-        self._creatives: dict[str, dict] = {}
+        # Use class-level storage (shared across all instances)
+        self._campaigns = YahooDSP._campaigns_store
+        self._creatives = YahooDSP._creatives_store
         
         # DSP-specific configuration
         self.default_bid_strategy = config.get("default_bid_strategy", "AUTOBID")
