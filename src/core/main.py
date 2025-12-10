@@ -1059,6 +1059,7 @@ from src.core.tools.yahoo_deals import (  # noqa: E402, F401
     activateCampaign,
     registerDeal,
     registerInnovidTag,
+    clearYahooDemoData,
 )
 
 
@@ -1196,3 +1197,4 @@ mcp.tool()(activateCampaign)
 # Agency workflow tools (Prisma integration)
 mcp.tool()(registerDeal)
 mcp.tool()(registerInnovidTag)
+mcp.tool()(clearYahooDemoData)

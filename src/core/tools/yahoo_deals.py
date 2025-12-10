@@ -760,6 +760,51 @@ async def registerInnovidTag(
 
 
 # ============================================================================
+# Clear Demo Data
+# ============================================================================
+
+async def _clear_yahoo_demo_data_impl(
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Implementation for clearing Yahoo DSP demo data."""
+    from src.adapters.yahoo_dsp import YahooDSP
+    
+    logger.info("🧹 Yahoo DSP: Clearing demo data")
+    result = YahooDSP.clear_demo_data()
+    return result
+
+
+async def clearYahooDemoData(
+    ctx: Context | None = None,
+    super_access: bool = False,
+) -> ToolResult:
+    """
+    Clear all Yahoo DSP demo campaign and creative data.
+    
+    This tool resets the Yahoo DSP simulation state, removing all:
+    - Registered campaigns
+    - Registered deals
+    - Registered creatives
+    - Line items
+    
+    Use this to start fresh before running a new demo.
+    
+    Args:
+        ctx: MCP context (injected automatically)
+    
+    Returns:
+        ToolResult with clear confirmation:
+        - campaigns_cleared: Number of campaigns removed
+        - creatives_cleared: Number of creatives removed
+    
+    Example:
+        clearYahooDemoData()
+    """
+    result = await _clear_yahoo_demo_data_impl(ctx=ctx)
+    return ToolResult(content=str(result), structured_content=result)
+
+
+# ============================================================================
 # Activate Campaign
 # ============================================================================
 
@@ -997,4 +1042,11 @@ async def register_innovid_tag_raw(
         line_ids=line_ids,
         ctx=ctx,
     )
+
+
+async def clear_yahoo_demo_data_raw(
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """A2A raw function for clearYahooDemoData."""
+    return await _clear_yahoo_demo_data_impl(ctx=ctx)
 
