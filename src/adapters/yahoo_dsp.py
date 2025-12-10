@@ -2247,6 +2247,20 @@ class YahooDSP(AdServerAdapter):
     # Agency Workflow Methods (Prisma Integration)
     # =========================================================================
     
+    @classmethod
+    def clear_demo_data(cls) -> dict[str, Any]:
+        """Clear all demo campaign and creative data."""
+        campaigns_cleared = len(cls._campaigns_store)
+        creatives_cleared = len(cls._creatives_store)
+        cls._campaigns_store.clear()
+        cls._creatives_store.clear()
+        return {
+            "success": True,
+            "campaigns_cleared": campaigns_cleared,
+            "creatives_cleared": creatives_cleared,
+            "message": f"Cleared {campaigns_cleared} campaigns and {creatives_cleared} creatives",
+        }
+
     def register_deal(
         self,
         deal_id: str,
@@ -2254,7 +2268,7 @@ class YahooDSP(AdServerAdapter):
         impressions: int,
         cpm_rate: float,
         ssp: str = "FreeWheel",
-        advertiser_id: str = "honda_motor_company",
+        advertiser_id: str = "default_advertiser",
         campaign_name: str | None = None,
     ) -> dict[str, Any]:
         """
