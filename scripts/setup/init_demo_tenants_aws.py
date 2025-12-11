@@ -58,6 +58,14 @@ def create_demo_tenants():
             "ad_server": "yahoo_dsp",
             "tenant_type": "dsp",
         },
+        {
+            "tenant_id": "nbcu",
+            "name": "NBCUniversal",
+            "subdomain": "nbcu",
+            "description": "NBCUniversal - Cross-platform Linear TV + Peacock Streaming advertising",
+            "ad_server": "mock",  # NBCU tools handle their own logic
+            "tenant_type": "broadcaster",
+        },
     ]
 
     now = datetime.now(UTC)
@@ -186,8 +194,8 @@ def create_demo_tenants():
             else:
                 print(f"  ℹ️ Principal already exists for {tenant_id}")
 
-            # For Yahoo DSP: Create Honda advertiser principal for demo
-            if config.get("tenant_type") == "dsp":
+            # For Yahoo DSP and NBCU: Create Honda advertiser principal for demo
+            if config.get("tenant_type") in ("dsp", "broadcaster"):
                 stmt = select(Principal).filter_by(principal_id="honda_advertiser", tenant_id=tenant_id)
                 honda_principal = session.scalars(stmt).first()
                 if not honda_principal:
@@ -209,8 +217,65 @@ def create_demo_tenants():
                 else:
                     print(f"  ℹ️ Honda Principal already exists for {tenant_id}")
 
-            # Create sample products (different for DSP vs publisher)
-            if config.get("tenant_type") == "dsp":
+            # Create sample products (different for DSP vs publisher vs broadcaster)
+            if config.get("tenant_type") == "broadcaster":
+                # Broadcaster products: Linear TV + Streaming (NBCU)
+                products_data = [
+                    {
+                        "name": "Sunday Night Football - Linear",
+                        "format": "video_30sec",
+                        "description": "Premium :30 spot during Sunday Night Football broadcast. "
+                                       "P2+ Nielsen-measured audience. Live sports exclusivity with 20-45M viewers per game. "
+                                       "Available games: Wildcard, Divisional, Conference championship.",
+                        "pricing_model": "CPM",
+                        "rate": 21.07,  # SNF CPM
+                        "is_fixed": True,
+                        "product_suffix": "_snf_linear",
+                    },
+                    {
+                        "name": "Sunday Night Football - Peacock Streaming",
+                        "format": "video_30sec",
+                        "description": "Premium :30 CTV spot during SNF on Peacock streaming. "
+                                       "Non-skippable, 100% completion rate. Captures cord-cutters for incremental reach. "
+                                       "Cross-platform measurement available with Linear.",
+                        "pricing_model": "CPM",
+                        "rate": 33.89,  # Streaming CPM
+                        "is_fixed": True,
+                        "product_suffix": "_snf_streaming",
+                    },
+                    {
+                        "name": "NBA Primetime - Linear",
+                        "format": "video_30sec",
+                        "description": "Premium :30 spot during NBA primetime broadcasts. "
+                                       "Includes Christmas Day games and regular season primetime. "
+                                       "P2+ Nielsen-measured audience.",
+                        "pricing_model": "CPM",
+                        "rate": 19.47,
+                        "is_fixed": True,
+                        "product_suffix": "_nba_linear",
+                    },
+                    {
+                        "name": "NBA - Peacock Streaming",
+                        "format": "video_30sec",
+                        "description": "Premium :30 CTV spot during NBA on Peacock streaming. "
+                                       "Non-skippable with completion tracking.",
+                        "pricing_model": "CPM",
+                        "rate": 33.89,
+                        "is_fixed": True,
+                        "product_suffix": "_nba_streaming",
+                    },
+                    {
+                        "name": "Entertainment - Golden Globes",
+                        "format": "video_30sec",
+                        "description": "Premium :30 spot during Golden Globes broadcast. "
+                                       "High-profile awards show with affluent audience.",
+                        "pricing_model": "CPM",
+                        "rate": 23.61,
+                        "is_fixed": True,
+                        "product_suffix": "_awards_linear",
+                    },
+                ]
+            elif config.get("tenant_type") == "dsp":
                 # DSP products: Audience-focused, programmatic
                 # Aligned with Yahoo DSP API terminology (Lines, Exchanges, Deals)
                 # AUTOMOTIVE-FOCUSED for Honda demo
