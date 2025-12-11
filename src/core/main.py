@@ -1062,6 +1062,14 @@ from src.core.tools.yahoo_deals import (  # noqa: E402, F401
     clearYahooDemoData,
 )
 
+# NBCU Linear + Streaming tools
+from src.core.tools.nbcu import (  # noqa: E402, F401
+    getProducts as nbcuGetProducts,
+    getMeasurement as nbcuGetMeasurement,
+    savePlan as nbcuSavePlan,
+    clearNBCUDemoData,
+)
+
 
 # ============================================================================
 # Demo Management Tool (Demo Mode Only)
@@ -1198,3 +1206,9 @@ mcp.tool()(activateCampaign)
 mcp.tool()(registerDeal)
 mcp.tool()(registerInnovidTag)
 mcp.tool()(clearYahooDemoData)
+
+# NBCU Linear + Streaming tools
+mcp.tool()(nbcuGetProducts)
+mcp.tool()(nbcuGetMeasurement)
+mcp.tool()(nbcuSavePlan)
+mcp.tool()(clearNBCUDemoData)
