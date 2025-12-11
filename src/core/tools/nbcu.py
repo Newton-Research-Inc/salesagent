@@ -16,7 +16,7 @@ from datetime import datetime, UTC
 from typing import Any, ClassVar
 
 from fastmcp import Context
-from fastmcp.tools import ToolResult
+from fastmcp.tools.tool import ToolResult
 
 logger = logging.getLogger(__name__)
 
