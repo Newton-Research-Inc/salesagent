@@ -139,15 +139,17 @@ class YahooDSPClient:
         self._request_timestamps.append(time.time())
 
     def _get_headers(self) -> dict[str, str]:
-        """Get request headers including auth token.
+        """Get request headers including auth token and seat ID.
         
         Yahoo DSP uses:
         - X-Auth-Method: OAuth2
         - X-Auth-Token: <access_token>
+        - X-Seat-Id: <seat_id>
         - Content-Type: application/json
         """
         headers = self.auth_manager.get_auth_headers()
         headers["Content-Type"] = "application/json"
+        headers["X-Seat-Id"] = str(self.seat_id)
         return headers
 
     def _handle_response(self, response: requests.Response) -> dict[str, Any]:
