@@ -224,13 +224,13 @@ def create_demo_tenants():
                 
                 # Determine platform mappings based on adapter type
                 if config.get("tenant_type") == "dsp_live":
-                    # For live API - credentials will be configured in tenant settings
+                    # For live API - use real Yahoo DSP credentials
+                    # These match the environment variables in terraform.tfvars
                     platform_mappings = {
                         "yahoo_dsp_live": {
-                            "advertiser_id": "placeholder_advertiser_id",
-                            "seat_id": "placeholder_seat_id",
+                            "advertiser_id": "33364",
+                            "seat_id": "799",
                             "account_name": "Honda Motor Company",
-                            "note": "Configure real credentials in tenant settings"
                         }
                     }
                 else:

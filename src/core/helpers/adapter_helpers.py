@@ -1,5 +1,6 @@
 """Adapter instance creation and configuration helpers."""
 
+import os
 from typing import Any
 
 from sqlalchemy import select
@@ -8,7 +9,8 @@ from src.adapters.google_ad_manager import GoogleAdManager
 from src.adapters.kevel import Kevel
 from src.adapters.mock_ad_server import MockAdServer as MockAdServerAdapter
 from src.adapters.triton_digital import TritonDigital
-from src.adapters.yahoo_dsp import YahooDSP
+from src.adapters.yahoo_dsp_simulated import YahooDSP
+from src.adapters.yahoo_dsp_live import YahooDSPLive
 from src.core.config_loader import get_current_tenant
 from src.core.database.database_session import get_db_session
 from src.core.database.models import AdapterConfig
@@ -17,7 +19,7 @@ from src.core.schemas import Principal
 
 def get_adapter(
     principal: Principal, dry_run: bool = False, testing_context: Any = None
-) -> MockAdServerAdapter | GoogleAdManager | Kevel | TritonDigital | YahooDSP:
+) -> MockAdServerAdapter | GoogleAdManager | Kevel | TritonDigital | YahooDSP | YahooDSPLive:
     """Get the appropriate adapter instance for the selected adapter type."""
     import logging
 
@@ -132,8 +134,46 @@ def get_adapter(
     elif selected_adapter in ["triton", "triton_digital"]:
         return TritonDigital(adapter_config, principal, dry_run, tenant_id=tenant_id)
     elif selected_adapter == "yahoo_dsp":
-        logger.info("[ADAPTER_SELECT] Instantiating YahooDSP")
+        logger.info("[ADAPTER_SELECT] Instantiating YahooDSP (simulated)")
         return YahooDSP(adapter_config, principal, dry_run, tenant_id=tenant_id)
+    elif selected_adapter == "yahoo_dsp_live":
+        logger.info("[ADAPTER_SELECT] Instantiating YahooDSPLive (real API)")
+        
+        # Get Yahoo DSP credentials from environment variables (injected via ECS secrets)
+        # These are set in the ECS task definition from AWS Secrets Manager
+        yahoo_config = {
+            "client_id": os.environ.get("YAHOO_DSP_CLIENT_ID", ""),
+            "client_secret": os.environ.get("YAHOO_DSP_CLIENT_SECRET", ""),
+            "seat_id": os.environ.get("YAHOO_DSP_SEAT_ID", ""),
+            "advertiser_id": os.environ.get("YAHOO_DSP_ADVERTISER_ID", ""),
+            # TEST MODE ENABLED BY DEFAULT for safety
+            # Set YAHOO_DSP_TEST_MODE=false in production when ready to go live
+            "test_mode": os.environ.get("YAHOO_DSP_TEST_MODE", "true").lower() == "true",
+        }
+        
+        # Override with principal's platform_mappings if available (skip placeholder values)
+        if principal.platform_mappings:
+            yahoo_mappings = principal.platform_mappings.get("yahoo_dsp_live", {})
+            adv_id = yahoo_mappings.get("advertiser_id", "")
+            seat = yahoo_mappings.get("seat_id", "")
+            # Only use platform_mappings if they're real values, not placeholders
+            if adv_id and "placeholder" not in adv_id.lower():
+                yahoo_config["advertiser_id"] = adv_id
+            if seat and "placeholder" not in seat.lower():
+                yahoo_config["seat_id"] = seat
+        
+        logger.info(
+            f"[ADAPTER_SELECT] Yahoo DSP Live config: seat_id={yahoo_config.get('seat_id')}, "
+            f"advertiser_id={yahoo_config.get('advertiser_id')}, test_mode={yahoo_config.get('test_mode')}"
+        )
+        
+        return YahooDSPLive(
+            yahoo_config,
+            principal,
+            dry_run=dry_run,
+            test_mode=yahoo_config.get("test_mode", True),
+            tenant_id=tenant_id,
+        )
     else:
         # Default to mock for unsupported adapters
         logger.warning(f"[ADAPTER_SELECT] Unknown adapter '{selected_adapter}', falling back to MockAdServer")
