@@ -85,7 +85,7 @@ class YahooDSPCampaignManager:
         Raises:
             YahooDSPAPIError: On API failure
         """
-        logger.info(f"Creating Yahoo DSP campaign: {name} (status: {status})")
+        logger.info(f"Creating Yahoo DSP campaign: {name} (status: {status}, budget: {budget} cents)")
 
         # Calculate goal_value if not provided
         # For impression goals, estimate based on budget assuming ~$5 CPM
@@ -115,8 +115,13 @@ class YahooDSPCampaignManager:
 
         # Add optional metadata
         if metadata:
-            campaign_data["externalId"] = metadata.get("external_id", "")
-            campaign_data["labels"] = metadata.get("labels", [])
+            if metadata.get("external_id"):
+                campaign_data["externalId"] = metadata["external_id"]
+            if metadata.get("labels"):
+                campaign_data["labels"] = metadata["labels"]
+
+        # Log full request for debugging
+        logger.info(f"Yahoo DSP campaign request payload: {campaign_data}")
 
         response = self.client.post("/traffic/campaigns", campaign_data)
 
