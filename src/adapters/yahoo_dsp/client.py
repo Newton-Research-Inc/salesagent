@@ -139,17 +139,18 @@ class YahooDSPClient:
         self._request_timestamps.append(time.time())
 
     def _get_headers(self) -> dict[str, str]:
-        """Get request headers including auth token and seat ID.
+        """Get request headers including auth token.
         
         Yahoo DSP uses:
         - X-Auth-Method: OAuth2
         - X-Auth-Token: <access_token>
-        - X-Seat-Id: <seat_id>
         - Content-Type: application/json
+        
+        Note: X-Seat-Id is NOT required for Traffic API based on testing.
         """
         headers = self.auth_manager.get_auth_headers()
         headers["Content-Type"] = "application/json"
-        headers["X-Seat-Id"] = str(self.seat_id)
+        # NOTE: X-Seat-Id removed - not required per testing notebook
         return headers
 
     def _handle_response(self, response: requests.Response) -> dict[str, Any]:
@@ -301,11 +302,16 @@ class YahooDSPClient:
 
         self._wait_for_rate_limit()
 
-        logger.debug(f"POST {url}")
+        headers = self._get_headers()
+        # Log full request for debugging
+        logger.info(f"POST {url}")
+        logger.info(f"Headers: {headers}")
+        logger.info(f"Body: {data}")
+        
         response = self._session.post(
             url,
             json=data,
-            headers=self._get_headers(),
+            headers=headers,
             timeout=60,
         )
 
