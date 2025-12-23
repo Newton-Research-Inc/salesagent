@@ -66,6 +66,14 @@ def create_demo_tenants():
             "ad_server": "mock",  # NBCU tools handle their own logic
             "tenant_type": "broadcaster",
         },
+        {
+            "tenant_id": "yahoo_live",
+            "name": "Yahoo DSP (Live API)",
+            "subdomain": "yahoo-live",
+            "description": "Yahoo DSP with REAL API integration - connects to actual Yahoo DSP endpoints",
+            "ad_server": "yahoo_dsp_live",  # Uses real Yahoo DSP API
+            "tenant_type": "dsp_live",
+        },
     ]
 
     now = datetime.now(UTC)
@@ -194,26 +202,44 @@ def create_demo_tenants():
             else:
                 print(f"  ℹ️ Principal already exists for {tenant_id}")
 
-            # For Yahoo DSP and NBCU: Create Honda advertiser principal for demo
-            if config.get("tenant_type") in ("dsp", "broadcaster"):
+            # For Yahoo DSP, Yahoo DSP Live, and NBCU: Create Honda advertiser principal for demo
+            if config.get("tenant_type") in ("dsp", "dsp_live", "broadcaster"):
                 stmt = select(Principal).filter_by(principal_id="honda_advertiser", tenant_id=tenant_id)
                 honda_principal = session.scalars(stmt).first()
+                
+                # Determine platform mappings based on adapter type
+                if config.get("tenant_type") == "dsp_live":
+                    # For live API - credentials will be configured in tenant settings
+                    platform_mappings = {
+                        "yahoo_dsp_live": {
+                            "advertiser_id": "placeholder_advertiser_id",
+                            "seat_id": "placeholder_seat_id",
+                            "account_name": "Honda Motor Company",
+                            "note": "Configure real credentials in tenant settings"
+                        }
+                    }
+                else:
+                    # For simulation
+                    platform_mappings = {
+                        "yahoo_dsp": {
+                            "advertiser_id": "12345",
+                            "seat_id": "honda_seat_001",
+                            "account_name": "Honda Motor Company"
+                        }
+                    }
+                
                 if not honda_principal:
+                    # Use unique token per tenant to avoid unique constraint violation
+                    honda_token = f"honda-demo-token-{tenant_id}"
                     honda_principal = Principal(
                         principal_id="honda_advertiser",
                         tenant_id=tenant_id,
                         name="Honda Motor Company",
-                        access_token="honda-demo-token",
-                        platform_mappings={
-                            "yahoo_dsp": {
-                                "advertiser_id": "12345",
-                                "seat_id": "honda_seat_001",
-                                "account_name": "Honda Motor Company"
-                            }
-                        },
+                        access_token=honda_token,
+                        platform_mappings=platform_mappings,
                     )
                     session.add(honda_principal)
-                    print(f"  ✓ Created Honda Principal for {tenant_id}")
+                    print(f"  ✓ Created Honda Principal for {tenant_id} (token: {honda_token})")
                 else:
                     print(f"  ℹ️ Honda Principal already exists for {tenant_id}")
 
@@ -275,7 +301,7 @@ def create_demo_tenants():
                         "product_suffix": "_awards_linear",
                     },
                 ]
-            elif config.get("tenant_type") == "dsp":
+            elif config.get("tenant_type") in ("dsp", "dsp_live"):
                 # DSP products: Audience-focused, programmatic
                 # Aligned with Yahoo DSP API terminology (Lines, Exchanges, Deals)
                 # AUTOMOTIVE-FOCUSED for Honda demo
