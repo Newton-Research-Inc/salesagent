@@ -236,7 +236,9 @@ class YahooDSPLive(AdServerAdapter):
                 total_budget = self.TEST_MODE_MAX_BUDGET_CENTS
 
             # Create Campaign
-            campaign_name = f"{request.buyer_ref} - {request.promoted_offering or 'Campaign'}"
+            # Use campaign_name if provided, otherwise derive from buyer_ref or brand_manifest
+            display_name = request.campaign_name or request.buyer_ref or "Campaign"
+            campaign_name = f"{display_name}"
             if self.test_mode:
                 campaign_name = f"[TEST] {campaign_name}"
                 
