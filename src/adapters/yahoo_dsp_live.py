@@ -52,7 +52,6 @@ from src.core.schemas import (
     CheckMediaBuyStatusResponse,
     CreateMediaBuyError,
     CreateMediaBuyRequest,
-    CreateMediaBuyResponse,
     CreateMediaBuySuccess,
     DeliveryTotals,
     Error,
@@ -189,7 +188,7 @@ class YahooDSPLive(AdServerAdapter):
         start_time: datetime,
         end_time: datetime,
         package_pricing_info: dict[str, dict] | None = None,
-    ) -> CreateMediaBuyResponse:
+    ) -> CreateMediaBuySuccess | CreateMediaBuyError:
         """Create a new media buy (Campaign + Lines) in Yahoo DSP.
 
         This creates:
@@ -204,7 +203,7 @@ class YahooDSPLive(AdServerAdapter):
             package_pricing_info: Validated pricing information per package
 
         Returns:
-            CreateMediaBuyResponse with campaign and line details
+            CreateMediaBuySuccess on success, CreateMediaBuyError on failure
         """
         try:
             # Test mode safeguards
@@ -330,13 +329,10 @@ class YahooDSPLive(AdServerAdapter):
                 },
             )
 
-            return CreateMediaBuyResponse(
-                success=CreateMediaBuySuccess(
-                    media_buy_id=campaign_id,
-                    buyer_ref=request.buyer_ref,
-                    status="pending",
-                    packages=created_packages,
-                )
+            return CreateMediaBuySuccess(
+                media_buy_id=campaign_id,
+                buyer_ref=request.buyer_ref or "unknown",
+                packages=created_packages,
             )
 
         except Exception as e:
@@ -350,13 +346,12 @@ class YahooDSPLive(AdServerAdapter):
                 error=str(e),
             )
 
-            return CreateMediaBuyResponse(
-                error=CreateMediaBuyError(
-                    error=Error(
-                        code="CREATION_FAILED",
-                        message=f"Failed to create media buy: {str(e)}",
-                    )
-                )
+            return CreateMediaBuyError(
+                errors=[Error(
+                    code="CREATION_FAILED",
+                    message=f"Failed to create media buy: {str(e)}",
+                    details=None,
+                )]
             )
 
     def add_creative_assets(
