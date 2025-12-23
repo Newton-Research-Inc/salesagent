@@ -105,10 +105,11 @@ class YahooDSPClient:
         session = requests.Session()
 
         # Configure retry strategy
+        # NOTE: Removed 500 from retry list to see actual error response for debugging
         retry_strategy = Retry(
             total=3,
             backoff_factor=1,
-            status_forcelist=[500, 502, 503, 504],
+            status_forcelist=[502, 503, 504],  # Don't retry 500 - we want to see the error
             allowed_methods=["GET", "POST", "PUT", "DELETE"],
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
