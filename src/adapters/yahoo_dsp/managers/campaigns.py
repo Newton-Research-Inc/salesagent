@@ -85,7 +85,9 @@ class YahooDSPCampaignManager:
         Raises:
             YahooDSPAPIError: On API failure
         """
-        logger.info(f"Creating Yahoo DSP campaign: {name} (status: {status}, budget: {budget} cents)")
+        # Convert budget from cents to dollars for Yahoo DSP
+        budget_dollars = budget / 100.0
+        logger.info(f"Creating Yahoo DSP campaign: {name} (status: {status}, budget: ${budget_dollars})")
 
         # Calculate goal_value if not provided
         # For impression goals, estimate based on budget assuming ~$5 CPM
@@ -101,20 +103,29 @@ class YahooDSPCampaignManager:
                 # Default to 1000 for other goal types
                 goal_value = 1000
 
+        # Yahoo DSP uses budgetSchedules array, NOT a simple budget object!
+        # See existing campaign structure from API for reference
         campaign_data = {
-            "accountId": int(self.advertiser_id),  # Yahoo uses accountId (integer)
+            "accountId": int(self.advertiser_id),
             "name": name,
             "status": status,
-            "budget": format_budget_for_yahoo(budget),
-            "startDate": format_date_for_yahoo(start_date),
-            "endDate": format_date_for_yahoo(end_date),
-            "pacingType": pacing_type,
+            "timezone": "America/New_York",  # Required field
+            "currency": currency,
+            "budgetType": "CURRENCY",  # Required field
+            "budgetSchedules": [
+                {
+                    "startDate": format_date_for_yahoo(start_date),
+                    "endDate": format_date_for_yahoo(end_date),
+                    "scheduleBudget": budget_dollars,  # Budget in DOLLARS
+                    "scheduleDailyBudget": 0.0,  # No daily cap
+                    "scheduleBudgetType": "TOTAL_BUDGET",
+                }
+            ],
             "goalType": goal_type,
             "goalValue": goal_value,
+            "frequencyCapPeriodType": "UNLIMITED",
+            "frequencyCapValue": 0,
         }
-
-        # NOTE: Removed externalId and labels as they may not be supported
-        # and were causing 500 errors. Can add back once basic creation works.
 
         # Log full request for debugging
         logger.info(f"Yahoo DSP campaign request payload: {campaign_data}")
