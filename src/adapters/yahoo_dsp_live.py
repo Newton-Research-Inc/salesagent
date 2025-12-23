@@ -302,7 +302,7 @@ class YahooDSPLive(AdServerAdapter):
                         ResponsePackage(
                             package_id=package.package_id,
                             platform_line_item_id=line_id,
-                            status=PackageStatus.PENDING_APPROVAL,
+                            status=PackageStatus.draft,  # Valid: active, completed, draft, paused
                         )
                     )
 
@@ -312,7 +312,7 @@ class YahooDSPLive(AdServerAdapter):
                         ResponsePackage(
                             package_id=package.package_id,
                             platform_line_item_id="",
-                            status=PackageStatus.REJECTED,
+                            status=PackageStatus.paused,  # Use paused for failed packages
                         )
                     )
 
