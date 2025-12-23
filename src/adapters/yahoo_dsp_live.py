@@ -174,7 +174,7 @@ class YahooDSPLive(AdServerAdapter):
         
         if self.test_mode:
             logger.warning(
-                "⚠️ TEST MODE ENABLED: Campaigns will be created as INACTIVE with max $5 budget"
+                "⚠️ TEST MODE ENABLED: Campaigns will be created as PAUSED with max $5 budget"
             )
 
     def get_supported_pricing_models(self) -> set[str]:
@@ -206,9 +206,9 @@ class YahooDSPLive(AdServerAdapter):
             CreateMediaBuySuccess on success, CreateMediaBuyError on failure
         """
         try:
-            # Test mode safeguards
-            campaign_status = "INACTIVE" if self.test_mode else "ACTIVE"
-            line_status = "INACTIVE" if self.test_mode else "ACTIVE"
+            # Test mode safeguards - use PAUSED for inactive campaigns (Yahoo's term)
+            campaign_status = "PAUSED" if self.test_mode else "ACTIVE"
+            line_status = "PAUSED" if self.test_mode else "ACTIVE"
             
             self.audit_logger.log_operation(
                 operation="create_media_buy",

@@ -113,12 +113,8 @@ class YahooDSPCampaignManager:
             "goalValue": goal_value,
         }
 
-        # Add optional metadata
-        if metadata:
-            if metadata.get("external_id"):
-                campaign_data["externalId"] = metadata["external_id"]
-            if metadata.get("labels"):
-                campaign_data["labels"] = metadata["labels"]
+        # NOTE: Removed externalId and labels as they may not be supported
+        # and were causing 500 errors. Can add back once basic creation works.
 
         # Log full request for debugging
         logger.info(f"Yahoo DSP campaign request payload: {campaign_data}")
