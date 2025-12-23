@@ -298,11 +298,13 @@ class YahooDSPLive(AdServerAdapter):
                     line_id = str(line.get("id"))
                     logger.info(f"Created Yahoo DSP line: {line_id} (status: {line_status})")
 
+                    # Store line_id mapping for later reference
+                    # Package schema only has: package_id, status, budget, impressions, etc.
                     created_packages.append(
                         ResponsePackage(
                             package_id=package.package_id,
-                            platform_line_item_id=line_id,
-                            status=PackageStatus.draft,  # Valid: active, completed, draft, paused
+                            status=PackageStatus.draft,
+                            buyer_ref=f"yahoo_line_{line_id}",  # Store line ID in buyer_ref
                         )
                     )
 
@@ -311,8 +313,7 @@ class YahooDSPLive(AdServerAdapter):
                     created_packages.append(
                         ResponsePackage(
                             package_id=package.package_id,
-                            platform_line_item_id="",
-                            status=PackageStatus.paused,  # Use paused for failed packages
+                            status=PackageStatus.paused,
                         )
                     )
 
