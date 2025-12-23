@@ -139,17 +139,32 @@ def create_demo_tenants():
             # Create or get currency limit
             stmt = select(CurrencyLimit).filter_by(tenant_id=tenant_id, currency_code="USD")
             currency_limit = session.scalars(stmt).first()
+            
+            # Use lower minimums for yahoo_live tenant (test mode)
+            if config.get("tenant_type") == "dsp_live":
+                min_budget = 5.0  # $5 minimum for testing
+                max_daily = 50.0  # $50 max daily for safety
+            else:
+                min_budget = 1000.0  # $1,000 for production tenants
+                max_daily = 50000.0
+                
             if not currency_limit:
                 currency_limit = CurrencyLimit(
                     tenant_id=tenant_id,
                     currency_code="USD",
-                    min_package_budget=1000.0,
-                    max_daily_package_spend=50000.0,
+                    min_package_budget=min_budget,
+                    max_daily_package_spend=max_daily,
                 )
                 session.add(currency_limit)
-                print(f"  ✓ Created CurrencyLimit for {tenant_id}")
+                print(f"  ✓ Created CurrencyLimit for {tenant_id} (min: ${min_budget})")
             else:
-                print(f"  ℹ️ CurrencyLimit already exists for {tenant_id}")
+                # Update existing currency limit for yahoo_live to use test values
+                if config.get("tenant_type") == "dsp_live":
+                    currency_limit.min_package_budget = min_budget
+                    currency_limit.max_daily_package_spend = max_daily
+                    print(f"  ✓ Updated CurrencyLimit for {tenant_id} to test mode (min: ${min_budget})")
+                else:
+                    print(f"  ℹ️ CurrencyLimit already exists for {tenant_id}")
 
             # Create or get property tag
             stmt = select(PropertyTag).filter_by(tag_id="all_inventory", tenant_id=tenant_id)
