@@ -99,3 +99,41 @@ variable "principal_id" {
   default     = "nike"
 }
 
+# Yahoo DSP Live API Credentials (optional - only needed for yahoo_live tenant)
+variable "yahoo_dsp_client_id" {
+  description = "Yahoo DSP OAuth Client ID (Secrets Manager ARN)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "yahoo_dsp_client_secret" {
+  description = "Yahoo DSP OAuth Client Secret (Secrets Manager ARN)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "yahoo_dsp_seat_id" {
+  description = "Yahoo DSP Seat ID"
+  type        = string
+  default     = ""
+}
+
+variable "yahoo_dsp_advertiser_id" {
+  description = "Yahoo DSP Advertiser ID"
+  type        = string
+  default     = ""
+}
+
+variable "yahoo_dsp_test_mode" {
+  description = "Yahoo DSP Test Mode - when 'true', creates INACTIVE campaigns with max $5 budget. Set to 'false' for production."
+  type        = string
+  default     = "true"  # Default to test mode for safety
+}
+
+variable "enabled_tools" {
+  description = "Comma-separated list of enabled tools. Use 'all' for all tools (default), 'core' for core AdCP tools only, 'core,yahoo' for core + Yahoo tools, etc."
+  type        = string
+  default     = "all"  # Default to all tools (backward compatible)
+}

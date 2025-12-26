@@ -1175,40 +1175,159 @@ def clean_demo_data(
         raise ToolError(f"Failed to clean demo data: {str(e)}")
 
 
+# =============================================================================
+# TOOL REGISTRATION WITH ENVIRONMENT-BASED FILTERING
+# =============================================================================
+#
+# Use ENABLED_TOOLS environment variable to control which tools are available.
+# This allows different deployments (yahoo-live, espn, nbcu) to expose only
+# relevant tools.
+#
+# Values:
+#   - "all" (default): Register all tools (backward compatible)
+#   - "core": Only core AdCP tools (get_products, create_media_buy, etc.)
+#   - "core,yahoo": Core + Yahoo DSP tools
+#   - "core,nbcu": Core + NBCU tools
+#   - Comma-separated tool names for fine-grained control
+#
+# Examples:
+#   ENABLED_TOOLS=all                    # All tools (default, existing behavior)
+#   ENABLED_TOOLS=core                   # Core AdCP tools only
+#   ENABLED_TOOLS=core,yahoo             # Core + Yahoo tools
+#   ENABLED_TOOLS=get_products,create_media_buy,listDeals  # Specific tools
+#
+
+# Tool groups for easier configuration
+TOOL_GROUPS = {
+    "core": [
+        "get_products",
+        "list_creative_formats",
+        "sync_creatives",
+        "list_creatives",
+        "get_signals",
+        "activate_signal",
+        "list_authorized_properties",
+        "create_media_buy",
+        "update_media_buy",
+        "get_media_buy_delivery",
+        "update_performance_index",
+        "clean_demo_data",
+    ],
+    "yahoo": [
+        "getAudienceSegments",
+        "Get_analytics_for_audiences_segment",
+        "listDeals",
+        "getDealDetails",
+        "createCampaign",
+        "createLine",
+        "createAd",
+        "getCampaignDelivery",
+        "activateCampaign",
+        "registerDeal",
+        "registerInnovidTag",
+        "clearYahooDemoData",
+    ],
+    "nbcu": [
+        "nbcuGetProducts",
+        "nbcuGetMeasurement",
+        "nbcuSavePlan",
+        "clearNBCUDemoData",
+    ],
+}
+
+# Parse ENABLED_TOOLS environment variable
+_enabled_tools_raw = os.environ.get("ENABLED_TOOLS", "all")
+_enabled_tools: set[str] = set()
+
+if _enabled_tools_raw == "all":
+    # Register everything (backward compatible default)
+    _enabled_tools = {"all"}
+else:
+    # Parse comma-separated values and expand groups
+    for item in _enabled_tools_raw.split(","):
+        item = item.strip()
+        if item in TOOL_GROUPS:
+            # Expand group to individual tools
+            _enabled_tools.update(TOOL_GROUPS[item])
+        else:
+            # Add individual tool name
+            _enabled_tools.add(item)
+
+logger.info(f"[MCP] Tool filtering: ENABLED_TOOLS={_enabled_tools_raw}")
+if "all" not in _enabled_tools:
+    logger.info(f"[MCP] Enabled tools ({len(_enabled_tools)}): {sorted(_enabled_tools)}")
+
+
+def _should_register_tool(tool_name: str) -> bool:
+    """Check if a tool should be registered based on ENABLED_TOOLS."""
+    if "all" in _enabled_tools:
+        return True
+    return tool_name in _enabled_tools
+
+
 # Register tools with MCP (must be done after imports to avoid circular dependency)
 # This breaks the circular import: tool modules no longer import mcp from main.py
-mcp.tool()(get_products)
-mcp.tool()(list_creative_formats)
-mcp.tool()(sync_creatives)
-mcp.tool()(list_creatives)
-mcp.tool()(get_signals)
-mcp.tool()(activate_signal)
-mcp.tool()(list_authorized_properties)
-mcp.tool()(create_media_buy)
-mcp.tool()(update_media_buy)
-mcp.tool()(get_media_buy_delivery)
-mcp.tool()(update_performance_index)
 
-# Yahoo DSP-specific audience tools (only available for Yahoo DSP adapter)
-mcp.tool()(getAudienceSegments)
-mcp.tool()(Get_analytics_for_audiences_segment)
+# Core AdCP tools
+if _should_register_tool("get_products"):
+    mcp.tool()(get_products)
+if _should_register_tool("list_creative_formats"):
+    mcp.tool()(list_creative_formats)
+if _should_register_tool("sync_creatives"):
+    mcp.tool()(sync_creatives)
+if _should_register_tool("list_creatives"):
+    mcp.tool()(list_creatives)
+if _should_register_tool("get_signals"):
+    mcp.tool()(get_signals)
+if _should_register_tool("activate_signal"):
+    mcp.tool()(activate_signal)
+if _should_register_tool("list_authorized_properties"):
+    mcp.tool()(list_authorized_properties)
+if _should_register_tool("create_media_buy"):
+    mcp.tool()(create_media_buy)
+if _should_register_tool("update_media_buy"):
+    mcp.tool()(update_media_buy)
+if _should_register_tool("get_media_buy_delivery"):
+    mcp.tool()(get_media_buy_delivery)
+if _should_register_tool("update_performance_index"):
+    mcp.tool()(update_performance_index)
 
-# Yahoo DSP-specific deal management tools (CTV workflow - only available for Yahoo DSP adapter)
-mcp.tool()(listDeals)
-mcp.tool()(getDealDetails)
-mcp.tool()(createCampaign)
-mcp.tool()(createLine)
-mcp.tool()(createAd)
-mcp.tool()(getCampaignDelivery)
-mcp.tool()(activateCampaign)
+# Yahoo DSP-specific audience tools
+if _should_register_tool("getAudienceSegments"):
+    mcp.tool()(getAudienceSegments)
+if _should_register_tool("Get_analytics_for_audiences_segment"):
+    mcp.tool()(Get_analytics_for_audiences_segment)
+
+# Yahoo DSP-specific deal management tools (CTV workflow)
+if _should_register_tool("listDeals"):
+    mcp.tool()(listDeals)
+if _should_register_tool("getDealDetails"):
+    mcp.tool()(getDealDetails)
+if _should_register_tool("createCampaign"):
+    mcp.tool()(createCampaign)
+if _should_register_tool("createLine"):
+    mcp.tool()(createLine)
+if _should_register_tool("createAd"):
+    mcp.tool()(createAd)
+if _should_register_tool("getCampaignDelivery"):
+    mcp.tool()(getCampaignDelivery)
+if _should_register_tool("activateCampaign"):
+    mcp.tool()(activateCampaign)
 
 # Agency workflow tools (Prisma integration)
-mcp.tool()(registerDeal)
-mcp.tool()(registerInnovidTag)
-mcp.tool()(clearYahooDemoData)
+if _should_register_tool("registerDeal"):
+    mcp.tool()(registerDeal)
+if _should_register_tool("registerInnovidTag"):
+    mcp.tool()(registerInnovidTag)
+if _should_register_tool("clearYahooDemoData"):
+    mcp.tool()(clearYahooDemoData)
 
 # NBCU Linear + Streaming tools
-mcp.tool()(nbcuGetProducts)
-mcp.tool()(nbcuGetMeasurement)
-mcp.tool()(nbcuSavePlan)
-mcp.tool()(clearNBCUDemoData)
+if _should_register_tool("nbcuGetProducts"):
+    mcp.tool()(nbcuGetProducts)
+if _should_register_tool("nbcuGetMeasurement"):
+    mcp.tool()(nbcuGetMeasurement)
+if _should_register_tool("nbcuSavePlan"):
+    mcp.tool()(nbcuSavePlan)
+if _should_register_tool("clearNBCUDemoData"):
+    mcp.tool()(clearNBCUDemoData)

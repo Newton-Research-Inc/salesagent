@@ -131,7 +131,7 @@ resource "aws_ecs_task_definition" "salesagent" {
       image     = "${var.ecr_repository_url}:latest"
       essential = true
 
-      environment = [
+      environment = concat([
         { name = "DATABASE_URL", value = "postgresql://${var.db_username}:${var.db_password}@${var.db_host}:5432/${var.db_name}" },
         { name = "ENVIRONMENT", value = "production" },
         { name = "ADCP_TESTING", value = "true" },
@@ -142,14 +142,30 @@ resource "aws_ecs_task_definition" "salesagent" {
         { name = "ADCP_HOST", value = "0.0.0.0" },
         { name = "ADMIN_UI_PORT", value = "9501" },
         { name = "A2A_PORT", value = "9591" },
-        { name = "SUPER_ADMIN_EMAILS", value = var.super_admin_emails }
-      ]
+        { name = "SUPER_ADMIN_EMAILS", value = var.super_admin_emails },
+        # Tool filtering - controls which MCP tools are exposed
+        # Use "all" for all tools (default), "core" for core AdCP only, "core,yahoo" for core + Yahoo, etc.
+        { name = "ENABLED_TOOLS", value = var.enabled_tools }
+      ],
+      # Yahoo DSP Live credentials (only included if seat_id is provided)
+      var.yahoo_dsp_seat_id != "" ? [
+        { name = "YAHOO_DSP_SEAT_ID", value = var.yahoo_dsp_seat_id },
+        { name = "YAHOO_DSP_ADVERTISER_ID", value = var.yahoo_dsp_advertiser_id },
+        # TEST MODE ENABLED BY DEFAULT - Creates INACTIVE campaigns with max $5 budget
+        # Set to "false" in production when ready to go live
+        { name = "YAHOO_DSP_TEST_MODE", value = var.yahoo_dsp_test_mode }
+      ] : [])
 
-      secrets = [
+      secrets = concat([
         { name = "GEMINI_API_KEY", valueFrom = var.gemini_api_key },
         { name = "GOOGLE_CLIENT_ID", valueFrom = var.google_client_id },
         { name = "GOOGLE_CLIENT_SECRET", valueFrom = var.google_client_secret }
-      ]
+      ],
+      # Yahoo DSP Live secrets (only included if client_id is provided)
+      var.yahoo_dsp_client_id != "" ? [
+        { name = "YAHOO_DSP_CLIENT_ID", valueFrom = var.yahoo_dsp_client_id },
+        { name = "YAHOO_DSP_CLIENT_SECRET", valueFrom = var.yahoo_dsp_client_secret }
+      ] : [])
 
       portMappings = [
         {
