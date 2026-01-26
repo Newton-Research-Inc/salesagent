@@ -504,7 +504,8 @@ module "ecs_yahoo" {
   ecr_repository_url = "381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging"
 }
 
-# ECS Module - NBCU (Linear + Streaming Broadcaster)
+# ECS Module - NBCU (Linear TV Broadcaster)
+# Note: Streaming/Peacock inventory is handled by the separate Freewheel server
 module "ecs_nbcu" {
   source = "../../modules/ecs"
   
@@ -533,8 +534,55 @@ module "ecs_nbcu" {
   google_client_secret = aws_secretsmanager_secret.google_client_secret.arn
   super_admin_emails   = var.super_admin_emails
   
+  # Tool filtering - Only expose NBCU Linear TV tools
+  # Core AdCP tools (get_products, create_media_buy, etc.) are NOT needed
+  # NBCU uses custom tools: nbcuGetSubDivisions, nbcuGetProducts, nbcuGetMeasurement, nbcuSavePlan
+  enabled_tools = "nbcu"
+  
   # Tenant-specific configuration
   tenant_id     = "nbcu"
+  principal_id  = "honda_advertiser"  # Honda for cross-platform demo
+  
+  # ECR repository URL
+  ecr_repository_url = "381492092437.dkr.ecr.us-east-1.amazonaws.com/salesagent-staging"
+}
+
+# ECS Module - Freewheel (NBCU Digital/Peacock Streaming)
+# Separate server for Peacock streaming inventory using standard AdCP protocol
+module "ecs_freewheel" {
+  source = "../../modules/ecs"
+  
+  environment        = "freewheel"
+  vpc_id             = data.aws_vpc.newton.id
+  private_subnet_ids = data.aws_subnets.private.ids
+  ecs_security_group_id = aws_security_group.ecs_tasks.id
+  
+  # Service Discovery (shared namespace)
+  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.salesagent.id
+  
+  # ALB target groups (not actually used for MCP, only for admin/a2a if needed)
+  mcp_target_group_arn   = module.alb.mcp_target_group_arn
+  admin_target_group_arn = module.alb.admin_target_group_arn
+  a2a_target_group_arn   = module.alb.a2a_target_group_arn
+  
+  # Database connection (shared by all tenants)
+  db_host     = split(":", module.database.endpoint)[0]
+  db_name     = module.database.database_name
+  db_username = module.database.username
+  db_password = var.db_password
+  
+  # Secrets
+  gemini_api_key       = aws_secretsmanager_secret.gemini_api_key.arn
+  google_client_id     = aws_secretsmanager_secret.google_client_id.arn
+  google_client_secret = aws_secretsmanager_secret.google_client_secret.arn
+  super_admin_emails   = var.super_admin_emails
+  
+  # Tool filtering - Only expose core AdCP tools for standard protocol
+  # Freewheel uses standard AdCP: get_products, create_media_buy, etc.
+  enabled_tools = "core"
+  
+  # Tenant-specific configuration
+  tenant_id     = "freewheel"
   principal_id  = "honda_advertiser"  # Honda for cross-platform demo
   
   # ECR repository URL
@@ -634,8 +682,13 @@ output "yahoo_url" {
 }
 
 output "nbcu_url" {
-  description = "NBCU agent URL"
+  description = "NBCU Linear TV agent URL"
   value       = "https://nbcu.${var.domain_name}"
+}
+
+output "freewheel_url" {
+  description = "Freewheel (NBCU Digital/Peacock) agent URL"
+  value       = "https://freewheel.${var.domain_name}"
 }
 
 output "yahoo_live_url" {
@@ -676,6 +729,13 @@ output "ecs_clusters" {
       cluster_id   = module.ecs_nbcu.cluster_id
       cluster_name = module.ecs_nbcu.cluster_name
       service_name = module.ecs_nbcu.service_name
+      note         = "NBCU Linear TV (custom NBCU tools)"
+    }
+    freewheel = {
+      cluster_id   = module.ecs_freewheel.cluster_id
+      cluster_name = module.ecs_freewheel.cluster_name
+      service_name = module.ecs_freewheel.service_name
+      note         = "Freewheel/Peacock streaming (standard AdCP tools)"
     }
     yahoo_live = {
       cluster_id   = module.ecs_yahoo_live.cluster_id
@@ -694,6 +754,7 @@ output "service_discovery_dns" {
     nyt        = module.ecs_nyt.service_discovery_dns_name
     yahoo      = module.ecs_yahoo.service_discovery_dns_name
     nbcu       = module.ecs_nbcu.service_discovery_dns_name
+    freewheel  = module.ecs_freewheel.service_discovery_dns_name
     yahoo_live = module.ecs_yahoo_live.service_discovery_dns_name
   }
 }
@@ -715,7 +776,8 @@ output "next_steps" {
        - NYT (Publisher): http://nyt.salesagent.local:9580/mcp
        - Yahoo DSP (Simulation): http://yahoo.salesagent.local:9580/mcp
        - Yahoo DSP Live (Real API): http://yahoo-live.salesagent.local:9580/mcp
-       - NBCU (Linear + Streaming): http://nbcu.salesagent.local:9580/mcp
+       - NBCU Linear TV: http://nbcu.salesagent.local:9580/mcp
+       - Freewheel/Peacock: http://freewheel.salesagent.local:9580/mcp
     
     2. For Yahoo DSP Live, configure real credentials:
        - Update terraform.tfvars with Yahoo DSP API credentials
@@ -725,7 +787,12 @@ output "next_steps" {
        - ESPN/CNN/NYT: Direct publisher buys (placement-focused, guaranteed)
        - Yahoo DSP: Programmatic simulation (audience-focused, auction-based)
        - Yahoo DSP Live: REAL Yahoo DSP API integration
-       - NBCU: Cross-platform Linear TV + Peacock Streaming
+       - NBCU + Freewheel: Cross-platform Linear TV + Peacock Streaming
+    
+    4. NBCU Cross-Platform Workflow:
+       - NBCU server uses custom tools: nbcuGetSubDivisions, nbcuGetProducts, nbcuGetMeasurement, nbcuSavePlan
+       - Freewheel server uses standard AdCP tools: get_products, create_media_buy
+       - Workflow orchestrates both for Linear + Streaming campaigns
     
     Benefits:
     - ✅ DNS names stay the same across deployments
@@ -733,7 +800,7 @@ output "next_steps" {
     - ✅ No more IP changes breaking Newton!
     - ✅ Direct, programmatic, simulation AND live API in one demo!
     
-    Cost: ~$180/month for 6 Fargate tasks (saved $40 by reusing Newton's network!)
+    Cost: ~$210/month for 7 Fargate tasks (saved $40 by reusing Newton's network!)
     
     Note: Service Discovery DNS only resolves within the VPC
   EOT

@@ -66,7 +66,8 @@ See [deployment.md](deployment.md) for platform-specific guides. We support your
   - Integration notes
 
 ### Demo Guides
-- **[demo/YAHOO_DSP_GUIDE.md](demo/YAHOO_DSP_GUIDE.md)** - Yahoo DSP sales agent guide
+- **[demo/YAHOO_DSP_GUIDE.md](demo/YAHOO_DSP_GUIDE.md)** - Yahoo DSP sales agent guide (simulated)
+- **[YAHOO_DSP_LIVE_MCP_SERVER.md](YAHOO_DSP_LIVE_MCP_SERVER.md)** - Yahoo DSP Live MCP server (real API)
 - **[demo/NEWTON_INTEGRATION_GUIDE.md](demo/NEWTON_INTEGRATION_GUIDE.md)** - Newton + AdCP integration
 - **[demo/NEWTON_CAMPAIGN_BRIEFS.md](demo/NEWTON_CAMPAIGN_BRIEFS.md)** - Pre-configured campaign scenarios
 - **[demo/NEWTON_YAHOO_DSP_DEMO_SCRIPT.md](demo/NEWTON_YAHOO_DSP_DEMO_SCRIPT.md)** - Yahoo DSP demo walkthrough
